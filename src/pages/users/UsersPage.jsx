@@ -10,6 +10,7 @@ import { Pagination } from '@/components/Pagination';
 import { SkeletonRow } from '@/components/SkeletonRow';
 import { EmptyState } from '@/components/EmptyState';
 import { StatusBadge } from '@/components/StatusBadge';
+import { ResourcePageHeader } from '@/components/ResourcePageHeader';
 import { formatDate } from '@/lib/utils';
 import { ROLE_LABELS } from '@/lib/constants';
 
@@ -45,6 +46,11 @@ export function UsersPage() {
 
     return (
         <div className="space-y-6">
+            <ResourcePageHeader
+                title="Users"
+                description="Manage organization members and account status."
+            />
+
             {/* Search */}
             <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
@@ -86,6 +92,8 @@ export function UsersPage() {
                                             icon={UsersIcon}
                                             title="No users found"
                                             description={search ? 'Try a different search term.' : 'Users will appear here once they register.'}
+                                            actionLabel={search ? 'Clear search' : undefined}
+                                            onAction={search ? () => setSearch('') : undefined}
                                         />
                                     </td>
                                 </tr>

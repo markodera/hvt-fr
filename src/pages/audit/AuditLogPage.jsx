@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonRow } from '@/components/SkeletonRow';
 import { Pagination } from '@/components/Pagination';
+import { ResourcePageHeader } from '@/components/ResourcePageHeader';
 import { formatDate, getErrorMessage } from '@/lib/utils';
 import { EVENT_TYPES } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
@@ -59,6 +60,11 @@ export function AuditLogPage() {
 
     return (
         <div className="space-y-6">
+            <ResourcePageHeader
+                title="Audit Logs"
+                description="Review authentication and security events across your organization."
+            />
+
             {!canViewAuditLogs && (
                 <div className="rounded-xl border border-warning/40 bg-warning/5 p-5">
                     <div className="flex items-start gap-3">

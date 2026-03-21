@@ -25,6 +25,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonRow } from '@/components/SkeletonRow';
 import { Pagination } from '@/components/Pagination';
+import { ResourcePageHeader } from '@/components/ResourcePageHeader';
 import { formatDate, getErrorMessage, truncate } from '@/lib/utils';
 
 export function WebhooksPage() {
@@ -86,13 +87,16 @@ export function WebhooksPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-text-secondary">Manage webhook endpoints for real-time event notifications.</p>
-                <Button onClick={() => setCreateOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create webhook
-                </Button>
-            </div>
+            <ResourcePageHeader
+                title="Webhooks"
+                description="Manage webhook endpoints for real-time event notifications."
+                action={(
+                    <Button onClick={() => setCreateOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create webhook
+                    </Button>
+                )}
+            />
 
             <div className="bg-bg-secondary border border-border rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">

@@ -27,6 +27,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonRow } from '@/components/SkeletonRow';
 import { Pagination } from '@/components/Pagination';
+import { ResourcePageHeader } from '@/components/ResourcePageHeader';
 import { formatDate, getErrorMessage } from '@/lib/utils';
 
 export function ApiKeysPage() {
@@ -95,16 +96,16 @@ export function ApiKeysPage() {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm text-text-secondary">Manage your API keys for programmatic access.</p>
-                </div>
-                <Button onClick={() => setCreateOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create key
-                </Button>
-            </div>
+            <ResourcePageHeader
+                title="API Keys"
+                description="Manage your API keys for programmatic access."
+                action={(
+                    <Button onClick={() => setCreateOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create key
+                    </Button>
+                )}
+            />
 
             {/* Table */}
             <div className="bg-bg-secondary border border-border rounded-xl overflow-hidden">
