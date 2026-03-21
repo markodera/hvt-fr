@@ -48,15 +48,25 @@ export function AuthProvider({ children }) {
         }
 
         // Fallback for backends that authenticate via cookies but do not include a user payload in login response.
-        const me = await getMe();
-        setUser(me);
+        try {
+            const me = await getMe();
+            setUser(me);
+        } catch (error) {
+            setUser(null);
+            throw error;
+        }
         return data;
     }, []);
 
     const refreshSession = useCallback(async () => {
-        const me = await getMe();
-        setUser(me);
-        return me;
+        try {
+            const me = await getMe();
+            setUser(me);
+            return me;
+        } catch (error) {
+            setUser(null);
+            throw error;
+        }
     }, []);
 
     const logout = useCallback(async () => {
