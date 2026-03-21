@@ -1,0 +1,99 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/800.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Dark theme (default) ── */
+:root {
+  --bg-primary: #000000;
+  --bg-secondary: #0A0A0F;
+  --bg-tertiary: #12101A;
+  --sidebar-bg: #06050D;
+  --border: #1E1535;
+  --border-hover: #2D2248;
+
+  --text-primary: #F0F0F3;
+  --text-secondary: #8B8D98;
+  --text-muted: #5A4D7A;
+
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --primary-muted: rgba(124, 58, 237, 0.10);
+
+  --success: #22C55E;
+  --success-muted: rgba(34, 197, 94, 0.10);
+  --danger: #EF4444;
+  --danger-muted: rgba(239, 68, 68, 0.10);
+  --warning: #F59E0B;
+  --warning-muted: rgba(245, 158, 11, 0.10);
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --bg-tertiary: #F1F5F9;
+  --sidebar-bg: #0F0A1F;
+  --border: #E2E8F0;
+  --border-hover: #CBD5E1;
+
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --primary-muted: #F3E8FF;
+}
+
+/* ── Base resets ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── Focus ring utility ── */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--primary);
+}
