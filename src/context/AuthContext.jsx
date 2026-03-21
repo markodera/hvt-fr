@@ -21,7 +21,8 @@ export function AuthProvider({ children }) {
             })
             .catch(() => {
                 // If the user isn't logged in, getMe returns 401/403 which is expected.
-                if (!cancelled) setUser(null);
+                // Do not overwrite a user that may have just logged in while this bootstrap call was in flight.
+                if (!cancelled) setUser((currentUser) => currentUser ?? null);
             })
             .finally(() => {
                 clearTimeout(timeoutId);
@@ -41,8 +42,21 @@ export function AuthProvider({ children }) {
 
     const login = useCallback(async (credentials) => {
         const data = await apiLogin(credentials);
-        setUser(data.user);
+        if (data?.user) {
+            setUser(data.user);
+            return data;
+        }
+
+        // Fallback for backends that authenticate via cookies but do not include a user payload in login response.
+        const me = await getMe();
+        setUser(me);
         return data;
+    }, []);
+
+    const refreshSession = useCallback(async () => {
+        const me = await getMe();
+        setUser(me);
+        return me;
     }, []);
 
     const logout = useCallback(async () => {
@@ -59,6 +73,7 @@ export function AuthProvider({ children }) {
         isAuthenticated: !!user,
         login,
         logout,
+        refreshSession,
     };
 
     return (

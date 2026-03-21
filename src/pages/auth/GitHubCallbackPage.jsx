@@ -2,12 +2,14 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { socialAuthGithub } from '@/api/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getErrorMessage } from '@/lib/utils';
 
 export function GitHubCallbackPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { refreshSession } = useAuth();
 
     useEffect(() => {
         const code = searchParams.get('code');
@@ -18,7 +20,8 @@ export function GitHubCallbackPage() {
         }
 
         socialAuthGithub({ code })
-            .then(() => {
+            .then(async () => {
+                await refreshSession();
                 toast.success('Signed in with GitHub!');
                 navigate('/dashboard');
             })

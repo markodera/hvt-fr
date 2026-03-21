@@ -9,6 +9,7 @@ import { getErrorMessage } from '@/lib/utils';
 export function GoogleCallbackPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { refreshSession } = useAuth();
 
     useEffect(() => {
         const code = searchParams.get('code');
@@ -19,7 +20,8 @@ export function GoogleCallbackPage() {
         }
 
         socialAuthGoogle({ code })
-            .then(() => {
+            .then(async () => {
+                await refreshSession();
                 toast.success('Signed in with Google!');
                 navigate('/dashboard');
             })
