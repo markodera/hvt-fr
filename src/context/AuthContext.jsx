@@ -51,11 +51,11 @@ export function AuthProvider({ children }) {
         try {
             const me = await getMe();
             setUser(me);
+            return me;
         } catch (error) {
             setUser(null);
             throw error;
         }
-        return data;
     }, []);
 
     const refreshSession = useCallback(async () => {

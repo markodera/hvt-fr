@@ -19,17 +19,20 @@ export function GitHubCallbackPage() {
             return;
         }
 
-        socialAuthGithub({ code })
-            .then(async () => {
+        const completeGithubLogin = async () => {
+            try {
+                await socialAuthGithub({ code });
                 await refreshSession();
                 toast.success('Signed in with GitHub!');
                 navigate('/dashboard');
-            })
-            .catch((err) => {
+            } catch (err) {
                 toast.error(getErrorMessage(err));
                 navigate('/login');
-            });
-    }, [searchParams, navigate]);
+            }
+        };
+
+        completeGithubLogin();
+    }, [searchParams, navigate, refreshSession]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-bg-primary gap-4">
