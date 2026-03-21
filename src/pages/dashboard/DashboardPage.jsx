@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { listAuditLogs } from '@/api/auditLogs';
 import { listUsers } from '@/api/users';
 import { listApiKeys } from '@/api/apiKeys';
-import { formatRelativeTime } from '@/lib/utils';
+import { formatRelativeTime, getErrorMessage } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
 function formatActor(log) {
@@ -46,6 +46,7 @@ export function DashboardPage() {
         data: auditData,
         isLoading: auditLoading,
         isError: auditError,
+        error: auditQueryError,
         refetch: refetchAudit,
         isFetching: auditRefreshing,
     } = useQuery({
@@ -55,6 +56,8 @@ export function DashboardPage() {
     });
 
     const recentEvents = auditData?.results ?? [];
+    const auditErrorMessage = getErrorMessage(auditQueryError);
+    const auditStatusCode = auditQueryError?.response?.status;
 
     return (
         <div className="space-y-8">
@@ -97,6 +100,18 @@ export function DashboardPage() {
                 />
             </div>
 
+            <section className="rounded-xl border border-border bg-bg-secondary p-4">
+                <h3 className="text-sm font-semibold text-text-primary">Quick actions</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                    {canViewUsers && <Button asChild size="sm" variant="outline"><Link to="/dashboard/users">Manage users</Link></Button>}
+                    {canViewApiKeys && <Button asChild size="sm" variant="outline"><Link to="/dashboard/api-keys">Create API key</Link></Button>}
+                    {canViewAuditLogs && <Button asChild size="sm" variant="outline"><Link to="/dashboard/audit-logs">View audit logs</Link></Button>}
+                    {!canViewUsers && !canViewApiKeys && !canViewAuditLogs && (
+                        <p className="text-xs text-text-secondary">No admin actions are available for your current role.</p>
+                    )}
+                </div>
+            </section>
+
             <div className="bg-bg-secondary border border-border rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                     <h2 className="text-lg font-bold text-text-primary">Recent Activity</h2>
@@ -134,7 +149,9 @@ export function DashboardPage() {
                                                     <AlertTriangle className="h-4 w-4" />
                                                 </div>
                                                 <p className="text-sm font-semibold text-text-primary">Couldn&apos;t load recent activity</p>
-                                                <p className="mt-1 text-xs text-text-secondary">Retry now. If this persists, verify audit log permissions and API availability.</p>
+                                                <p className="mt-1 text-xs text-text-secondary">
+                                                    {auditStatusCode ? `HTTP ${auditStatusCode} — ` : ''}{auditErrorMessage}
+                                                </p>
                                                 <Button size="sm" variant="outline" className="mt-3" onClick={() => refetchAudit()}>
                                                     Retry
                                                 </Button>
