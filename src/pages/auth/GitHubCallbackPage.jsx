@@ -2,12 +2,14 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { socialAuthGithub } from '@/api/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getErrorMessage } from '@/lib/utils';
 
 export function GitHubCallbackPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { refreshSession } = useAuth();
 
     useEffect(() => {
         const code = searchParams.get('code');
@@ -17,16 +19,20 @@ export function GitHubCallbackPage() {
             return;
         }
 
-        socialAuthGithub({ code })
-            .then(() => {
+        const completeGithubLogin = async () => {
+            try {
+                await socialAuthGithub({ code });
+                await refreshSession();
                 toast.success('Signed in with GitHub!');
                 navigate('/dashboard');
-            })
-            .catch((err) => {
+            } catch (err) {
                 toast.error(getErrorMessage(err));
                 navigate('/login');
-            });
-    }, [searchParams, navigate]);
+            }
+        };
+
+        completeGithubLogin();
+    }, [searchParams, navigate, refreshSession]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-bg-primary gap-4">

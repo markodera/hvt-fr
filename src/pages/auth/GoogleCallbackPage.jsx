@@ -9,6 +9,7 @@ import { getErrorMessage } from '@/lib/utils';
 export function GoogleCallbackPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { refreshSession } = useAuth();
 
     useEffect(() => {
         const code = searchParams.get('code');
@@ -18,16 +19,20 @@ export function GoogleCallbackPage() {
             return;
         }
 
-        socialAuthGoogle({ code })
-            .then(() => {
+        const completeGoogleLogin = async () => {
+            try {
+                await socialAuthGoogle({ code });
+                await refreshSession();
                 toast.success('Signed in with Google!');
                 navigate('/dashboard');
-            })
-            .catch((err) => {
+            } catch (err) {
                 toast.error(getErrorMessage(err));
                 navigate('/login');
-            });
-    }, [searchParams, navigate]);
+            }
+        };
+
+        completeGoogleLogin();
+    }, [searchParams, navigate, refreshSession]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-bg-primary gap-4">
