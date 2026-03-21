@@ -16,6 +16,7 @@ import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { GoogleCallbackPage } from '@/pages/auth/GoogleCallbackPage';
 import { GitHubCallbackPage } from '@/pages/auth/GitHubCallbackPage';
 import { DashboardPage } from '@/pages/dashboard/DashboardPage';
+import { GetStartedPage } from '@/pages/onboarding/GetStartedPage';
 import { UsersPage } from '@/pages/users/UsersPage';
 import { UserDetailPage } from '@/pages/users/UserDetailPage';
 import { ApiKeysPage } from '@/pages/api-keys/ApiKeysPage';
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: '/dashboard', element: <DashboardPage /> },
+      { path: '/dashboard/get-started', element: <GetStartedPage /> },
       { path: '/dashboard/users', element: <UsersPage /> },
       { path: '/dashboard/users/:id', element: <UserDetailPage /> },
       { path: '/dashboard/api-keys', element: <ApiKeysPage /> },

@@ -28,9 +28,10 @@ export function LoginPage() {
 
     const onSubmit = async (data) => {
         try {
-            await login(data);
+            const loginResult = await login(data);
+            const role = loginResult?.user?.role || loginResult?.role;
             toast.success('Welcome back!');
-            navigate('/dashboard');
+            navigate(role === 'owner' ? '/dashboard/get-started' : '/dashboard');
         } catch (err) {
             toast.error(getErrorMessage(err));
         }

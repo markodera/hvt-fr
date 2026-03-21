@@ -19,6 +19,7 @@ import { listUsers } from '@/api/users';
 import { listApiKeys } from '@/api/apiKeys';
 import { formatRelativeTime, getErrorMessage } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 function formatActor(log) {
     return log.actor_email || log.actor_api_key_name || 'System';
@@ -26,6 +27,8 @@ function formatActor(log) {
 
 export function DashboardPage() {
     const { user } = useAuth();
+    const { completedCount, totalCount, isComplete } = useOnboarding(user?.organization);
+    const isOwner = user?.role === 'owner';
     const canViewUsers = user?.role === 'owner' || user?.role === 'admin';
     const canViewApiKeys = user?.role === 'owner';
     const canViewAuditLogs = user?.role === 'owner' || user?.role === 'admin';
@@ -78,6 +81,19 @@ export function DashboardPage() {
                     )}
                 </div>
             </section>
+            {isOwner && !isComplete && (
+                <section className="rounded-xl border border-primary/40 bg-primary/10 p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-sm font-semibold text-text-primary">Finish onboarding checklist</p>
+                        <p className="text-xs text-text-secondary mt-1">
+                            {completedCount}/{totalCount} setup steps complete.
+                        </p>
+                    </div>
+                    <Button asChild size="sm">
+                        <Link to="/dashboard/get-started">Continue setup</Link>
+                    </Button>
+                </section>
+            )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <StatCard
