@@ -8,6 +8,9 @@ import {
     AlertTriangle,
     ArrowRight,
     ShieldAlert,
+    BadgeCheck,
+    Lock,
+    LifeBuoy,
 } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -61,6 +64,39 @@ export function DashboardPage() {
     const recentEvents = auditData?.results ?? [];
     const auditErrorMessage = getErrorMessage(auditQueryError);
     const auditStatusCode = auditQueryError?.response?.status;
+    const isMemberView = !canViewUsers && !canViewApiKeys && !canViewAuditLogs;
+
+    if (isMemberView) {
+        return (
+            <div className="space-y-6">
+                <section className="rounded-xl border border-border bg-bg-secondary p-6">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Workspace</p>
+                    <h2 className="mt-1 text-2xl font-extrabold text-text-primary">Welcome, {user?.full_name || user?.email}</h2>
+                    <p className="mt-2 text-sm text-text-secondary">
+                        Your account is active as a <span className="font-semibold text-text-primary">member</span>. Admin-only resources are hidden for your role.
+                    </p>
+                </section>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="rounded-xl border border-border bg-bg-secondary p-4">
+                        <BadgeCheck className="h-5 w-5 text-success" />
+                        <h3 className="mt-3 text-sm font-semibold text-text-primary">Account ready</h3>
+                        <p className="mt-1 text-xs text-text-secondary">You can sign in and use member-access experiences immediately.</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-bg-secondary p-4">
+                        <Lock className="h-5 w-5 text-warning" />
+                        <h3 className="mt-3 text-sm font-semibold text-text-primary">Restricted sections</h3>
+                        <p className="mt-1 text-xs text-text-secondary">Users, API keys, and audit logs require owner/admin permissions.</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-bg-secondary p-4">
+                        <LifeBuoy className="h-5 w-5 text-primary" />
+                        <h3 className="mt-3 text-sm font-semibold text-text-primary">Need more access?</h3>
+                        <p className="mt-1 text-xs text-text-secondary">Ask your organization owner/admin to update your role if required.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
