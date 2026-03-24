@@ -8,7 +8,7 @@ function NavLink({ to, children, onClick }) {
         <Link
             to={to}
             onClick={onClick}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
         >
             {children}
         </Link>
@@ -19,44 +19,45 @@ function LandingNav() {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-bg-primary/60 backdrop-blur-xl border-b border-border shadow-[0_4px_30px_rgba(0,0,0,0.1)] transition-all duration-300">
+        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg-primary/80 backdrop-blur-xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2 group">
-                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow">
-                            <span className="text-white font-extrabold text-sm">H</span>
+                <div className="flex h-16 items-center justify-between">
+                    <Link to="/" className="flex items-center gap-3 group">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple-500 shadow-lg shadow-primary/20 transition-shadow group-hover:shadow-primary/40">
+                            <span className="text-sm font-extrabold text-white">H</span>
                         </div>
-                        <span className="text-xl font-extrabold text-text-primary tracking-tight">HVT<span className="text-primary">.dev</span></span>
+                        <div>
+                            <p className="text-base font-extrabold tracking-tight text-text-primary">HVT.dev</p>
+                            <p className="text-[11px] uppercase tracking-[0.24em] text-text-muted">Auth infrastructure</p>
+                        </div>
                     </Link>
 
-                    {/* Desktop links */}
-                    <div className="hidden md:flex items-center gap-8 bg-bg-secondary/50 px-6 py-2 rounded-full border border-border/50">
+                    <div className="hidden md:flex items-center gap-8 rounded-full border border-border bg-bg-secondary/60 px-6 py-2">
+                        <NavLink to="/#why-hvt">Why HVT</NavLink>
+                        <NavLink to="/#system">System model</NavLink>
                         <NavLink to="/#features">Features</NavLink>
-                        <NavLink to="/#pricing">Pricing</NavLink>
+                        <NavLink to="/#integration">Integration</NavLink>
                         <a
                             href="https://github.com"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+                            className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
                         >
-                            Docs
+                            GitHub
                         </a>
                     </div>
 
-                    {/* Desktop CTAs */}
                     <div className="hidden md:flex items-center gap-3">
-                        <Button variant="ghost" className="font-semibold text-text-secondary hover:text-text-primary" asChild>
+                        <Button variant="ghost" asChild className="font-semibold text-text-secondary hover:text-text-primary">
                             <Link to="/login">Sign in</Link>
                         </Button>
-                        <Button className="font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all font-sans" asChild>
-                            <Link to="/register">Get started <span className="ml-1 text-primary-muted group-hover:translate-x-0.5 transition-transform">→</span></Link>
+                        <Button asChild className="font-semibold shadow-lg shadow-primary/20 transition-shadow hover:shadow-primary/40">
+                            <Link to="/register">Get started</Link>
                         </Button>
                     </div>
 
-                    {/* Mobile hamburger */}
                     <button
-                        className="md:hidden text-text-primary p-2 -mr-2 rounded-lg hover:bg-bg-secondary transition-colors"
+                        className="rounded-lg p-2 text-text-primary transition-colors hover:bg-bg-secondary md:hidden"
                         onClick={() => setMobileOpen(!mobileOpen)}
                         aria-label="Toggle menu"
                     >
@@ -64,11 +65,12 @@ function LandingNav() {
                     </button>
                 </div>
 
-                {/* Mobile menu */}
                 {mobileOpen && (
-                    <div className="md:hidden border-t border-border py-4 space-y-4">
+                    <div className="space-y-4 border-t border-border py-4 md:hidden">
+                        <NavLink to="/#why-hvt" onClick={() => setMobileOpen(false)}>Why HVT</NavLink>
+                        <NavLink to="/#system" onClick={() => setMobileOpen(false)}>System model</NavLink>
                         <NavLink to="/#features" onClick={() => setMobileOpen(false)}>Features</NavLink>
-                        <NavLink to="/#pricing" onClick={() => setMobileOpen(false)}>Pricing</NavLink>
+                        <NavLink to="/#integration" onClick={() => setMobileOpen(false)}>Integration</NavLink>
                         <div className="flex flex-col gap-2 pt-2">
                             <Button variant="outline" asChild className="w-full">
                                 <Link to="/login">Sign in</Link>
@@ -88,50 +90,40 @@ function LandingFooter() {
     return (
         <footer className="border-t border-border bg-bg-secondary">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    {/* Brand */}
-                    <div className="col-span-2 md:col-span-1">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                                <span className="text-white font-extrabold text-sm">H</span>
+                <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr]">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
+                                <span className="text-sm font-extrabold">H</span>
                             </div>
-                            <span className="text-lg font-extrabold text-text-primary">HVT.dev</span>
+                            <div>
+                                <p className="text-lg font-extrabold text-text-primary">HVT.dev</p>
+                                <p className="text-sm text-text-secondary">Open-source auth infrastructure for modern product teams.</p>
+                            </div>
                         </div>
-                        <p className="text-sm text-text-secondary">
-                            Open-source authentication platform for modern applications.
-                        </p>
                     </div>
 
-                    {/* Links */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-4">Product</h4>
+                        <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-text-secondary">Explore</h4>
                         <ul className="space-y-2">
-                            <li><a href="/#features" className="text-sm text-text-muted hover:text-text-primary transition-colors">Features</a></li>
-                            <li><a href="/#pricing" className="text-sm text-text-muted hover:text-text-primary transition-colors">Pricing</a></li>
-                            <li><a href="/#how-it-works" className="text-sm text-text-muted hover:text-text-primary transition-colors">How it works</a></li>
+                            <li><a href="/#why-hvt" className="text-sm text-text-muted transition-colors hover:text-text-primary">Why HVT</a></li>
+                            <li><a href="/#system" className="text-sm text-text-muted transition-colors hover:text-text-primary">System model</a></li>
+                            <li><a href="/#integration" className="text-sm text-text-muted transition-colors hover:text-text-primary">Integration</a></li>
                         </ul>
                     </div>
+
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-4">Resources</h4>
+                        <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-text-secondary">Start</h4>
                         <ul className="space-y-2">
-                            <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-text-muted hover:text-text-primary transition-colors">GitHub</a></li>
-                            <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">Documentation</a></li>
-                            <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">API Reference</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-4">Legal</h4>
-                        <ul className="space-y-2">
-                            <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">Privacy</a></li>
-                            <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">Terms</a></li>
+                            <li><Link to="/register" className="text-sm text-text-muted transition-colors hover:text-text-primary">Create account</Link></li>
+                            <li><Link to="/login" className="text-sm text-text-muted transition-colors hover:text-text-primary">Sign in</Link></li>
+                            <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-text-muted transition-colors hover:text-text-primary">GitHub</a></li>
                         </ul>
                     </div>
                 </div>
 
-                <div className="mt-12 pt-8 border-t border-border">
-                    <p className="text-sm text-text-muted text-center">
-                        © {new Date().getFullYear()} HVT. Open source under the MIT License.
-                    </p>
+                <div className="mt-10 border-t border-border pt-8 text-center">
+                    <p className="text-sm text-text-muted">Copyright {new Date().getFullYear()} HVT. Open source under the MIT License.</p>
                 </div>
             </div>
         </footer>

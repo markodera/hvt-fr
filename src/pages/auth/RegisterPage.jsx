@@ -1,11 +1,14 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Github } from 'lucide-react';
-import { register as apiRegister } from '@/api/auth';
+import { listSocialProviders, register as apiRegister } from '@/api/auth';
 import { registerSchema } from '@/lib/schemas';
+import { SOCIAL_AUTH_PROVIDERS, startSocialSignIn } from '@/lib/socialAuth';
+import { markInvitationResumeAfterAuth } from '@/lib/invitations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +17,15 @@ import { getErrorMessage } from '@/lib/utils';
 
 export function RegisterPage() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [showPassword, setShowPassword] = useState(false);
+    const inviteToken = searchParams.get('invite_token') || '';
+
+    useEffect(() => {
+        if (inviteToken) {
+            markInvitationResumeAfterAuth(inviteToken);
+        }
+    }, [inviteToken]);
 
     const {
         register,
@@ -31,52 +42,50 @@ export function RegisterPage() {
         },
     });
 
+    const { data: socialProviderData } = useQuery({
+        queryKey: ['controlPlaneSocialProviders'],
+        queryFn: listSocialProviders,
+    });
+
+    const controlPlaneProviders = socialProviderData?.providers ?? [];
+    const googleAvailable = controlPlaneProviders.some((provider) => provider.provider === 'google');
+    const githubAvailable = controlPlaneProviders.some((provider) => provider.provider === 'github');
+
     const onSubmit = async (data) => {
         try {
             await apiRegister(data);
-            navigate('/auth/verify-email-notice', { state: { email: data.email } });
+            navigate('/auth/verify-email-notice', { state: { email: data.email, inviteToken } });
         } catch (err) {
             toast.error(getErrorMessage(err));
         }
     };
 
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-
-    const handleGoogleLogin = () => {
-        if (!googleClientId) {
-            toast.error('Google login is not configured');
-            return;
+    const handleSocialLogin = (provider, label) => {
+        if (inviteToken) {
+            markInvitationResumeAfterAuth(inviteToken);
         }
-        const redirectUri = `${window.location.origin}/auth/google/callback`;
-        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile&access_type=offline`;
-    };
-
-    const handleGithubLogin = () => {
-        if (!githubClientId) {
-            toast.error('GitHub login is not configured');
-            return;
+        const started = startSocialSignIn(provider, controlPlaneProviders);
+        if (!started) {
+            toast.error(`${label} login is not configured`);
         }
-        const redirectUri = `${window.location.origin}/auth/github/callback`;
-        window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=user:email`;
     };
 
     return (
         <div>
-            <div className="text-center mb-6">
+            <div className="mb-6 text-center">
                 <h2 className="text-2xl font-extrabold text-text-primary">Create an account</h2>
-                <p className="text-sm text-text-secondary mt-1">Get started with HVT</p>
+                <p className="mt-1 text-sm text-text-secondary">Get started with HVT</p>
             </div>
 
-            {/* Social login */}
             <div className="flex gap-3">
                 <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={handleGoogleLogin}
+                    onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GOOGLE, 'Google')}
                     type="button"
+                    disabled={!googleAvailable}
                 >
-                    <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -87,13 +96,20 @@ export function RegisterPage() {
                 <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={handleGithubLogin}
+                    onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GITHUB, 'GitHub')}
                     type="button"
+                    disabled={!githubAvailable}
                 >
-                    <Github className="h-4 w-4 mr-2" />
+                    <Github className="mr-2 h-4 w-4" />
                     GitHub
                 </Button>
             </div>
+
+            {controlPlaneProviders.length === 0 && (
+                <p className="mt-3 text-center text-xs text-text-secondary">
+                    Social sign-up is not configured for this environment yet.
+                </p>
+            )}
 
             <div className="relative my-6">
                 <Separator />
@@ -153,7 +169,7 @@ export function RegisterPage() {
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-primary"
                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -178,13 +194,13 @@ export function RegisterPage() {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating account…' : 'Create account'}
+                    {isSubmitting ? 'Creating account...' : 'Create account'}
                 </Button>
             </form>
 
-            <p className="text-sm text-text-secondary text-center mt-6">
+            <p className="mt-6 text-center text-sm text-text-secondary">
                 Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:text-primary-hover font-medium transition-colors">
+                <Link to="/login" className="font-medium text-primary transition-colors hover:text-primary-hover">
                     Sign in
                 </Link>
             </p>

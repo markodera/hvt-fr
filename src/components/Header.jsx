@@ -14,6 +14,7 @@ import {
 
 const pageTitles = {
     '/dashboard': 'Dashboard',
+    '/dashboard/create-organization': 'Create Organisation',
     '/dashboard/users': 'Users',
     '/dashboard/api-keys': 'API Keys',
     '/dashboard/webhooks': 'Webhooks',

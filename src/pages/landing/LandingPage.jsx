@@ -1,137 +1,217 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    Shield,
+    ArrowRight,
+    Building2,
+    Check,
+    Code2,
+    Globe,
+    Lock,
     RefreshCw,
+    ScrollText,
+    Shield,
+    Terminal,
     Users,
     Webhook,
-    ScrollText,
-    Building2,
-    ArrowRight,
-    Terminal,
-    Code2,
-    Check,
     Zap,
-    Lock,
-    Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// ── Hero ──
+const proofPoints = [
+    'Project-scoped API keys and token claims',
+    'Per-project social provider configuration',
+    'Invite flow, RBAC, audit logs, and webhooks',
+];
+
+const fitCards = [
+    {
+        title: 'You keep the tenant boundary',
+        description: 'Organizations handle team ownership. Projects handle app and environment boundaries. Tokens and runtime auth stay in that context.',
+    },
+    {
+        title: 'You do not lose the operational trail',
+        description: 'Every meaningful action can be traced through audit logs, webhooks, and explicit project or org context.',
+    },
+    {
+        title: 'You can self-host without dumbing the model down',
+        description: 'This is not a login widget pretending to be a platform. It is auth infrastructure built for a real control plane and runtime plane.',
+    },
+];
+
+const featureCards = [
+    {
+        icon: RefreshCw,
+        title: 'JWT hardening',
+        description: 'Access and refresh flows carry org and project claims so tenant checks survive token decode, not just queryset filters.',
+    },
+    {
+        icon: Building2,
+        title: 'Org and project model',
+        description: 'Organizations map to teams. Projects map to apps or environments. Keys, social config, and runtime auth can stay aligned to that model.',
+    },
+    {
+        icon: Globe,
+        title: 'Project social auth',
+        description: 'Google and GitHub can be configured per project, so one broken provider setup does not poison every tenant.',
+    },
+    {
+        icon: Users,
+        title: 'Invitations and roles',
+        description: 'Owners invite admins and members into the control plane with explicit acceptance flow instead of silent membership side effects.',
+    },
+    {
+        icon: Webhook,
+        title: 'Runtime event hooks',
+        description: 'Login, registration, API key activity, and user changes can feed downstream systems without inventing a second event pipeline.',
+    },
+    {
+        icon: ScrollText,
+        title: 'Operational evidence',
+        description: 'Audit events are separated cleanly across org, project, and invitation actions so the logs explain what actually happened.',
+    },
+];
+
+const launchChecklist = [
+    'Create an organization for your team',
+    'Create a project for each app or environment',
+    'Issue a project API key for your backend',
+    'Configure social providers only for that project',
+    'Use runtime register, login, refresh, and social endpoints',
+    'Observe audit logs and webhook deliveries when something changes',
+];
+
+const codeExamples = {
+    runtime: `POST /api/v1/auth/runtime/login/
+X-API-Key: hvt_test_xxxxxxxxx
+Content-Type: application/json
+
+{
+  "email": "customer@example.com",
+  "password": "Strongpass123!"
+}
+
+200 OK
+Set-Cookie: auth-token=...
+Set-Cookie: refresh-token=...
+
+{
+  "user": {
+    "email": "customer@example.com",
+    "role": "member",
+    "project_slug": "storefront-prod"
+  }
+}`,
+    control: `POST /api/v1/organizations/current/projects/
+Authorization: Bearer <owner-jwt>
+Content-Type: application/json
+
+{
+  "name": "Storefront Prod",
+  "slug": "storefront-prod",
+  "allow_signup": true
+}
+
+POST /api/v1/organizations/current/keys/
+Authorization: Bearer <owner-jwt>
+Content-Type: application/json
+
+{
+  "name": "Storefront Backend",
+  "environment": "live",
+  "project_id": "<project-id>",
+  "scopes": ["read:org", "write:users"]
+}`,
+};
+
 function Hero() {
     return (
-        <section className="relative overflow-hidden">
-            {/* Background effects */}
-            <div className="absolute inset-0 bg-[radial-gradient(#1E1535_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+        <section className="relative overflow-hidden border-b border-border">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.22),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.12),transparent_26%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:32px_32px] opacity-30" />
 
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 text-center">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8">
-                    <Zap className="h-3.5 w-3.5" />
-                    Open source · Self-hostable · Production-ready
-                </div>
-
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-text-primary max-w-4xl mx-auto leading-[1.1] tracking-tight">
-                    Authentication infrastructure{' '}
-                    <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                        you own
-                    </span>
-                </h1>
-
-                <p className="mt-6 text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
-                    HVT is an open-source Auth0 alternative. JWT rotation, RBAC, webhooks, audit logs, and multi-tenancy               deployed on your infrastructure.
-                </p>
-
-                <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button size="lg" asChild className="text-base px-8">
-                        <Link to="/register">
-                            Get started free
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                    </Button>
-                    <Button size="lg" variant="outline" asChild className="text-base px-8">
-                        <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-                            <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" /></svg>
-                            View on GitHub
-                        </a>
-                    </Button>
-                </div>
-
-                {/* Dashboard preview */}
-                <div className="mt-16 max-w-4xl mx-auto relative">
-                    {/* Purple glow behind preview */}
-                    <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-primary/10 to-purple-600/20 rounded-3xl blur-2xl" />
-
-                    <div className="relative bg-bg-secondary border border-border rounded-xl overflow-hidden shadow-2xl">
-                        {/* Window chrome */}
-                        <div className="flex items-center gap-2 px-4 py-3 bg-bg-tertiary border-b border-border">
-                            <div className="w-3 h-3 rounded-full bg-danger/60" />
-                            <div className="w-3 h-3 rounded-full bg-warning/60" />
-                            <div className="w-3 h-3 rounded-full bg-success/60" />
-                            <span className="ml-2 text-xs text-text-muted font-mono">HVT Dashboard</span>
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+                <div className="grid gap-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center">
+                    <div>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+                            <Shield className="h-4 w-4" />
+                            Open-source auth infrastructure for serious product teams
                         </div>
 
-                        <div className="flex">
-                            {/* Mini sidebar */}
-                            <div className="hidden sm:flex w-48 bg-bg-tertiary/50 border-r border-border flex-col py-4 px-3 gap-1 shrink-0">
-                                <div className="flex items-center gap-2 px-3 py-2 mb-4">
-                                    <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                                        <span className="text-[10px] text-white font-bold">H</span>
+                        <h1 className="mt-8 max-w-4xl text-4xl font-extrabold leading-[1.02] tracking-tight text-text-primary sm:text-5xl lg:text-7xl">
+                            HVT gives developers the auth boundary they actually need.
+                        </h1>
+
+                        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-secondary sm:text-xl">
+                            Build the control plane for your team, run the auth runtime for your apps, and keep tenant isolation explicit all the way down to keys, projects, tokens, social auth, and audit trails.
+                        </p>
+
+                        <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+                            <Button size="lg" asChild className="px-8 text-base font-semibold">
+                                <Link to="/register">
+                                    Build with HVT
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                            <Button size="lg" variant="outline" asChild className="px-8 text-base font-semibold">
+                                <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+                                    Read the code
+                                </a>
+                            </Button>
+                        </div>
+
+                        <div className="mt-10 grid gap-3 sm:grid-cols-3">
+                            {proofPoints.map((point) => (
+                                <div key={point} className="rounded-2xl border border-border bg-bg-secondary/80 p-4 text-sm leading-relaxed text-text-secondary shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
+                                    <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary/12 text-primary">
+                                        <Check className="h-4 w-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-text-primary">HVT.dev</span>
+                                    {point}
                                 </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium">
-                                    <div className="w-3 h-3 rounded-sm bg-primary/30" />
-                                    Dashboard
-                                </div>
-                                {['Users', 'API Keys', 'Webhooks', 'Audit Logs', 'Settings'].map((item) => (
-                                    <div key={item} className="flex items-center gap-2 px-3 py-1.5 text-text-muted text-xs">
-                                        <div className="w-3 h-3 rounded-sm bg-border" />
-                                        {item}
-                                    </div>
-                                ))}
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-5">
+                        <div className="overflow-hidden rounded-3xl border border-border bg-bg-secondary shadow-[0_28px_80px_rgba(0,0,0,0.28)]">
+                            <div className="flex items-center gap-2 border-b border-border bg-bg-tertiary px-5 py-4">
+                                <div className="h-3 w-3 rounded-full bg-danger/70" />
+                                <div className="h-3 w-3 rounded-full bg-warning/70" />
+                                <div className="h-3 w-3 rounded-full bg-success/70" />
+                                <span className="ml-3 text-xs font-mono text-text-muted">runtime-auth.log</span>
                             </div>
-
-                            {/* Main content area */}
-                            <div className="flex-1 p-4 sm:p-6 min-h-[280px]">
-                                {/* Stat cards */}
-                                <div className="grid grid-cols-3 gap-3 mb-6">
-                                    {[
-                                        { label: 'Total Users', value: '1,284' },
-                                        { label: 'API Keys', value: '42' },
-                                        { label: 'Events', value: '8,391' },
-                                    ].map((stat) => (
-                                        <div key={stat.label} className="bg-bg-tertiary border border-border rounded-lg p-3">
-                                            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">{stat.label}</p>
-                                            <p className="text-lg font-bold text-text-primary">{stat.value}</p>
-                                        </div>
-                                    ))}
+                            <div className="space-y-4 p-5 font-mono text-sm text-text-secondary">
+                                <div>
+                                    <p className="text-primary">POST /auth/runtime/login</p>
+                                    <p className="mt-1">project: storefront-prod</p>
+                                    <p>api_key: hvt_live_a13f9e2c</p>
                                 </div>
-
-                                {/* Activity table */}
-                                <div className="bg-bg-tertiary border border-border rounded-lg overflow-hidden">
-                                    <div className="px-3 py-2 border-b border-border">
-                                        <p className="text-xs font-semibold text-text-primary">Recent Activity</p>
+                                <div className="rounded-2xl border border-border bg-bg-tertiary/60 p-4">
+                                    <p className="text-text-primary">issued claims</p>
+                                    <p className="mt-2">org_id: org_75b08bf5</p>
+                                    <p>project_id: prj_3c0227</p>
+                                    <p>role: member</p>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="rounded-2xl border border-border bg-bg-tertiary/60 p-4">
+                                        <p className="text-text-primary">control plane</p>
+                                        <p className="mt-2 text-xs">owners, admins, invites, projects, keys</p>
                                     </div>
-                                    <div className="divide-y divide-border">
-                                        {[
-                                            { event: 'user.login', actor: 'mark@hvt.dev', status: true, time: '2m ago' },
-                                            { event: 'api_key.created', actor: 'admin@hvt.dev', status: true, time: '5m ago' },
-                                            { event: 'webhook.fired', actor: 'system', status: false, time: '12m ago' },
-                                            { event: 'user.registered', actor: 'new@example.com', status: true, time: '1h ago' },
-                                        ].map((row) => (
-                                            <div key={row.event + row.time} className="flex items-center justify-between px-3 py-2 text-xs">
-                                                <span className="text-text-primary font-medium">{row.event}</span>
-                                                <span className="text-text-muted hidden sm:inline">{row.actor}</span>
-                                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${row.status ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
-                                                    {row.status ? 'OK' : 'FAIL'}
-                                                </span>
-                                                <span className="text-text-muted">{row.time}</span>
-                                            </div>
-                                        ))}
+                                    <div className="rounded-2xl border border-border bg-bg-tertiary/60 p-4">
+                                        <p className="text-text-primary">runtime plane</p>
+                                        <p className="mt-2 text-xs">signup, login, social auth, refresh, webhooks</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-border bg-bg-secondary/85 p-5">
+                                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-muted">Built for</p>
+                                <p className="mt-3 text-lg font-semibold text-text-primary">Multi-tenant SaaS, ecommerce, internal platforms</p>
+                            </div>
+                            <div className="rounded-2xl border border-primary/25 bg-primary/10 p-5">
+                                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Promise</p>
+                                <p className="mt-3 text-lg font-semibold text-text-primary">Developers should know exactly which org, project, key, and user context is active.</p>
                             </div>
                         </div>
                     </div>
@@ -141,220 +221,176 @@ function Hero() {
     );
 }
 
-// ── Features ──
-const features = [
-    {
-        icon: RefreshCw,
-        title: 'JWT Rotation',
-        description: 'Automatic access and refresh token rotation with httpOnly cookies. Zero XSS exposure.',
-    },
-    {
-        icon: Shield,
-        title: 'RBAC',
-        description: 'Role-based access control with Owner, Admin, and Member roles out of the box.',
-    },
-    {
-        icon: Webhook,
-        title: 'Webhooks',
-        description: 'Real-time event notifications with automatic retries and delivery tracking.',
-    },
-    {
-        icon: ScrollText,
-        title: 'Audit Logs',
-        description: 'Complete audit trail of every authentication event with IP and user-agent tracking.',
-    },
-    {
-        icon: Building2,
-        title: 'Multi-tenancy',
-        description: 'Built-in organisation support. Each tenant gets isolated users, keys, and settings.',
-    },
-    {
-        icon: Globe,
-        title: 'Social OAuth',
-        description: 'Google and GitHub login pre-configured. Add any OAuth provider with minimal setup.',
-    },
-];
+function WhyHVT() {
+    return (
+        <section id="why-hvt" className="py-24">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-3xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">Why developers stay</p>
+                    <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-text-primary sm:text-5xl">
+                        This is for teams that want auth to behave like infrastructure, not a black box.
+                    </h2>
+                </div>
+
+                <div className="mt-12 grid gap-6 lg:grid-cols-3">
+                    {fitCards.map((card) => (
+                        <div key={card.title} className="rounded-3xl border border-border bg-bg-secondary p-7 shadow-[0_16px_50px_rgba(0,0,0,0.18)]">
+                            <p className="text-lg font-semibold text-text-primary">{card.title}</p>
+                            <p className="mt-4 text-sm leading-7 text-text-secondary">{card.description}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function SystemModel() {
+    return (
+        <section id="system" className="border-y border-border bg-bg-secondary py-24">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">System model</p>
+                    <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-text-primary sm:text-5xl">
+                        Two planes. One platform. Clear boundaries.
+                    </h2>
+                    <p className="mx-auto mt-5 max-w-3xl text-lg leading-relaxed text-text-secondary">
+                        HVT works when the developer control plane and the auth runtime plane are both explicit. That is the difference between a toy auth layer and something your team can launch on.
+                    </p>
+                </div>
+
+                <div className="mt-14 grid gap-6 lg:grid-cols-[1fr_auto_1fr] lg:items-stretch">
+                    <div className="rounded-3xl border border-border bg-bg-primary p-8">
+                        <div className="flex items-center gap-3">
+                            <Building2 className="h-6 w-6 text-primary" />
+                            <h3 className="text-xl font-bold text-text-primary">Developer control plane</h3>
+                        </div>
+                        <ul className="mt-6 space-y-4 text-sm leading-7 text-text-secondary">
+                            <li>Create organizations for teams.</li>
+                            <li>Create projects for apps or environments.</li>
+                            <li>Issue API keys tied to project context.</li>
+                            <li>Invite admins and members with explicit acceptance.</li>
+                            <li>Configure social providers per project.</li>
+                        </ul>
+                    </div>
+
+                    <div className="hidden items-center justify-center lg:flex">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-primary/25 bg-primary/10">
+                            <Zap className="h-6 w-6 text-primary" />
+                        </div>
+                    </div>
+
+                    <div className="rounded-3xl border border-primary/25 bg-primary/10 p-8">
+                        <div className="flex items-center gap-3">
+                            <Terminal className="h-6 w-6 text-primary" />
+                            <h3 className="text-xl font-bold text-text-primary">Auth runtime plane</h3>
+                        </div>
+                        <ul className="mt-6 space-y-4 text-sm leading-7 text-text-secondary">
+                            <li>Register and login end users under the right org and project.</li>
+                            <li>Issue access and refresh tokens with tenant claims.</li>
+                            <li>Run social auth only where provider config is valid.</li>
+                            <li>Emit audit events and webhook deliveries when state changes.</li>
+                            <li>Reject cross-tenant requests before data leaks happen.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
 
 function Features() {
     return (
         <section id="features" className="py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Features</p>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
-                        Everything you need to ship auth
-                    </h2>
-                    <p className="mt-4 text-lg text-text-secondary max-w-2xl mx-auto">
-                        Stop rebuilding authentication from scratch. HVT gives you production-ready auth infrastructure in minutes.
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {features.map((feature) => (
-                        <div
-                            key={feature.title}
-                            className="group bg-bg-secondary border border-border rounded-xl p-6 hover:border-border-hover hover:bg-bg-tertiary/50 transition-all duration-300"
-                        >
-                            <div className="mb-4 rounded-xl bg-primary/10 w-12 h-12 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                <feature.icon className="h-6 w-6 text-primary" />
-                            </div>
-                            <h3 className="text-base font-semibold text-text-primary mb-2">{feature.title}</h3>
-                            <p className="text-sm text-text-secondary leading-relaxed">{feature.description}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ── How it Works ──
-const steps = [
-    {
-        step: '01',
-        title: 'Install',
-        description: 'Clone the repo and run docker-compose up. HVT spins up with a single command.',
-        icon: Terminal,
-    },
-    {
-        step: '02',
-        title: 'Configure',
-        description: 'Set your OAuth providers, email settings, and organisation defaults via environment variables.',
-        icon: Code2,
-    },
-    {
-        step: '03',
-        title: 'Integrate',
-        description: 'Use our REST API or SDK to add login, registration, and user management to your app.',
-        icon: Zap,
-    },
-];
-
-function HowItWorks() {
-    return (
-        <section id="how-it-works" className="py-24 bg-bg-secondary">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">How it works</p>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
-                        Up and running in three steps
-                    </h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {steps.map((step, i) => (
-                        <div key={step.step} className="relative text-center">
-                            {i < steps.length - 1 && (
-                                <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-px bg-gradient-to-r from-border to-transparent" />
-                            )}
-                            <div className="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20">
-                                <step.icon className="h-7 w-7 text-primary" />
-                            </div>
-                            <div className="text-xs font-bold text-primary mb-2">{step.step}</div>
-                            <h3 className="text-lg font-bold text-text-primary mb-2">{step.title}</h3>
-                            <p className="text-sm text-text-secondary leading-relaxed max-w-xs mx-auto">{step.description}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ── Code Tabs ──
-function CodeSection() {
-    const [tab, setTab] = useState('sdk');
-
-    return (
-        <section className="py-24">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Integration</p>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
-                        Integrate in under 10 lines
-                    </h2>
-                </div>
-
-                <div className="max-w-2xl mx-auto">
-                    <div className="flex gap-1 mb-4">
-                        <button
-                            onClick={() => setTab('sdk')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'sdk'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-                                }`}
-                        >
-                            JavaScript SDK
-                        </button>
-                        <button
-                            onClick={() => setTab('rest')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'rest'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
-                                }`}
-                        >
-                            REST API
-                        </button>
+                <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">What ships with HVT</p>
+                        <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-text-primary sm:text-5xl">
+                            The pieces developers normally end up rebuilding anyway.
+                        </h2>
+                        <p className="mt-5 text-lg leading-relaxed text-text-secondary">
+                            You should not have to bolt on tenancy, invitations, runtime auth, provider config, logging, and event delivery after choosing an auth layer. HVT is built around those realities from the start.
+                        </p>
                     </div>
 
-                    <div className="bg-bg-secondary border border-border rounded-xl overflow-hidden">
-                        <div className="flex items-center gap-2 px-4 py-3 bg-bg-tertiary border-b border-border">
-                            <div className="w-3 h-3 rounded-full bg-danger/60" />
-                            <div className="w-3 h-3 rounded-full bg-warning/60" />
-                            <div className="w-3 h-3 rounded-full bg-success/60" />
-                            <span className="ml-2 text-xs text-text-muted font-mono">
-                                {tab === 'sdk' ? 'app.js' : 'terminal'}
-                            </span>
+                    <div className="grid gap-5 md:grid-cols-2">
+                        {featureCards.map((feature) => (
+                            <div key={feature.title} className="rounded-3xl border border-border bg-bg-secondary p-6 shadow-[0_14px_40px_rgba(0,0,0,0.15)]">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <feature.icon className="h-5 w-5" />
+                                </div>
+                                <h3 className="mt-5 text-lg font-semibold text-text-primary">{feature.title}</h3>
+                                <p className="mt-3 text-sm leading-7 text-text-secondary">{feature.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function IntegrationSection() {
+    const [tab, setTab] = useState('runtime');
+
+    return (
+        <section id="integration" className="border-y border-border bg-bg-secondary py-24">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid gap-10 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">How integration feels</p>
+                        <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-text-primary sm:text-5xl">
+                            The launch path is concrete.
+                        </h2>
+                        <p className="mt-5 text-lg leading-relaxed text-text-secondary">
+                            HVT is easiest to understand when you picture the exact developer path: create org, create project, mint key, configure providers, then point your app at the runtime endpoints.
+                        </p>
+
+                        <div className="mt-8 rounded-3xl border border-border bg-bg-primary p-6">
+                            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-text-muted">Launch checklist</p>
+                            <ul className="mt-5 space-y-4 text-sm leading-7 text-text-secondary">
+                                {launchChecklist.map((item) => (
+                                    <li key={item} className="flex gap-3">
+                                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                            <Check className="h-3.5 w-3.5" />
+                                        </span>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        <pre className="p-6 text-sm font-mono overflow-x-auto">
-                            {tab === 'sdk' ? (
-                                <code>
-                                    <span className="text-primary">import</span>{' '}
-                                    <span className="text-text-primary">{'{ HVTClient }'}</span>{' '}
-                                    <span className="text-primary">from</span>{' '}
-                                    <span className="text-success">'@hvt/sdk'</span>
-                                    {'\n\n'}
-                                    <span className="text-primary">const</span>{' '}
-                                    <span className="text-text-primary">hvt</span>{' = '}
-                                    <span className="text-warning">new</span>{' '}
-                                    <span className="text-text-primary">HVTClient</span>
-                                    {'({\n'}
-                                    <span className="text-text-secondary">{'  baseURL'}</span>
-                                    {': '}
-                                    <span className="text-success">'https://auth.yourapp.com'</span>
-                                    {'\n})\n\n'}
-                                    <span className="text-text-muted">{'// Login a user'}</span>
-                                    {'\n'}
-                                    <span className="text-primary">const</span>{' '}
-                                    <span className="text-text-primary">session</span>{' = '}
-                                    <span className="text-primary">await</span>{' '}
-                                    <span className="text-text-primary">hvt.auth.login</span>
-                                    {'({\n'}
-                                    <span className="text-text-secondary">{'  email'}</span>
-                                    {': '}
-                                    <span className="text-success">'user@example.com'</span>
-                                    {',\n'}
-                                    <span className="text-text-secondary">{'  password'}</span>
-                                    {': '}
-                                    <span className="text-success">'secure-password'</span>
-                                    {'\n})'}
-                                </code>
-                            ) : (
-                                <code>
-                                    <span className="text-text-muted">$ </span>
-                                    <span className="text-text-primary">curl -X POST https://auth.yourapp.com/api/v1/auth/login/ \</span>
-                                    {'\n'}
-                                    <span className="text-text-primary">{'  -H "Content-Type: application/json" \\'}</span>
-                                    {'\n'}
-                                    <span className="text-text-primary">{"  -d '{\"email\": \"user@example.com\", \"password\": \"secure\"}}'"}</span>
-                                    {'\n\n'}
-                                    <span className="text-success">{'{'}</span>
-                                    {'\n'}
-                                    <span className="text-text-secondary">{'  "user": { "id": "...", "email": "user@example.com" }'}</span>
-                                    {'\n'}
-                                    <span className="text-success">{'}'}</span>
-                                </code>
-                            )}
+                    </div>
+
+                    <div className="rounded-3xl border border-border bg-bg-primary shadow-[0_24px_70px_rgba(0,0,0,0.2)]">
+                        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-5">
+                            <div>
+                                <p className="text-lg font-semibold text-text-primary">Developer surface</p>
+                                <p className="mt-1 text-sm text-text-secondary">Switch between control-plane setup and runtime auth.</p>
+                            </div>
+                            <div className="flex gap-2 rounded-full bg-bg-secondary p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setTab('runtime')}
+                                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${tab === 'runtime' ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}
+                                >
+                                    Runtime auth
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setTab('control')}
+                                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${tab === 'control' ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}
+                                >
+                                    Control plane
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="border-b border-border px-6 py-4 text-xs uppercase tracking-[0.26em] text-text-muted">
+                            {tab === 'runtime' ? 'runtime-auth.http' : 'control-plane.http'}
+                        </div>
+                        <pre className="overflow-x-auto px-6 py-6 text-sm leading-7 text-text-secondary">
+                            <code>{codeExamples[tab]}</code>
                         </pre>
                     </div>
                 </div>
@@ -363,109 +399,37 @@ function CodeSection() {
     );
 }
 
-// ── Pricing ──
-function Pricing() {
-    return (
-        <section id="pricing" className="py-24 bg-bg-secondary">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Pricing</p>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
-                        Simple, transparent pricing
-                    </h2>
-                    <p className="mt-4 text-lg text-text-secondary">
-                        Open source and free forever. Or let us host it for you.
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    {/* Self-hosted */}
-                    <div className="bg-bg-primary border border-border rounded-2xl p-8">
-                        <h3 className="text-lg font-bold text-text-primary">Self-hosted</h3>
-                        <p className="text-sm text-text-secondary mt-2 mb-6">Deploy on your own infrastructure</p>
-                        <div className="mb-8">
-                            <span className="text-4xl font-extrabold text-text-primary">$0</span>
-                            <span className="text-text-secondary ml-1">/forever</span>
-                        </div>
-                        <ul className="space-y-3 mb-8">
-                            {[
-                                'Unlimited users',
-                                'Full source code',
-                                'All features included',
-                                'Docker & Docker Compose',
-                                'Community support',
-                                'MIT License',
-                            ].map((item) => (
-                                <li key={item} className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <Check className="h-4 w-4 text-success shrink-0" />
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                        <Button variant="outline" className="w-full" asChild>
-                            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-                                View on GitHub
-                            </a>
-                        </Button>
-                    </div>
-
-                    {/* Cloud */}
-                    <div className="bg-bg-primary border-2 border-primary rounded-2xl p-8 relative">
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-primary text-white text-xs font-semibold rounded-full">
-                            Recommended
-                        </div>
-                        <h3 className="text-lg font-bold text-text-primary">Cloud</h3>
-                        <p className="text-sm text-text-secondary mt-2 mb-6">Fully managed by the HVT team</p>
-                        <div className="mb-8">
-                            <span className="text-4xl font-extrabold text-text-primary">$29</span>
-                            <span className="text-text-secondary ml-1">/month</span>
-                        </div>
-                        <ul className="space-y-3 mb-8">
-                            {[
-                                'Everything in Self-hosted',
-                                'Managed infrastructure',
-                                'Automatic updates',
-                                'Global CDN',
-                                'Priority support',
-                                '99.9% uptime SLA',
-                            ].map((item) => (
-                                <li key={item} className="flex items-center gap-3 text-sm text-text-secondary">
-                                    <Check className="h-4 w-4 text-success shrink-0" />
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                        <Button className="w-full" asChild>
-                            <Link to="/register">Start free trial</Link>
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ── CTA Banner ──
-function CTABanner() {
+function ClosingSection() {
     return (
         <section className="py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-gradient-to-br from-primary/20 via-bg-secondary to-bg-secondary border border-primary/20 rounded-2xl p-12 text-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(#7C3AED_0.5px,transparent_0.5px)] [background-size:16px_16px] opacity-10" />
-                    <div className="relative">
-                        <Lock className="h-10 w-10 text-primary mx-auto mb-6" />
-                        <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-4">
-                            Start building in minutes
-                        </h2>
-                        <p className="text-lg text-text-secondary max-w-xl mx-auto mb-8">
-                            Deploy HVT today and never worry about authentication plumbing again.
-                        </p>
-                        <Button size="lg" asChild className="text-base px-8">
-                            <Link to="/register">
-                                Get started free
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
+                <div className="overflow-hidden rounded-[32px] border border-primary/20 bg-[linear-gradient(135deg,rgba(124,58,237,0.18),rgba(11,17,32,0.96)_42%,rgba(11,17,32,0.96))] p-10 shadow-[0_30px_90px_rgba(0,0,0,0.28)] sm:p-14">
+                    <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
+                        <div>
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/8 text-primary">
+                                <Lock className="h-7 w-7" />
+                            </div>
+                            <h2 className="mt-8 max-w-3xl text-3xl font-extrabold tracking-tight text-text-primary sm:text-5xl">
+                                If you care about tenant boundaries, debugging evidence, and owning your auth stack, you are in the right place.
+                            </h2>
+                            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-text-secondary">
+                                HVT is for developers who want auth to be explicit, testable, and explainable when the product gets real.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
+                            <Button size="lg" asChild className="px-8 text-base font-semibold">
+                                <Link to="/register">
+                                    Start building
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                            <Button size="lg" variant="outline" asChild className="px-8 text-base font-semibold">
+                                <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+                                    Inspect the repo
+                                </a>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -473,16 +437,15 @@ function CTABanner() {
     );
 }
 
-// ── Landing Page ──
 export function LandingPage() {
     return (
         <>
             <Hero />
+            <WhyHVT />
+            <SystemModel />
             <Features />
-            <HowItWorks />
-            <CodeSection />
-            <Pricing />
-            <CTABanner />
+            <IntegrationSection />
+            <ClosingSection />
         </>
     );
 }

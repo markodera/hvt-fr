@@ -1,19 +1,35 @@
-import client from './client';
+import { hvt } from '@/lib/hvt';
 
-const BASE = '/organizations/current/keys';
-
-export function listApiKeys(params = {}) {
-    return client.get(`${BASE}/`, { params }).then((res) => res.data);
+function normalizeQueryArgs(params = {}, options = {}) {
+    if (
+        params &&
+        typeof params === 'object' &&
+        ('queryKey' in params || 'pageParam' in params || 'meta' in params)
+    ) {
+        return [{}, params.signal ? { signal: params.signal } : {}];
+    }
+    return [params, options];
 }
 
-export function createApiKey(data) {
-    return client.post(`${BASE}/`, data).then((res) => res.data);
+export function listApiKeys(params = {}, options = {}) {
+    const [query, requestOptions] = normalizeQueryArgs(params, options);
+    return hvt.organizations.listApiKeys(query, requestOptions);
 }
 
-export function updateApiKey(id, data) {
-    return client.patch(`${BASE}/${id}/`, data).then((res) => res.data);
+export function createApiKey(data, options = {}) {
+    return hvt.organizations.createApiKey(data, options);
 }
 
-export function revokeApiKey(id) {
-    return client.post(`${BASE}/${id}/revoke/`).then((res) => res.data);
+export function updateApiKey(id, data, options = {}) {
+    return hvt.organizations.getApiKey(id, options).then(() =>
+        hvt.request(`/api/v1/organizations/current/keys/${id}/`, {
+            method: 'PATCH',
+            body: data,
+            ...options,
+        })
+    );
+}
+
+export function revokeApiKey(id, options = {}) {
+    return hvt.organizations.revokeApiKey(id, options);
 }

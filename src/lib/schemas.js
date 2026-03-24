@@ -1,6 +1,17 @@
 import { z } from 'zod';
 
-// ── Auth schemas ──
+const redirectUrisTextSchema = z
+    .string()
+    .min(1, 'Add at least one redirect URI')
+    .refine((value) => {
+        const lines = value
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean);
+        return lines.length > 0 && lines.every((line) => z.string().url().safeParse(line).success);
+    }, 'Enter one valid redirect URI per line');
+
+// Auth schemas
 
 export const loginSchema = z.object({
     email: z.string().email('Enter a valid email'),
@@ -39,16 +50,22 @@ export const changePasswordSchema = z.object({
     path: ['new_password2'],
 });
 
-// ── API key schemas ──
+export const profileSchema = z.object({
+    first_name: z.string().max(100, 'First name is too long'),
+    last_name: z.string().max(100, 'Last name is too long'),
+});
+
+// API key schemas
 
 export const createKeySchema = z.object({
     name: z.string().min(1, 'Name is required').max(100),
     environment: z.enum(['test', 'live']),
+    project_id: z.string().uuid('Select a project'),
     scopes: z.array(z.string()).min(1, 'Select at least one scope'),
     expires_at: z.string().nullable().optional(),
 });
 
-// ── Webhook schemas ──
+// Webhook schemas
 
 export const createWebhookSchema = z.object({
     url: z.string().url('Enter a valid URL'),
@@ -63,7 +80,7 @@ export const updateWebhookSchema = z.object({
     is_active: z.boolean().optional(),
 });
 
-// ── Organisation schemas ──
+// Organisation schemas
 
 export const orgSettingsSchema = z.object({
     name: z.string().min(1, 'Organisation name is required').max(100),
@@ -74,7 +91,46 @@ export const orgSettingsSchema = z.object({
     allow_signup: z.boolean(),
 });
 
-// ── User role schema ──
+export const createOrgSchema = z.object({
+    name: z.string().min(1, 'Organisation name is required').max(100),
+    slug: z.string().min(1, 'Slug is required').max(50).regex(
+        /^[a-z0-9-]+$/,
+        'Slug must contain only lowercase letters, numbers, and hyphens'
+    ),
+    allow_signup: z.boolean(),
+});
+
+export const createProjectSchema = z.object({
+    name: z.string().min(1, 'Project name is required').max(100),
+    slug: z.string().min(1, 'Slug is required').max(50).regex(
+        /^[a-z0-9-]+$/,
+        'Slug must contain only lowercase letters, numbers, and hyphens'
+    ),
+    allow_signup: z.boolean(),
+});
+
+export const socialProviderCreateSchema = z.object({
+    provider: z.enum(['google', 'github']),
+    client_id: z.string().min(1, 'Client ID is required').max(255),
+    client_secret: z.string().min(1, 'Client secret is required').max(255),
+    redirect_uris_text: redirectUrisTextSchema,
+    is_active: z.boolean(),
+});
+
+export const socialProviderUpdateSchema = z.object({
+    client_id: z.string().min(1, 'Client ID is required').max(255),
+    client_secret: z.string().max(255).optional(),
+    redirect_uris_text: redirectUrisTextSchema,
+    is_active: z.boolean(),
+});
+
+
+export const organizationInvitationCreateSchema = z.object({
+    email: z.string().email('Enter a valid email'),
+    role: z.enum(['admin', 'member']),
+});
+
+// User role schema
 
 export const updateRoleSchema = z.object({
     role: z.enum(['owner', 'admin', 'member']),

@@ -1,11 +1,21 @@
-import client from './client';
+import { hvt } from '@/lib/hvt';
 
-const BASE = '/organizations/current/audit-logs';
-
-export function listAuditLogs(params = {}) {
-    return client.get(`${BASE}/`, { params }).then((res) => res.data);
+function normalizeQueryArgs(params = {}, options = {}) {
+    if (
+        params &&
+        typeof params === 'object' &&
+        ('queryKey' in params || 'pageParam' in params || 'meta' in params)
+    ) {
+        return [{}, params.signal ? { signal: params.signal } : {}];
+    }
+    return [params, options];
 }
 
-export function getAuditLog(id) {
-    return client.get(`${BASE}/${id}/`).then((res) => res.data);
+export function listAuditLogs(params = {}, options = {}) {
+    const [query, requestOptions] = normalizeQueryArgs(params, options);
+    return hvt.organizations.listAuditLogs(query, requestOptions);
+}
+
+export function getAuditLog(id, options = {}) {
+    return hvt.organizations.getAuditLog(id, options);
 }

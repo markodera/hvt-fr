@@ -1,69 +1,78 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
 import { verifyEmail } from '@/api/auth';
-import { Button } from '@/components/ui/button';
+import { AuthCard, AuthPageShell } from '@/components/auth/AuthShell';
+import { Logo } from '@/components/Logo';
+import { clearPendingVerificationEmail, getPendingVerificationEmail } from '@/lib/emailVerification';
 import { getErrorMessage } from '@/lib/utils';
 
 export function VerifyEmailPage() {
+    const navigate = useNavigate();
     const { key } = useParams();
-    const [status, setStatus] = useState('loading'); // loading | success | error
-    const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        if (!key) {
-            setStatus('error');
-            setErrorMsg('No verification key found in the URL.');
-            return;
+        document.title = 'Verifying email | HVT';
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function finishVerification() {
+            if (!key) {
+                navigate('/verify-email/expired', {
+                    replace: true,
+                    state: {
+                        email: getPendingVerificationEmail(),
+                        message: 'No verification key was provided.',
+                    },
+                });
+                return;
+            }
+
+            try {
+                await verifyEmail(key);
+                clearPendingVerificationEmail();
+                if (!cancelled) {
+                    navigate('/verify-email/success', { replace: true });
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    navigate('/verify-email/expired', {
+                        replace: true,
+                        state: {
+                            email: getPendingVerificationEmail(),
+                            message: getErrorMessage(error),
+                        },
+                    });
+                }
+            }
         }
 
-        verifyEmail(key)
-            .then(() => setStatus('success'))
-            .catch((err) => {
-                setStatus('error');
-                setErrorMsg(getErrorMessage(err));
-            });
-    }, [key]);
+        finishVerification();
 
-    if (status === 'loading') {
-        return (
-            <div className="text-center py-8">
-                <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-text-primary">Verifying your email…</h2>
-                <p className="text-sm text-text-secondary mt-1">Please wait a moment.</p>
-            </div>
-        );
-    }
-
-    if (status === 'success') {
-        return (
-            <div className="text-center py-8">
-                <div className="mb-4 inline-flex rounded-full bg-success-muted p-4">
-                    <CheckCircle className="h-10 w-10 text-success" />
-                </div>
-                <h2 className="text-xl font-bold text-text-primary">Email verified!</h2>
-                <p className="text-sm text-text-secondary mt-1 mb-6">
-                    Your email has been confirmed. You can now sign in.
-                </p>
-                <Button asChild>
-                    <Link to="/login">Sign in</Link>
-                </Button>
-            </div>
-        );
-    }
+        return () => {
+            cancelled = true;
+        };
+    }, [key, navigate]);
 
     return (
-        <div className="text-center py-8">
-            <div className="mb-4 inline-flex rounded-full bg-danger-muted p-4">
-                <XCircle className="h-10 w-10 text-danger" />
-            </div>
-            <h2 className="text-xl font-bold text-text-primary">Verification failed</h2>
-            <p className="text-sm text-text-secondary mt-1 mb-6">
-                {errorMsg || 'This verification link may have expired or already been used.'}
-            </p>
-            <Button variant="outline" asChild>
-                <Link to="/login">Back to sign in</Link>
-            </Button>
-        </div>
+        <AuthPageShell>
+            <AuthCard>
+                <div className="space-y-6 text-center">
+                    <Logo align="center" className="mx-auto" />
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-[#a78bfa]">
+                        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#7c3aed]" />
+                    </div>
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Verifying your email</h1>
+                        <p className="text-sm leading-6 text-[#a1a1aa]">
+                            We&apos;re validating your verification link now.
+                        </p>
+                    </div>
+                </div>
+            </AuthCard>
+        </AuthPageShell>
     );
 }
+

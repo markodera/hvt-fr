@@ -1,136 +1,296 @@
-import { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { keepPreviousData } from '@tanstack/react-query';
-import { Search, Users as UsersIcon } from 'lucide-react';
-import { listUsers } from '@/api/users';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Pagination } from '@/components/Pagination';
-import { SkeletonRow } from '@/components/SkeletonRow';
-import { EmptyState } from '@/components/EmptyState';
-import { StatusBadge } from '@/components/StatusBadge';
-import { formatDate } from '@/lib/utils';
-import { ROLE_LABELS } from '@/lib/constants';
+import { useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MoreHorizontal, Search, UserPlus, Users as UsersIcon } from 'lucide-react';
 
-export function UsersPage() {
+import { listUsers, updateUserRole } from '@/api/users';
+import { useAuth } from '@/hooks/useAuth';
+import { formatDate, getErrorMessage } from '@/lib/utils';
+import { OrganizationInvitationsSection } from '@/pages/users/OrganizationInvitationsSection';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+
+function TableCard({ children }) {
+    return (
+        <section className="overflow-hidden rounded-2xl border border-[#27272a] bg-[#18181b]">
+            {children}
+        </section>
+    );
+}
+
+function SkeletonRow() {
+    return (
+        <tr className="border-b border-[#27272a] last:border-b-0">
+            {Array.from({ length: 6 }).map((_, index) => (
+                <td key={index} className="px-4 py-3">
+                    <div className="h-5 animate-pulse rounded bg-[#1c1c1f]" />
+                </td>
+            ))}
+        </tr>
+    );
+}
+
+function EmptyState({ message }) {
+    return (
+        <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#27272a] bg-[#111111] text-[#71717a]">
+                <UsersIcon className="h-6 w-6" />
+            </div>
+            <p className="max-w-md text-sm leading-6 text-[#71717a]">{message}</p>
+        </div>
+    );
+}
+
+function roleBadge(role) {
+    if (role === 'owner') {
+        return 'border border-[#7c3aed]/40 bg-[#7c3aed]/15 text-[#c4b5fd]';
+    }
+    if (role === 'admin') {
+        return 'border border-[#8b5cf6]/30 bg-[#8b5cf6]/10 text-[#c4b5fd]';
+    }
+    return 'border border-[#3f3f46] bg-[#111111] text-[#a1a1aa]';
+}
+
+function initialsForUser(user) {
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+    if (fullName) {
+        return fullName
+            .split(/\s+/)
+            .slice(0, 2)
+            .map((part) => part[0]?.toUpperCase())
+            .join('');
+    }
+    return (user.email || 'HV').slice(0, 2).toUpperCase();
+}
+
+function displayName(user) {
+    return user.full_name?.trim() || user.email;
+}
+
+function Pagination({ count, page, onPageChange, pageSize = 10 }) {
+    const totalPages = Math.max(1, Math.ceil((count || 0) / pageSize));
+    return (
+        <div className="flex flex-col gap-3 border-t border-[#27272a] px-4 py-4 text-sm text-[#71717a] sm:flex-row sm:items-center sm:justify-between">
+            <p>
+                Page {page} of {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => onPageChange(page - 1)}
+                    disabled={page <= 1}
+                    className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] px-3 text-white transition-colors hover:bg-[#111111] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    Previous
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onPageChange(page + 1)}
+                    disabled={page >= totalPages}
+                    className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] px-3 text-white transition-colors hover:bg-[#111111] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    Next
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default function UsersPage() {
+    const queryClient = useQueryClient();
+    const { user: currentUser } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
-    const page = Number(searchParams.get('page')) || 1;
+    const page = Number(searchParams.get('page') || 1);
     const search = searchParams.get('search') || '';
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['users', { page, search }],
-        queryFn: () => listUsers({ page, search, page_size: 10 }),
-        placeholderData: keepPreviousData,
+        queryFn: () => listUsers({ page, page_size: 10, search }),
     });
 
-    const setPage = (newPage) => {
-        setSearchParams((prev) => {
-            prev.set('page', newPage);
-            return prev;
-        });
-    };
+    const roleMutation = useMutation({
+        mutationFn: ({ id, role }) => updateUserRole(id, { role }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            toast.success('User role updated');
+        },
+        onError: (error) => {
+            toast.error(getErrorMessage(error));
+        },
+    });
 
-    const setSearch = (value) => {
-        setSearchParams((prev) => {
-            if (value) {
-                prev.set('search', value);
+    const users = useMemo(() => data?.results ?? [], [data]);
+
+    function updateParams(next) {
+        const params = new URLSearchParams(searchParams);
+        Object.entries(next).forEach(([key, value]) => {
+            if (value === '' || value === null || value === undefined) {
+                params.delete(key);
             } else {
-                prev.delete('search');
+                params.set(key, String(value));
             }
-            prev.set('page', '1');
-            return prev;
         });
-    };
+        setSearchParams(params);
+    }
+
+    function handleSearchChange(value) {
+        updateParams({ search: value || null, page: 1 });
+    }
+
+    function handlePageChange(nextPage) {
+        updateParams({ page: nextPage });
+    }
+
+    function scrollToInvites() {
+        document.getElementById('organization-invitations')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
     return (
         <div className="space-y-6">
-            {/* Search */}
-            <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                <Input
-                    placeholder="Search users..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                />
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative w-full max-w-md">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717a]" />
+                    <Input
+                        value={search}
+                        onChange={(event) => handleSearchChange(event.target.value)}
+                        placeholder="Search users by name or email"
+                        className="h-10 border-[#27272a] bg-[#18181b] pl-10 text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                    />
+                </div>
+                {currentUser?.role === 'owner' ? (
+                    <button
+                        type="button"
+                        onClick={scrollToInvites}
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9]"
+                    >
+                        <UserPlus className="h-4 w-4" />
+                        Invite user
+                    </button>
+                ) : null}
             </div>
 
-            {/* Table */}
-            <div className="bg-bg-secondary border border-border rounded-xl overflow-hidden">
+            <TableCard>
                 <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-bg-tertiary">
-                            <tr>
-                                <th className="text-xs uppercase tracking-wider text-text-secondary font-semibold px-4 py-3 text-left">User</th>
-                                <th className="text-xs uppercase tracking-wider text-text-secondary font-semibold px-4 py-3 text-left">Role</th>
-                                <th className="text-xs uppercase tracking-wider text-text-secondary font-semibold px-4 py-3 text-left">Status</th>
-                                <th className="text-xs uppercase tracking-wider text-text-secondary font-semibold px-4 py-3 text-left">Joined</th>
+                    <table className="min-w-[880px] w-full">
+                        <thead>
+                            <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
+                                <th className="px-4 py-3 font-medium">Name</th>
+                                <th className="px-4 py-3 font-medium">Email</th>
+                                <th className="px-4 py-3 font-medium">Role</th>
+                                <th className="px-4 py-3 font-medium">Project</th>
+                                <th className="px-4 py-3 font-medium">Joined</th>
+                                <th className="px-4 py-3 font-medium text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {isLoading && Array.from({ length: 5 }).map((_, i) => (
-                                <SkeletonRow key={i} columns={4} />
-                            ))}
-                            {isError && (
+                            {isLoading ? Array.from({ length: 6 }).map((_, index) => <SkeletonRow key={index} />) : null}
+                            {!isLoading && isError ? (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-8 text-center text-sm text-text-secondary">
-                                        Failed to load users.
+                                    <td colSpan={6} className="px-4 py-12">
+                                        <EmptyState message="Users could not be loaded right now." />
                                     </td>
                                 </tr>
-                            )}
-                            {data?.results?.length === 0 && (
+                            ) : null}
+                            {!isLoading && !isError && users.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4}>
+                                    <td colSpan={6} className="px-4 py-12">
                                         <EmptyState
-                                            icon={UsersIcon}
-                                            title="No users found"
-                                            description={search ? 'Try a different search term.' : 'Users will appear here once they register.'}
+                                            message={
+                                                search
+                                                    ? 'No users match this search yet.'
+                                                    : 'No users yet. Invited teammates and runtime signups will appear here.'
+                                            }
                                         />
                                     </td>
                                 </tr>
-                            )}
-                            {data?.results?.map((user) => (
-                                <tr key={user.id} className="border-b border-border hover:bg-bg-tertiary/50 transition-colors">
-                                    <td className="px-4 py-3">
-                                        <Link to={`/dashboard/users/${user.id}`} className="flex items-center gap-3 group">
-                                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-                                                {user.first_name?.[0]}{user.last_name?.[0]}
+                            ) : null}
+                            {!isLoading &&
+                                !isError &&
+                                users.map((user) => (
+                                    <tr key={user.id} className="border-b border-[#27272a] last:border-b-0">
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                                    {initialsForUser(user)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium text-white">
+                                                        {displayName(user)}
+                                                    </p>
+                                                    <p className="truncate text-xs text-[#71717a]">
+                                                        {user.is_active ? 'Active user' : 'Inactive'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-text-primary group-hover:text-primary transition-colors">
-                                                    {user.full_name || user.email}
-                                                </p>
-                                                <p className="text-xs text-text-muted">{user.email}</p>
-                                            </div>
-                                        </Link>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Badge variant={user.role === 'owner' ? 'default' : 'secondary'}>
-                                            {ROLE_LABELS[user.role] || user.role}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <StatusBadge status={user.is_active ? 'active' : 'inactive'} />
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-text-muted">
-                                        {formatDate(user.created_at, { hour: undefined, minute: undefined })}
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-[#a1a1aa]">{user.email}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${roleBadge(user.role)}`}>
+                                                {user.role_display || user.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {user.project_slug ? (
+                                                <span className="rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]">
+                                                    {user.project_slug}
+                                                </span>
+                                            ) : (
+                                                <span className="text-sm text-[#71717a]">Org-wide</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 font-mono text-xs text-[#71717a]">
+                                            {formatDate(user.created_at, { hour: undefined, minute: undefined })}
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-9 w-9 border-[#27272a] bg-[#111111] text-white hover:bg-[#18181b]"
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent className="border-[#27272a] bg-[#18181b]">
+                                                    <DropdownMenuItem asChild>
+                                                        <Link to={`/dashboard/users/${user.id}`}>View details</Link>
+                                                    </DropdownMenuItem>
+                                                    {currentUser?.role === 'owner' && currentUser?.id !== user.id && user.role !== 'owner' ? (
+                                                        <>
+                                                            {user.role !== 'admin' ? (
+                                                                <DropdownMenuItem onClick={() => roleMutation.mutate({ id: user.id, role: 'admin' })}>
+                                                                    Make admin
+                                                                </DropdownMenuItem>
+                                                            ) : null}
+                                                            {user.role !== 'member' ? (
+                                                                <DropdownMenuItem onClick={() => roleMutation.mutate({ id: user.id, role: 'member' })}>
+                                                                    Make member
+                                                                </DropdownMenuItem>
+                                                            ) : null}
+                                                        </>
+                                                    ) : null}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>
 
-                {data && (
-                    <Pagination
-                        count={data.count}
-                        page={page}
-                        pageSize={10}
-                        onPageChange={setPage}
-                    />
-                )}
-            </div>
+                {data?.count ? (
+                    <Pagination count={data.count} page={page} onPageChange={handlePageChange} />
+                ) : null}
+            </TableCard>
+
+            {currentUser?.role === 'owner' ? (
+                <div id="organization-invitations" className="scroll-mt-24">
+                    <OrganizationInvitationsSection />
+                </div>
+            ) : null}
         </div>
     );
 }

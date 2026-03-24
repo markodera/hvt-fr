@@ -28,17 +28,18 @@ export const ROLE_OPTIONS = [
     { value: 'member', label: 'Member' },
 ];
 
-/** API key scopes */
+/** Canonical API key scopes */
 export const SCOPES = [
-    { value: 'read:users', label: 'Read Users' },
-    { value: 'write:users', label: 'Write Users' },
-    { value: 'read:keys', label: 'Read API Keys' },
-    { value: 'write:keys', label: 'Write API Keys' },
-    { value: 'read:webhooks', label: 'Read Webhooks' },
-    { value: 'write:webhooks', label: 'Write Webhooks' },
-    { value: 'read:audit', label: 'Read Audit Logs' },
-    { value: 'read:org', label: 'Read Organisation' },
-    { value: 'write:org', label: 'Write Organisation' },
+    {
+        value: 'auth:runtime',
+        label: 'Runtime auth',
+        helper: 'Required for runtime login and social auth',
+    },
+    { value: 'organization:read', label: 'Read organisation' },
+    { value: 'users:read', label: 'Read users' },
+    { value: 'api_keys:read', label: 'Read API keys' },
+    { value: 'webhooks:read', label: 'Read webhooks' },
+    { value: 'audit_logs:read', label: 'Read audit logs' },
 ];
 
 /** API key environments */

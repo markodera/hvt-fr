@@ -1,27 +1,38 @@
-import client from './client';
+import { hvt } from '@/lib/hvt';
 
-const BASE = '/organizations/current/webhooks';
-
-export function listWebhooks(params = {}) {
-    return client.get(`${BASE}/`, { params }).then((res) => res.data);
+function normalizeQueryArgs(params = {}, options = {}) {
+    if (
+        params &&
+        typeof params === 'object' &&
+        ('queryKey' in params || 'pageParam' in params || 'meta' in params)
+    ) {
+        return [{}, params.signal ? { signal: params.signal } : {}];
+    }
+    return [params, options];
 }
 
-export function createWebhook(data) {
-    return client.post(`${BASE}/`, data).then((res) => res.data);
+export function listWebhooks(params = {}, options = {}) {
+    const [query, requestOptions] = normalizeQueryArgs(params, options);
+    return hvt.organizations.listWebhooks(query, requestOptions);
 }
 
-export function getWebhook(id) {
-    return client.get(`${BASE}/${id}/`).then((res) => res.data);
+export function createWebhook(data, options = {}) {
+    return hvt.organizations.createWebhook(data, options);
 }
 
-export function updateWebhook(id, data) {
-    return client.patch(`${BASE}/${id}/`, data).then((res) => res.data);
+export function getWebhook(id, options = {}) {
+    return hvt.organizations.getWebhook(id, options);
 }
 
-export function deleteWebhook(id) {
-    return client.delete(`${BASE}/${id}/`).then((res) => res.data);
+export function updateWebhook(id, data, options = {}) {
+    return hvt.organizations.updateWebhook(id, data, options);
 }
 
-export function getWebhookDeliveries(id, params = {}) {
-    return client.get(`${BASE}/${id}/deliveries/`, { params }).then((res) => res.data);
+export function deleteWebhook(id, options = {}) {
+    return hvt.organizations.deleteWebhook(id, options);
+}
+
+export function getWebhookDeliveries(id, params = {}, options = {}) {
+    const [query, requestOptions] = normalizeQueryArgs(params, options);
+    return hvt.organizations.listWebhookDeliveries(id, query, requestOptions);
 }

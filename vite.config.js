@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'hvt-sdk': '@hvt/sdk',
     },
   },
   server: {
@@ -15,7 +16,6 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
-        // Rewrite cookies from 127.0.0.1 to localhost so the browser doesn't drop them
         cookieDomainRewrite: 'localhost',
       },
     },
