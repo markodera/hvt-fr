@@ -1,3 +1,4 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -5,14 +6,7 @@ import { AlertTriangle, Building2, Mail, ShieldCheck, Users } from 'lucide-react
 import { toast } from 'sonner';
 
 import { acceptOrganizationInvitation, lookupOrganizationInvitation } from '@/api/organizations';
-import {
-    AuthCard,
-    AuthPageShell,
-    AUTH_GHOST_BUTTON_CLASS,
-    AUTH_PRIMARY_BUTTON_CLASS,
-    AUTH_TEXT_LINK_CLASS,
-    ButtonSpinner,
-} from '@/components/auth/AuthShell';
+import { AuthCard, AUTH_GHOST_BUTTON_CLASS, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -79,7 +73,7 @@ export function InvitationAcceptPage() {
 
     if (!token) {
         return (
-            <AuthPageShell>
+            <AuthLayout>
                 <AuthCard>
                     <div className="space-y-6 text-center">
                         <Logo align="center" className="mx-auto" />
@@ -97,13 +91,13 @@ export function InvitationAcceptPage() {
                         </Link>
                     </div>
                 </AuthCard>
-            </AuthPageShell>
+            </AuthLayout>
         );
     }
 
     if (authLoading || invitationQuery.isLoading) {
         return (
-            <AuthPageShell>
+            <AuthLayout>
                 <AuthCard>
                     <div className="space-y-6 text-center">
                         <Logo align="center" className="mx-auto" />
@@ -118,13 +112,13 @@ export function InvitationAcceptPage() {
                         </div>
                     </div>
                 </AuthCard>
-            </AuthPageShell>
+            </AuthLayout>
         );
     }
 
     if (invitationQuery.isError || !invitationQuery.data) {
         return (
-            <AuthPageShell>
+            <AuthLayout>
                 <AuthCard>
                     <div className="space-y-6 text-center">
                         <Logo align="center" className="mx-auto" />
@@ -140,7 +134,7 @@ export function InvitationAcceptPage() {
                         </Link>
                     </div>
                 </AuthCard>
-            </AuthPageShell>
+            </AuthLayout>
         );
     }
 
@@ -154,7 +148,7 @@ export function InvitationAcceptPage() {
     const statusMessage = statusCopy(invitation.status);
 
     return (
-        <AuthPageShell>
+        <AuthLayout>
             <AuthCard>
                 <div className="space-y-6">
                     <div className="space-y-4 text-center">
@@ -266,6 +260,6 @@ export function InvitationAcceptPage() {
                     </div>
                 </div>
             </AuthCard>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }

@@ -1,10 +1,11 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { resendVerificationEmail } from '@/api/auth';
-import { AuthCard, AuthPageShell, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
+import { AuthCard, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { getPendingVerificationEmail } from '@/lib/emailVerification';
 import { getErrorMessage } from '@/lib/utils';
@@ -44,7 +45,7 @@ export function VerifyEmailExpiredPage() {
     };
 
     return (
-        <AuthPageShell>
+        <AuthLayout>
             <AuthCard>
                 <div className="space-y-6 text-center">
                     <Logo align="center" className="mx-auto" />
@@ -70,6 +71,6 @@ export function VerifyEmailExpiredPage() {
                     </Link>
                 </div>
             </AuthCard>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }

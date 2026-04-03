@@ -1,3 +1,4 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -7,21 +8,17 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 
 import { confirmPasswordReset, validatePasswordResetToken } from '@/api/auth';
-import {
-    AuthCard,
-    AuthFieldError,
-    AuthPageShell,
-    AUTH_INPUT_CLASS,
-    AUTH_PRIMARY_BUTTON_CLASS,
-    AUTH_TEXT_LINK_CLASS,
-    ButtonSpinner,
-} from '@/components/auth/AuthShell';
+import { AuthCard, AuthFieldError, AUTH_INPUT_CLASS, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { getErrorMessage } from '@/lib/utils';
 
 const resetPasswordSchema = z
     .object({
-        new_password1: z.string().min(8, 'Password must be at least 8 characters'),
+        new_password1: z
+            .string()
+            .min(8, 'Password must be at least 8 characters')
+            .refine((value) => /[A-Z]/.test(value), 'Include at least one uppercase letter')
+            .refine((value) => /\d/.test(value), 'Include at least one number'),
         new_password2: z.string().min(1, 'Confirm your new password'),
     })
     .refine((data) => data.new_password1 === data.new_password2, {
@@ -138,11 +135,8 @@ export function ResetPasswordPage() {
     });
 
     const password = watch('new_password1') || '';
-    const confirmPassword = watch('new_password2') || '';
     const checks = useMemo(() => buildPasswordChecks(password), [password]);
     const strength = useMemo(() => getStrengthVisuals(password), [password]);
-    const passwordsMatch = password && confirmPassword && password === confirmPassword;
-    const isAcceptableStrength = checks.length && checks.uppercase && checks.number;
 
     useEffect(() => {
         document.title = 'Set new password | HVT';
@@ -209,7 +203,7 @@ export function ResetPasswordPage() {
 
     if (status === 'loading') {
         return (
-            <AuthPageShell>
+            <AuthLayout>
                 <AuthCard>
                     <div className="space-y-6 text-center">
                         <Logo align="center" className="mx-auto" />
@@ -224,20 +218,20 @@ export function ResetPasswordPage() {
                         </div>
                     </div>
                 </AuthCard>
-            </AuthPageShell>
+            </AuthLayout>
         );
     }
 
     if (status === 'expired') {
         return (
-            <AuthPageShell>
+            <AuthLayout>
                 <ExpiredResetState message={expiredMessage} />
-            </AuthPageShell>
+            </AuthLayout>
         );
     }
 
     return (
-        <AuthPageShell>
+        <AuthLayout>
             <AuthCard>
                 <div className="space-y-6">
                     <div className="space-y-4 text-center">
@@ -326,7 +320,7 @@ export function ResetPasswordPage() {
 
                         <button
                             type="submit"
-                            disabled={isSubmitting || !passwordsMatch || !isAcceptableStrength}
+                            disabled={isSubmitting}
                             className={AUTH_PRIMARY_BUTTON_CLASS}
                         >
                             {isSubmitting ? (
@@ -347,7 +341,6 @@ export function ResetPasswordPage() {
                     </div>
                 </div>
             </AuthCard>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }
-

@@ -2,6 +2,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/Logo';
 
 function NavLink({ to, children, onClick }) {
     return (
@@ -22,15 +23,7 @@ function LandingNav() {
         <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg-primary/80 backdrop-blur-xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
-                    <Link to="/" className="flex items-center gap-3 group">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple-500 shadow-lg shadow-primary/20 transition-shadow group-hover:shadow-primary/40">
-                            <span className="text-sm font-extrabold text-white">H</span>
-                        </div>
-                        <div>
-                            <p className="text-base font-extrabold tracking-tight text-text-primary">HVT.dev</p>
-                            <p className="text-[11px] uppercase tracking-[0.24em] text-text-muted">Auth infrastructure</p>
-                        </div>
-                    </Link>
+                    <Logo href="/" />
 
                     <div className="hidden md:flex items-center gap-8 rounded-full border border-border bg-bg-secondary/60 px-6 py-2">
                         <NavLink to="/#why-hvt">Why HVT</NavLink>
@@ -93,13 +86,8 @@ function LandingFooter() {
                 <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr]">
                     <div>
                         <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
-                                <span className="text-sm font-extrabold">H</span>
-                            </div>
-                            <div>
-                                <p className="text-lg font-extrabold text-text-primary">HVT.dev</p>
-                                <p className="text-sm text-text-secondary">Open-source auth infrastructure for modern product teams.</p>
-                            </div>
+                            <Logo href="/" />
+                            <p className="text-sm text-text-secondary">Open-source auth infrastructure for modern product teams.</p>
                         </div>
                     </div>
 
@@ -123,7 +111,7 @@ function LandingFooter() {
                 </div>
 
                 <div className="mt-10 border-t border-border pt-8 text-center">
-                    <p className="text-sm text-text-muted">Copyright {new Date().getFullYear()} HVT. Open source under the MIT License.</p>
+                    <p className="text-sm text-text-muted">Copyright {new Date().getFullYear()} HVT. AGPL v3 licensed.</p>
                 </div>
             </div>
         </footer>

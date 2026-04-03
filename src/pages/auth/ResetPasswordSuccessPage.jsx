@@ -1,12 +1,13 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
-import { AuthCard, AuthPageShell, AUTH_PRIMARY_BUTTON_CLASS } from '@/components/auth/AuthShell';
+import { AuthCard, AUTH_PRIMARY_BUTTON_CLASS } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 
 export function ResetPasswordSuccessPage() {
     return (
-        <AuthPageShell>
+        <AuthLayout>
             <AuthCard>
                 <div className="space-y-6 text-center">
                     <Logo align="center" className="mx-auto" />
@@ -24,6 +25,6 @@ export function ResetPasswordSuccessPage() {
                     </Link>
                 </div>
             </AuthCard>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }

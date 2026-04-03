@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router-dom';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { AuthLayout } from '@/layouts/AuthLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 
 import Landing from '@/pages/landing/Landing';
@@ -33,16 +32,12 @@ const router = createBrowserRouter([
     { path: '/login', element: <Login /> },
     { path: '/signup', element: <Signup /> },
     { path: '/register', element: <Navigate to="/signup" replace /> },
-    {
-        element: <AuthLayout />,
-        children: [
-            { path: '/auth/verify-email-notice', element: <VerifyEmailNoticePage /> },
-            { path: '/forgot-password', element: <ForgotPasswordPage /> },
-            { path: '/auth/password-reset/:key', element: <ResetPasswordPage /> },
-            { path: '/invite', element: <InvitePage /> },
-            { path: '/invite/accept', element: <InviteAcceptRedirect /> },
-        ],
-    },
+    { path: '/auth/verify-email-notice', element: <VerifyEmailNoticePage /> },
+    { path: '/forgot-password', element: <ForgotPasswordPage /> },
+    { path: '/auth/password-reset/:uid/:token', element: <ResetPasswordPage /> },
+    { path: '/auth/password-reset/:key', element: <ResetPasswordPage /> },
+    { path: '/invite', element: <InvitePage /> },
+    { path: '/invite/accept', element: <InviteAcceptRedirect /> },
     { path: '/auth/verify-email/:key', element: <VerifyEmailPage /> },
     { path: '/auth/google/callback', element: <GoogleCallbackPage /> },
     { path: '/auth/github/callback', element: <GitHubCallbackPage /> },

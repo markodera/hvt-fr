@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { Logo } from '@/components/Logo';
 import { formatDate, getErrorMessage } from '@/lib/utils';
 
 function statusVariant(status) {
@@ -51,15 +52,7 @@ function InviteBackground() {
 }
 
 function Wordmark() {
-    return (
-        <Link to="/" className="inline-flex items-center gap-3">
-            <div className="h-9 w-9 rounded-md bg-[#7c3aed]" />
-            <div>
-                <div className="text-sm font-semibold tracking-[0.22em] text-[#a78bfa]">HVT</div>
-                <div className="text-[11px] uppercase tracking-[0.18em] text-[#71717a]">hvts.app</div>
-            </div>
-        </Link>
-    );
+    return <Logo href="/" align="center" className="mx-auto" />;
 }
 
 export function InvitePage() {

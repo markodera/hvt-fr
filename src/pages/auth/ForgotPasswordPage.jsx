@@ -1,3 +1,4 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -7,16 +8,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 
 import { requestPasswordReset } from '@/api/auth';
-import {
-    AuthCard,
-    AuthCardHeader,
-    AuthFieldError,
-    AuthPageShell,
-    AUTH_INPUT_CLASS,
-    AUTH_PRIMARY_BUTTON_CLASS,
-    AUTH_TEXT_LINK_CLASS,
-    ButtonSpinner,
-} from '@/components/auth/AuthShell';
+import { AuthCard, AuthCardHeader, AuthFieldError, AUTH_INPUT_CLASS, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { getErrorMessage } from '@/lib/utils';
 
 const forgotPasswordSchema = z.object({
@@ -50,7 +42,7 @@ export function ForgotPasswordPage() {
     };
 
     return (
-        <AuthPageShell>
+        <AuthLayout>
             <AuthCard>
                 <AuthCardHeader
                     title="Reset your password"
@@ -101,7 +93,7 @@ export function ForgotPasswordPage() {
                     </Link>
                 </div>
             </AuthCard>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }
 

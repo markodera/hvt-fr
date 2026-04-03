@@ -8,6 +8,7 @@ import { Eye, EyeOff, Github } from 'lucide-react';
 import { z } from 'zod';
 
 import { listSocialProviders } from '@/api/auth';
+import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { SOCIAL_AUTH_PROVIDERS, startSocialSignIn } from '@/lib/socialAuth';
 import {
@@ -72,18 +73,7 @@ function AuthBackground() {
 }
 
 function Wordmark({ centered = false }) {
-  return (
-    <Link
-      to="/"
-      className={`inline-flex items-center gap-3 ${centered ? 'justify-center' : ''}`}
-    >
-      <div className="h-9 w-9 rounded-md bg-[#7c3aed]" />
-      <div className={centered ? 'text-left' : ''}>
-        <div className="text-sm font-semibold tracking-[0.22em] text-[#a78bfa]">HVT</div>
-        <div className="text-[11px] uppercase tracking-[0.18em] text-[#71717a]">hvts.app</div>
-      </div>
-    </Link>
-  );
+  return <Logo href="/" align={centered ? 'center' : 'left'} className={centered ? 'mx-auto' : ''} />;
 }
 
 export default function Login() {

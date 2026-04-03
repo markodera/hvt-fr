@@ -1,8 +1,9 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { verifyEmail } from '@/api/auth';
-import { AuthCard, AuthPageShell } from '@/components/auth/AuthShell';
+import { AuthCard } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { clearPendingVerificationEmail, getPendingVerificationEmail } from '@/lib/emailVerification';
 import { getErrorMessage } from '@/lib/utils';
@@ -57,7 +58,7 @@ export function VerifyEmailPage() {
     }, [key, navigate]);
 
     return (
-        <AuthPageShell>
+        <AuthLayout>
             <AuthCard>
                 <div className="space-y-6 text-center">
                     <Logo align="center" className="mx-auto" />
@@ -72,7 +73,7 @@ export function VerifyEmailPage() {
                     </div>
                 </div>
             </AuthCard>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }
 

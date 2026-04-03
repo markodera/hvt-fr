@@ -1,16 +1,11 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Mail } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { resendVerificationEmail } from '@/api/auth';
-import {
-    AuthCard,
-    AuthPageShell,
-    AUTH_PRIMARY_BUTTON_CLASS,
-    AUTH_TEXT_LINK_CLASS,
-    ButtonSpinner,
-} from '@/components/auth/AuthShell';
+import { AuthCard, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { getPendingVerificationEmail, setPendingVerificationEmail } from '@/lib/emailVerification';
 import { buildInvitationAuthPath, getPendingInvitationToken } from '@/lib/invitations';
@@ -75,7 +70,7 @@ export function VerifyEmailNoticePage() {
     };
 
     return (
-        <AuthPageShell>
+        <AuthLayout>
             <AuthCard>
                 <div className="space-y-6 text-center">
                     <Logo align="center" className="mx-auto" />
@@ -121,6 +116,6 @@ export function VerifyEmailNoticePage() {
                     <p className="text-xs leading-6 text-[#71717a]">Check your spam folder if you don&apos;t see it.</p>
                 </div>
             </AuthCard>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }

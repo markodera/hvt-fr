@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS } from '@/lib/constants';
+import { Logo } from '@/components/Logo';
 
 const iconMap = {
     LayoutDashboard,
@@ -34,12 +35,7 @@ export function Sidebar() {
         <aside className="fixed left-0 top-0 bottom-0 w-[240px] bg-sidebar border-r border-border flex flex-col z-40">
             {/* Logo */}
             <div className="h-16 flex items-center px-6 border-b border-border/50">
-                <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                        <span className="text-white font-extrabold text-sm">H</span>
-                    </div>
-                    <span className="text-lg font-extrabold text-white">HVT.dev</span>
-                </div>
+                <Logo href="/" />
             </div>
 
             {/* Navigation */}

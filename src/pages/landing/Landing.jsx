@@ -5,7 +5,6 @@ import {
   BookOpen,
   Boxes,
   Building2,
-  Check,
   ExternalLink,
   GitBranchPlus,
   Github,
@@ -18,6 +17,8 @@ import {
   Webhook,
   X,
 } from 'lucide-react';
+
+import { HvtLogoMark, Logo } from '@/components/Logo';
 
 const SITE_URL = 'https://hvts.app';
 const GITHUB_URL = 'https://github.com/markodera/hvt';
@@ -131,85 +132,6 @@ const features = [
   },
 ];
 
-const pricingTiers = [
-  {
-    name: 'Free',
-    price: '$0',
-    period: '/mo',
-    description: 'For developers learning, experimenting, or building side projects.',
-    bullets: [
-      'Low MAU cap',
-      'Basic auth only',
-      'No webhooks',
-      'No audit logs',
-      'Simple control-plane setup',
-    ],
-    cta: 'Get started free',
-    featured: false,
-  },
-  {
-    name: 'Starter',
-    price: '$5',
-    period: '/mo',
-    description: 'For developers building real projects on a tight budget.',
-    bullets: [
-      'Core features unlocked',
-      'Modest MAU limit',
-      'Webhooks included',
-      'Project-scoped API keys',
-      'Runtime login and register',
-    ],
-    cta: 'Choose Starter',
-    featured: false,
-  },
-  {
-    name: 'Builder',
-    price: '$15',
-    period: '/mo',
-    description: 'Full feature access for developers who are serious but not flush.',
-    bullets: [
-      'Webhooks and audit logs',
-      'All social providers',
-      'Higher MAU allowance',
-      'Project-first tenant controls',
-      'Full hosted feature set',
-    ],
-    cta: 'Choose Builder',
-    featured: true,
-    badge: 'Recommended',
-  },
-  {
-    name: 'Pro',
-    price: '$35',
-    period: '/mo',
-    description: 'For growing startups protecting early users.',
-    bullets: [
-      'Higher usage limits',
-      'Priority support',
-      'Advanced RBAC configuration',
-      'Webhooks and audit logs',
-      'All social providers',
-    ],
-    cta: 'Choose Pro',
-    featured: false,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    description: 'For teams that need private deployment help and direct support.',
-    bullets: [
-      'Unlimited MAU',
-      'SLA-backed support',
-      'Dedicated support',
-      'Private deployment assistance',
-      'Hosted or self-hosted rollout help',
-    ],
-    cta: 'Contact sales',
-    featured: false,
-  },
-];
-
 function upsertMeta(selector, factory, updater) {
   let element = document.head.querySelector(selector);
   if (!element) {
@@ -316,13 +238,13 @@ const codeTabs = {
 
 function Wordmark() {
   return (
-    <a href="#top" className="flex items-center gap-3">
-      <div className="h-8 w-8 rounded-md bg-[#7c3aed]" />
-      <div>
-        <div className="text-sm font-semibold tracking-[0.22em] text-[#a78bfa]">HVT</div>
-        <div className="text-[11px] uppercase tracking-[0.18em] text-[#71717a]">hvts.app</div>
+    <Link to="/" className="inline-flex items-center gap-3">
+      <HvtLogoMark className="h-9 w-9 shrink-0" />
+      <div className="leading-none">
+        <div className="font-mono text-[1.08rem] font-bold tracking-[-0.03em] text-white">HVT</div>
+        <div className="mt-1 text-[11px] text-[#71717a]">hvts.app</div>
       </div>
-    </a>
+    </Link>
   );
 }
 
@@ -340,11 +262,22 @@ function NavLink({ href, children, mobile = false, onClick }) {
 
 function ChainDiagram({ compact = false }) {
   return (
-    <div className={`rounded-[18px] border border-[#27272a] bg-[#111111]/88 ${compact ? 'p-4' : 'p-5'} transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]`}>
+    <div
+      className={`rounded-[18px] border border-[#27272a] bg-[#111111]/88 ${compact ? 'p-4' : 'p-5'} transition-[border-color,transform,box-shadow] duration-200 hover:border-[rgba(124,58,237,0.6)]`}
+      style={{
+        animation: compact ? undefined : 'heroFloat 7.5s ease-in-out infinite',
+        boxShadow: compact ? undefined : '0 18px 48px rgba(0,0,0,0.28)',
+      }}
+    >
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {chainNodes.map((node, index) => (
           <div key={node} className="contents">
-            <div className={`rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 ${compact ? 'text-xs' : 'text-sm'} font-medium text-[#e4e4e7]`}>
+            <div
+              className={`rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 ${compact ? 'text-xs' : 'text-sm'} font-medium text-[#e4e4e7]`}
+              style={{
+                animation: compact ? undefined : `heroFadeUp 0.7s ease-out ${0.18 + index * 0.08}s both`,
+              }}
+            >
               {node}
             </div>
             {index < chainNodes.length - 1 ? (
@@ -473,6 +406,21 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <style>{`
+        @keyframes heroFadeUp {
+          0% { opacity: 0; transform: translateY(18px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes heroFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+
+        @keyframes heroGlowPulse {
+          0%, 100% { opacity: 0.72; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.04); }
+        }
+
         @keyframes featureMarquee {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
@@ -485,26 +433,43 @@ export default function Landing() {
       `}</style>
 
       <header
-        className={`sticky top-0 z-50 border-b transition-all ${scrolled ? 'border-[#27272a] bg-[#0a0a0a]/90 backdrop-blur-xl' : 'border-transparent bg-[#0a0a0a]/75 backdrop-blur-sm'}`}
+        className={`sticky top-0 z-50 border-b transition-all ${
+          scrolled ? 'border-[#27272a] bg-[#0a0a0a]/88 backdrop-blur-xl' : 'border-transparent bg-[#0a0a0a]/72 backdrop-blur-md'
+        }`}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Wordmark />
+        <div className="mx-auto grid h-[60px] max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 sm:px-6 lg:px-8">
+          <div className="justify-self-start">
+            <Wordmark />
+          </div>
 
-          <nav className="hidden items-center gap-6 md:flex">
-            <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-sm text-[#a1a1aa] transition-colors hover:text-white">GitHub</a>
-            <a href={DOCS_URL} target="_blank" rel="noreferrer" className="text-sm text-[#a1a1aa] transition-colors hover:text-white">Docs</a>
-            <Link to="/login" className="rounded-md border border-[#27272a] px-4 py-2 text-sm font-medium text-[#d4d4d8] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white">
+          <nav className="hidden items-center justify-center gap-8 justify-self-center md:flex">
+            <a href="#features" className="text-sm text-[#a1a1aa] transition-colors duration-150 hover:text-white">
+              Features
+            </a>
+            <a href={DOCS_URL} target="_blank" rel="noreferrer" className="text-sm text-[#a1a1aa] transition-colors duration-150 hover:text-white">
+              Docs
+            </a>
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-sm text-[#a1a1aa] transition-colors duration-150 hover:text-white">
+              GitHub
+            </a>
+          </nav>
+
+          <div className="hidden items-center gap-3 justify-self-end md:flex">
+            <Link to="/login" className="px-2 py-2 text-sm font-medium text-[#d4d4d8] transition-colors duration-150 hover:text-white">
               Sign in
             </Link>
-            <Link to="/signup" className="rounded-md bg-[#7c3aed] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]">
+            <Link
+              to="/signup"
+              className="rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_10px_24px_rgba(0,0,0,0.26)] transition-[border-color,background-color] duration-150 hover:border-[rgba(124,58,237,0.45)] hover:bg-[#1d1d22]"
+            >
               Get started free
             </Link>
-          </nav>
+          </div>
 
           <button
             type="button"
             onClick={() => setMenuOpen((value) => !value)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#27272a] bg-[#111111] text-[#d4d4d8] md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-md border border-[#27272a] bg-[#111111] text-[#d4d4d8] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white md:hidden"
             aria-label="Toggle navigation"
           >
             {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -512,10 +477,11 @@ export default function Landing() {
         </div>
 
         {menuOpen && (
-          <div className="border-t border-[#27272a] bg-[#0a0a0a] md:hidden">
+          <div className="border-t border-[#27272a] bg-[#0a0a0a]/96 md:hidden">
             <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6">
-              <NavLink href={GITHUB_URL} mobile onClick={() => setMenuOpen(false)}>GitHub</NavLink>
+              <NavLink href="#features" mobile onClick={() => setMenuOpen(false)}>Features</NavLink>
               <NavLink href={DOCS_URL} mobile onClick={() => setMenuOpen(false)}>Docs</NavLink>
+              <NavLink href={GITHUB_URL} mobile onClick={() => setMenuOpen(false)}>GitHub</NavLink>
               <Link to="/login" onClick={() => setMenuOpen(false)} className="mt-2 rounded-md border border-[#27272a] px-4 py-3 text-center text-sm font-medium text-[#d4d4d8]">
                 Sign in
               </Link>
@@ -535,6 +501,7 @@ export default function Landing() {
             style={{
               background:
                 'radial-gradient(circle at top center, rgba(124,58,237,0.15), transparent 58%)',
+              animation: 'heroGlowPulse 8s ease-in-out infinite',
             }}
           />
           <div
@@ -551,21 +518,30 @@ export default function Landing() {
 
           <div className="relative mx-auto max-w-7xl px-4 py-28 sm:px-6 lg:px-8 lg:py-32">
             <div className="max-w-5xl">
-              <div className="inline-flex items-center rounded-full border border-[#27272a] bg-[#111111]/88 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">
+              <div
+                className="inline-flex items-center rounded-full border border-[#27272a] bg-[#111111]/88 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]"
+                style={{ animation: 'heroFadeUp 0.6s ease-out 0.05s both' }}
+              >
                 Open-source auth infrastructure for developers and teams
               </div>
-              <h1 className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl">
+              <h1
+                className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl"
+                style={{ animation: 'heroFadeUp 0.7s ease-out 0.12s both' }}
+              >
                 Auth infrastructure that&apos;s entirely yours. The code, the model, the runtime - all of it.
               </h1>
-              <p className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg">
+              <p
+                className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg"
+                style={{ animation: 'heroFadeUp 0.7s ease-out 0.2s both' }}
+              >
                 HVT gives teams a self-hosted auth stack with an explicit org -&gt; project -&gt; runtime chain, licensed under AGPL v3 and available as a managed service at hvts.app when they do not want to operate it themselves.
               </p>
 
-              <div className="mt-8 max-w-3xl">
+              <div className="mt-8 max-w-3xl" style={{ animation: 'heroFadeUp 0.8s ease-out 0.28s both' }}>
                 <ChainDiagram />
               </div>
 
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row" style={{ animation: 'heroFadeUp 0.8s ease-out 0.36s both' }}>
                 <Link to="/signup" className="inline-flex items-center justify-center rounded-md bg-[#7c3aed] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]">
                   Get started free
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -575,7 +551,7 @@ export default function Landing() {
                 </a>
               </div>
 
-              <div className="mt-8 max-w-3xl">
+              <div className="mt-8 max-w-3xl" style={{ animation: 'heroFadeUp 0.8s ease-out 0.44s both' }}>
                 <FeatureStrip />
               </div>
             </div>
@@ -689,53 +665,53 @@ export default function Landing() {
         <section id="pricing" className="scroll-mt-24 border-b border-[#27272a]">
           <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">Pricing</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">Hosted plans for hvts.app.</h2>
+              <div className="text-sm font-medium text-[#a78bfa]">Hosted</div>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">Hosted pricing is coming soon.</h2>
               <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                The code stays auditable and self-hostable under AGPL v3. The hosted service at hvts.app is the managed path for teams that want the same model without running it themselves.
+                Hosted pricing will be published soon. Until then, HVT remains fully open-source and self-hostable under AGPL v3.
               </p>
             </div>
 
-            <div className="mt-10 overflow-x-auto pb-2">
-              <div className="grid min-w-[1180px] gap-4 lg:grid-cols-5">
-                {pricingTiers.map((tier) => (
-                  <div
-                    key={tier.name}
-                    className={`flex min-h-[420px] flex-col rounded-[18px] border p-6 transition-[border-color,box-shadow,transform] duration-150 hover:border-[rgba(124,58,237,0.6)] ${tier.featured ? 'border-[#7c3aed] bg-[#18181b] shadow-[0_0_0_1px_#7c3aed,0_0_24px_rgba(124,58,237,0.15)] hover:scale-[1.02]' : 'border-[#27272a] bg-[#111111]'}`}
+            <div className="mt-10 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
+                <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">What is true today</div>
+                <div className="mt-4 space-y-4 text-sm leading-7 text-[#d4d4d8]">
+                  <p>
+                    HVT is available as open-source software under <span className="text-white">AGPL v3</span>. You can self-host
+                    it now, audit the code, and keep the full org to project to runtime model intact.
+                  </p>
+                  <p>
+                    The managed service at <span className="text-white">hvts.app</span> is also real, but public pricing is staying
+                    private until the hosted limits and support promises are backed by actual enforcement.
+                  </p>
+                </div>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    to="/signup"
+                    className="inline-flex items-center justify-center rounded-md bg-[#7c3aed] px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">{tier.name}</h3>
-                        <p className="mt-2 text-sm leading-6 text-[#a1a1aa]">{tier.description}</p>
-                      </div>
-                      {tier.badge ? (
-                        <span className="rounded-full border border-[#7c3aed] bg-[#7c3aed]/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a78bfa]">
-                          {tier.badge}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-6 flex items-end gap-1">
-                      <span className="text-4xl font-semibold tracking-[-0.04em] text-white">{tier.price}</span>
-                      {tier.period ? <span className="pb-1 text-sm text-[#71717a]">{tier.period}</span> : null}
-                    </div>
-                    <ul className="mt-6 space-y-3 text-sm text-[#d4d4d8]">
-                      {tier.bullets.map((bullet) => (
-                        <li key={bullet} className="flex gap-3">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#a78bfa]" />
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-auto pt-8">
-                      <Link
-                        to="/signup"
-                        className={`inline-flex w-full items-center justify-center rounded-md px-4 py-3 text-sm font-semibold transition-colors duration-150 ${tier.featured ? 'bg-[#7c3aed] text-white hover:bg-[#6d28d9]' : 'border border-[#27272a] text-[#d4d4d8] hover:border-[rgba(124,58,237,0.6)] hover:text-white'}`}
-                      >
-                        {tier.cta}
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                    Get started free
+                  </Link>
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-md border border-[#27272a] px-4 py-3 text-sm font-semibold text-[#d4d4d8] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white"
+                  >
+                    View on GitHub
+                  </a>
+                </div>
+              </div>
+
+              <div className="rounded-[18px] border border-[#27272a] bg-[#18181b] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
+                <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Managed hosting</div>
+                <h3 className="mt-4 text-xl font-semibold text-white">Coming soon</h3>
+                <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
+                  If you want the managed path, start with the product first. Hosted pricing will show up here once the launch settles.
+                </p>
+                <div className="mt-6 rounded-2xl border border-[#27272a] bg-[#111111] px-4 py-4 text-sm text-[#d4d4d8]">
+                  Until then, use the docs, run it locally, and self-host if you want full access without waiting on pricing.
+                </div>
               </div>
             </div>
           </div>
@@ -743,21 +719,15 @@ export default function Landing() {
       </main>
 
       <footer className="bg-[#0a0a0a]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_1fr_0.7fr] lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_0.7fr] lg:px-8">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md bg-[#7c3aed]" />
-              <div>
-                <div className="text-sm font-semibold tracking-[0.22em] text-[#a78bfa]">HVT</div>
-                <div className="text-[11px] uppercase tracking-[0.18em] text-[#71717a]">hvts.app</div>
-              </div>
-            </div>
+            <Logo href="/" />
             <p className="mt-4 max-w-sm text-sm leading-7 text-[#a1a1aa]">
               Open-source auth infrastructure with an explicit org to project to runtime model for teams shipping real products.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid gap-8 sm:grid-cols-2">
             <div>
               <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Links</div>
               <div className="mt-4 space-y-3">
@@ -782,7 +752,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="flex items-start lg:justify-end">
+          <div className="flex items-start md:col-span-2 xl:col-span-1 xl:justify-end">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#27272a] bg-[#111111] px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-[#a1a1aa]">
               <LockKeyhole className="h-3.5 w-3.5 text-[#a78bfa]" /> AGPL v3 Licensed
             </div>

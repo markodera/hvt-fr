@@ -1,3 +1,4 @@
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -8,17 +9,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 
 import { listSocialProviders, register as apiRegister } from '@/api/auth';
-import {
-    AuthCard,
-    AuthDivider,
-    AuthFieldError,
-    AuthPageShell,
-    AUTH_GHOST_BUTTON_CLASS,
-    AUTH_INPUT_CLASS,
-    AUTH_PRIMARY_BUTTON_CLASS,
-    AUTH_TEXT_LINK_CLASS,
-    ButtonSpinner,
-} from '@/components/auth/AuthShell';
+import { AuthCard, AuthDivider, AuthFieldError, AUTH_GHOST_BUTTON_CLASS, AUTH_INPUT_CLASS, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { setPendingVerificationEmail } from '@/lib/emailVerification';
 import { markInvitationResumeAfterAuth } from '@/lib/invitations';
@@ -163,7 +154,7 @@ export default function Signup() {
     };
 
     return (
-        <AuthPageShell contentClassName="py-6">
+        <AuthLayout>
             <div className="mx-auto grid w-full max-w-6xl items-stretch gap-6 lg:grid-cols-[1.05fr_0.95fr]">
                 <div className="hidden flex-col justify-between rounded-[24px] border border-[#27272a] bg-[#111111]/78 p-8 shadow-[0_32px_80px_rgba(0,0,0,0.35)] backdrop-blur lg:flex">
                     <div className="space-y-10">
@@ -334,6 +325,6 @@ export default function Signup() {
                     </p>
                 </AuthCard>
             </div>
-        </AuthPageShell>
+        </AuthLayout>
     );
 }

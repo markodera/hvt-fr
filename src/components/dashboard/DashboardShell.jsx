@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
     Grid2x2,
     KeyRound,
@@ -12,6 +12,7 @@ import {
     Webhook,
 } from 'lucide-react';
 
+import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -31,35 +32,6 @@ const titleMap = [
     { match: '/dashboard/audit-logs', title: 'Audit Logs' },
     { match: '/dashboard/settings', title: 'Settings' },
 ];
-
-function HvtLogoMark({ className = '' }) {
-    return (
-        <svg className={className} width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <defs>
-                <mask id="hvt-mask">
-                    <rect width="32" height="32" rx="7" fill="white" />
-                    <rect x="8" y="5" width="5" height="22" rx="1.5" fill="black" />
-                    <rect x="19" y="5" width="5" height="22" rx="1.5" fill="black" />
-                    <rect x="8" y="13" width="16" height="7" rx="1" fill="black" />
-                    <rect x="13" y="13" width="6" height="7" rx="0" fill="white" />
-                </mask>
-            </defs>
-            <rect width="32" height="32" rx="7" fill="#5b21b6" mask="url(#hvt-mask)" />
-        </svg>
-    );
-}
-
-function HvtLogo() {
-    return (
-        <Link to="/" className="inline-flex items-center gap-3">
-            <HvtLogoMark className="h-8 w-8" />
-            <div className="space-y-0.5">
-                <div className="font-mono text-[1.0625rem] font-bold tracking-[-0.3px] text-white">HVT</div>
-                <div className="text-[11px] text-[#71717a]">hvts.app</div>
-            </div>
-        </Link>
-    );
-}
 
 function getInitials(user) {
     const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
@@ -127,7 +99,7 @@ export function DashboardShell({ children }) {
         <div className="min-h-screen bg-[#0a0a0a] text-white">
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-[#27272a] bg-[#111111] md:flex md:flex-col">
                 <div className="border-b border-[#27272a] px-5 py-5">
-                    <HvtLogo />
+                    <Logo href="/" />
                 </div>
 
                 <nav className="flex-1 space-y-1 px-3 py-4">
