@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#6366F1"/>
-  <path d="M8 10h4v12H8V10zm6 0h4v5h-4v-5zm6 0h4v12h-4V10zm-6 7h4v5h-4v-5z" fill="white"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><rdf:Description><dc:creator>RealFaviconGenerator</dc:creator><dc:source>https://realfavicongenerator.net</dc:source></rdf:Description></rdf:RDF></metadata><defs>
+    <mask id="hvt-favicon-mask">
+      <rect width="16" height="16" rx="4" fill="white"></rect>
+      <rect x="4" y="2" width="3" height="12" rx="1" fill="black"></rect>
+      <rect x="9" y="2" width="3" height="12" rx="1" fill="black"></rect>
+      <rect x="4" y="6" width="8" height="4" rx="0.5" fill="black"></rect>
+      <rect x="6.5" y="6" width="3" height="4" fill="white"></rect>
+    </mask>
+  </defs><rect width="16" height="16" rx="4" fill="#5b21b6" mask="url(#hvt-favicon-mask)"></rect><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: contrast(1) brightness(1); } }
+</style></svg>

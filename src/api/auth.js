@@ -69,9 +69,14 @@ export function validatePasswordResetToken(data, options = {}) {
 
 export function confirmPasswordReset(tokenOrKey, data, options = {}) {
     const path = resolveResetTokenPath(tokenOrKey);
+    const uid = tokenOrKey?.uid || tokenOrKey?.uidb64;
+    const token = tokenOrKey?.token;
     return hvt.request(`/api/v1/auth/password/reset/confirm/${path}/`, {
         method: 'POST',
-        body: data,
+        body: {
+            ...data,
+            ...(uid && token ? { uid, token } : {}),
+        },
         auth: 'none',
         ...options,
     });
