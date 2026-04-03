@@ -705,12 +705,12 @@ export default function Landing() {
 
               <div className="rounded-[18px] border border-[#27272a] bg-[#18181b] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
                 <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Managed hosting</div>
-                <h3 className="mt-4 text-xl font-semibold text-white">Coming soon</h3>
+                <h3 className="mt-4 text-xl font-semibold text-white">Free for testing</h3>
                 <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
-                  If you want the managed path, start with the product first. Hosted pricing will show up here once the launch settles.
+                  You can use the managed version of HVT for free today. It's the perfect way to test the platform or build a demo before deciding to self-host or wait for paid tiers.
                 </p>
                 <div className="mt-6 rounded-2xl border border-[#27272a] bg-[#111111] px-4 py-4 text-sm text-[#d4d4d8]">
-                  Until then, use the docs, run it locally, and self-host if you want full access without waiting on pricing.
+                  Hosted pricing will show up here once the launch settles. Until then, sign up and try the platform for free.
                 </div>
               </div>
             </div>
