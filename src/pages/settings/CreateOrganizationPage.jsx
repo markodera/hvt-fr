@@ -1,7 +1,7 @@
 ﻿import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Building2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,7 +34,6 @@ function Toggle({ checked, onChange }) {
 }
 
 export function CreateOrganizationPage() {
-    const navigate = useNavigate();
     const { user, waitForSession } = useAuth();
 
     const {
@@ -55,9 +54,15 @@ export function CreateOrganizationPage() {
     const mutation = useMutation({
         mutationFn: createOrg,
         onSuccess: async () => {
-            await waitForSession({ attempts: 5, delayMs: 400 });
             toast.success('Organization created');
-            navigate('/dashboard', { replace: true });
+
+            try {
+                await waitForSession({ attempts: 5, delayMs: 400 });
+            } catch (_) {
+                // A hard navigation below forces a fresh auth bootstrap anyway.
+            }
+
+            window.location.replace('/dashboard/settings');
         },
         onError: (error) => {
             toast.error(getErrorMessage(error));
@@ -93,7 +98,7 @@ export function CreateOrganizationPage() {
                         <ol className="mt-3 space-y-2 leading-6">
                             <li>1. You become the organization owner.</li>
                             <li>2. HVT creates your default project automatically.</li>
-                            <li>3. You can issue keys and configure runtime auth.</li>
+                            <li>3. You are taken straight to settings so you can create project setup and keys.</li>
                         </ol>
                     </div>
                 </div>
