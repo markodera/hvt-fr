@@ -1,6 +1,7 @@
-﻿import { useMemo } from 'react';
+import { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
+    BookOpen,
     Building2,
     Grid2x2,
     KeyRound,
@@ -15,6 +16,7 @@ import {
 
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
+import { DOCS_URL } from '@/lib/appLinks';
 import { useTheme } from '@/hooks/useTheme';
 
 const navigation = [
@@ -114,6 +116,15 @@ export function DashboardShell({ children }) {
                     {shellNavigation.map((item) => (
                         <NavItem key={item.to} item={item} />
                     ))}
+                    <a
+                        href={DOCS_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-[#71717a] transition-all duration-150 hover:bg-[#18181b] hover:text-[#a1a1aa]"
+                    >
+                        <BookOpen className="h-4 w-4" />
+                        <span>Docs</span>
+                    </a>
                 </nav>
 
                 <div className="border-t border-[#27272a] px-4 py-4">
@@ -142,6 +153,15 @@ export function DashboardShell({ children }) {
                     <div className="flex h-full items-center justify-between px-4 md:px-6">
                         <h1 className="text-base font-semibold text-white">{pageTitle}</h1>
                         <div className="flex items-center gap-3">
+                            <a
+                                href={DOCS_URL}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-9 items-center gap-2 rounded-full border border-[#27272a] bg-[#18181b] px-3 text-sm font-medium text-[#a1a1aa] transition-colors hover:border-[#3f3f46] hover:text-white"
+                            >
+                                <BookOpen className="h-4 w-4" />
+                                <span className="hidden sm:inline">Docs</span>
+                            </a>
                             <button
                                 type="button"
                                 onClick={toggleTheme}

@@ -17,6 +17,7 @@ import {
   markInvitationResumeAfterAuth,
 } from '@/lib/invitations';
 import { getErrorMessage } from '@/lib/utils';
+import { DOCS_URL } from '@/lib/appLinks';
 
 const DOT_GRID_STYLE = {
   backgroundImage:
@@ -243,6 +244,13 @@ export default function Login() {
             </Link>
           </p>
 
+          <p className="mt-3 text-center text-xs text-[#71717a]">
+            Need setup help?{' '}
+            <a href={DOCS_URL} target="_blank" rel="noreferrer" className="text-[#a78bfa] transition-colors hover:text-white">
+              Read the docs
+            </a>
+          </p>
+
           {controlPlaneProviders.length === 0 ? (
             <p className="mt-4 text-center text-xs text-[#71717a]">
               Social sign-in is not configured for this environment yet.
@@ -253,3 +261,4 @@ export default function Login() {
     </div>
   );
 }
+

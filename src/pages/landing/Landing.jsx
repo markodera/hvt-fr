@@ -19,13 +19,9 @@ import {
 } from 'lucide-react';
 
 import { HvtLogoMark, Logo } from '@/components/Logo';
+import { API_URL, CHANGELOG_URL, DOCS_URL, GITHUB_URL, SITE_URL, STATUS_URL } from '@/lib/appLinks';
 
-const SITE_URL = 'https://hvts.app';
-const API_URL = 'https://api.hvts.app';
-const GITHUB_URL = 'https://github.com/markodera/hvt';
-const DOCS_URL = import.meta.env.VITE_PUBLIC_DOCS_URL?.trim() || 'https://docs.hvts.app';
-const CHANGELOG_URL = 'https://github.com/markodera/hvt/commits/main';
-const STATUS_URL = import.meta.env.VITE_PUBLIC_STATUS_URL?.trim() || `${API_URL}/healthz/`;
+
 
 const DOT_GRID_STYLE = {
   backgroundImage:
@@ -791,3 +787,4 @@ export default function Landing() {
     </div>
   );
 }
+

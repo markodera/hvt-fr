@@ -15,6 +15,7 @@ import { setPendingVerificationEmail } from '@/lib/emailVerification';
 import { markInvitationResumeAfterAuth } from '@/lib/invitations';
 import { getErrorMessage } from '@/lib/utils';
 import { SOCIAL_AUTH_PROVIDERS, startSocialSignIn } from '@/lib/socialAuth';
+import { DOCS_URL } from '@/lib/appLinks';
 
 const signupSchema = z
     .object({
@@ -331,8 +332,16 @@ export default function Signup() {
                             Sign in
                         </Link>
                     </p>
+
+                    <p className="mt-3 text-center text-xs text-[#71717a]">
+                        Want the setup guide first?{' '}
+                        <a href={DOCS_URL} target="_blank" rel="noreferrer" className="text-[#a78bfa] transition-colors hover:text-white">
+                            Read the docs
+                        </a>
+                    </p>
                 </AuthCard>
             </div>
         </AuthLayout>
     );
 }
+
