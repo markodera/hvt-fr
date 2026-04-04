@@ -21,10 +21,11 @@ import {
 import { HvtLogoMark, Logo } from '@/components/Logo';
 
 const SITE_URL = 'https://hvts.app';
+const API_URL = 'https://api.hvts.app';
 const GITHUB_URL = 'https://github.com/markodera/hvt';
-const DOCS_URL = `${SITE_URL}/api/docs/`;
+const DOCS_URL = import.meta.env.VITE_PUBLIC_DOCS_URL?.trim() || 'https://docs.hvts.app';
 const CHANGELOG_URL = 'https://github.com/markodera/hvt/commits/main';
-const STATUS_URL = `${SITE_URL}/healthz/`;
+const STATUS_URL = import.meta.env.VITE_PUBLIC_STATUS_URL?.trim() || `${API_URL}/healthz/`;
 
 const DOT_GRID_STYLE = {
   backgroundImage:
@@ -33,102 +34,102 @@ const DOT_GRID_STYLE = {
 };
 
 const featureStripItems = [
-  'JWT rotation',
-  'Multi-tenancy',
-  'RBAC',
+  'User signup and login',
+  'Password reset',
+  'Google and GitHub login',
+  'Team invites',
+  'Audit history',
   'Webhooks',
-  'Audit logs',
-  'AGPL v3',
 ];
 
-const chainNodes = ['Org', 'Project', 'API Key', 'Runtime', 'Token'];
+const chainNodes = ['Set up', 'Invite team', 'Connect app', 'Users sign in', 'Track activity'];
 
 const controlPlaneNodes = [
   {
-    title: 'Organization',
-    description: 'Team ownership, current settings, and the top-level tenant boundary.',
+    title: 'Workspace',
+    description: 'Create one home for your company or team.',
   },
   {
-    title: 'Project',
-    description: 'App or environment scope inside the organization with its own signup toggle.',
+    title: 'Apps and environments',
+    description: 'Give each app or environment its own settings and signup rules.',
   },
   {
-    title: 'API Key',
-    description: 'Server credential with environment, scopes, and project context.',
+    title: 'API keys',
+    description: 'Connect your backend securely without reusing one shared key everywhere.',
   },
   {
-    title: 'Invitations',
-    description: 'Owner-managed invites for admin and member access to the control plane.',
+    title: 'Team invites',
+    description: 'Invite owners, admins, and members with the right level of access.',
   },
   {
-    title: 'Social config',
-    description: 'Per-project Google and GitHub credentials with allowed redirect URIs.',
+    title: 'Login options',
+    description: 'Turn Google or GitHub sign-in on only where you need it.',
   },
 ];
 
 const runtimeNodes = [
   {
-    title: 'Register',
-    description: 'Runtime signup uses /auth/register/ and attaches the new user to the calling key context.',
+    title: 'Create accounts',
+    description: 'Let people sign up with email and password.',
   },
   {
-    title: 'Login',
-    description: 'Runtime login uses X-API-Key and rejects the wrong organization or project before issuing cookies.',
+    title: 'Sign in',
+    description: 'Let returning users log in to the right app safely.',
   },
   {
-    title: 'Social auth',
-    description: 'Runtime provider lists and callback validation are scoped to the current project.',
+    title: 'Reset access',
+    description: 'Handle forgot-password and email verification flows without extra tools.',
   },
   {
-    title: 'Token refresh',
-    description: 'Refresh revalidates org and project membership before restamping JWT claims.',
+    title: 'Social login',
+    description: 'Offer Google or GitHub sign-in when it is enabled for that app.',
   },
   {
-    title: 'Webhooks',
-    description: 'Project-scoped deliveries carry event metadata, signed headers, and retry status.',
+    title: 'Activity updates',
+    description: 'Send important account events to your other tools with webhooks.',
   },
   {
-    title: 'Audit',
-    description: 'Audit logs record auth, project, invitation, API key, and webhook activity.',
+    title: 'History',
+    description: 'See who signed in and what changed from one clear activity trail.',
   },
 ];
 
 const features = [
   {
     icon: ShieldCheck,
-    title: 'JWT hardening',
+    title: 'User signup and login',
     description:
-      'Access and refresh tokens carry org_id, project_id, project_slug, role, and email claims, with refresh-time revalidation.',
+      'Let customers create accounts, sign in, verify email addresses, and reset passwords from one system.',
   },
   {
     icon: KeyRound,
-    title: 'Project-scoped keys',
+    title: 'API keys for your backend',
     description:
-      'API keys belong to an organization and project, support test and live modes, and can drive runtime auth from the backend.',
+      'Connect your server to HVT with app-specific keys instead of sharing one credential across everything.',
   },
   {
     icon: GitBranchPlus,
-    title: 'Social auth per project',
+    title: 'Google and GitHub sign-in',
     description:
-      'Google and GitHub provider configs are stored per project with explicit redirect URIs and active-state controls.',
+      'Offer social login where you want it, and keep each app or environment separated.',
   },
   {
     icon: Users,
-    title: 'RBAC and invitations',
+    title: 'Team roles and invites',
     description:
-      'Owners, admins, and members are explicit roles, and invitation acceptance is tokenised, email-bound, and auditable.',
+      'Invite teammates, choose what they can access, and avoid mixing staff access with customer access.',
   },
   {
     icon: Webhook,
-    title: 'Webhook delivery',
+    title: 'Webhooks and alerts',
     description:
-      'Deliveries include signed headers, retry state, response metadata, and auto-disable logic after repeated failures.',
+      'Send account and security events to Slack, internal tools, or any system that needs updates.',
   },
   {
     icon: ScrollText,
-    title: 'Audit trail',
+    title: 'Audit history',
     description:
-      'Audit logs separate org, project, invitation, auth, and API key events so operational history is readable when something changes.',
+      'See who signed in, who was invited, what changed, and when it happened.',
   },
 ];
 
@@ -171,66 +172,66 @@ function CodeLine({ children }) {
 
 const codeTabs = {
   runtime: {
-    label: 'Runtime login',
+    label: 'For your users',
     caption:
-      'Runtime login is API-key-scoped and the issued JWT cookies carry org and project claims from the current project.',
+      'The customer-facing experience stays simple from the first screen.',
     code: (
       <>
-        <CodeLine><Kw>POST</Kw> <PathToken>/api/v1/auth/runtime/login/</PathToken></CodeLine>
-        <CodeLine><Prop>X-API-Key</Prop>: <Str>hvt_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</Str></CodeLine>
-        <CodeLine><Prop>Content-Type</Prop>: <Str>application/json</Str></CodeLine>
+        <CodeLine>1. A visitor opens your app.</CodeLine>
+        <CodeLine>2. They create an account or sign in.</CodeLine>
+        <CodeLine>3. HVT checks the right app and access rules.</CodeLine>
+        <CodeLine>4. HVT signs them in securely.</CodeLine>
+        <CodeLine>5. If needed, they can verify email or reset a password.</CodeLine>
         <CodeLine></CodeLine>
-        <CodeLine>{'{'}</CodeLine>
-        <CodeLine>  <Prop>"email"</Prop>: <Str>"customer@example.com"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"password"</Prop>: <Str>"Strongpass123!"</Str></CodeLine>
-        <CodeLine>{'}'}</CodeLine>
+        <CodeLine>Common user flows</CodeLine>
         <CodeLine></CodeLine>
-        <CodeLine><Num>200 OK</Num></CodeLine>
-        <CodeLine><Prop>Set-Cookie</Prop>: <Str>auth-token=...</Str></CodeLine>
-        <CodeLine><Prop>Set-Cookie</Prop>: <Str>refresh-token=...</Str></CodeLine>
+        <CodeLine>- Sign up</CodeLine>
+        <CodeLine>- Sign in</CodeLine>
+        <CodeLine>- Email verification</CodeLine>
+        <CodeLine>- Password reset</CodeLine>
+        <CodeLine>- Google and GitHub login</CodeLine>
       </>
     ),
   },
   key: {
-    label: 'Issue API key',
+    label: 'For your team',
     caption:
-      'API keys are created under the current organization, can target a specific project, and return the full secret once.',
+      'Your staff can set up access without stitching together multiple products.',
     code: (
       <>
-        <CodeLine><Kw>POST</Kw> <PathToken>/api/v1/organizations/current/keys/</PathToken></CodeLine>
-        <CodeLine><Prop>Authorization</Prop>: <Str>Bearer {'<owner-jwt>'}</Str></CodeLine>
-        <CodeLine><Prop>Content-Type</Prop>: <Str>application/json</Str></CodeLine>
+        <CodeLine>1. Create a workspace for your company.</CodeLine>
+        <CodeLine>2. Add an app or environment.</CodeLine>
+        <CodeLine>3. Invite teammates with the right role.</CodeLine>
+        <CodeLine>4. Choose email login, Google, or GitHub.</CodeLine>
+        <CodeLine>5. Connect your backend with an API key.</CodeLine>
         <CodeLine></CodeLine>
-        <CodeLine>{'{'}</CodeLine>
-        <CodeLine>  <Prop>"name"</Prop>: <Str>"Storefront backend"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"environment"</Prop>: <Str>"live"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"project_id"</Prop>: <Str>"{'<project-uuid>'}"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"scopes"</Prop>: [<Str>"auth:runtime"</Str>, <Str>"users:read"</Str>]</CodeLine>
-        <CodeLine>{'}'}</CodeLine>
+        <CodeLine>What your team manages</CodeLine>
         <CodeLine></CodeLine>
-        <CodeLine><Num>201 Created</Num> <Comment># response includes id, project_slug, and key</Comment></CodeLine>
+        <CodeLine>- Apps and environments</CodeLine>
+        <CodeLine>- Staff access</CodeLine>
+        <CodeLine>- API keys</CodeLine>
+        <CodeLine>- Social login settings</CodeLine>
+        <CodeLine>- Signup rules</CodeLine>
       </>
     ),
   },
   webhook: {
-    label: 'Webhook payload',
+    label: 'For your operations',
     caption:
-      'Webhook deliveries are project-scoped JSON payloads signed with X-HVT-Signature and tagged with delivery metadata.',
+      'HVT keeps the rest of your tools informed when something important happens.',
     code: (
       <>
-        <CodeLine>{'{'}</CodeLine>
-        <CodeLine>  <Prop>"event"</Prop>: <Str>"user.registered"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"delivery_id"</Prop>: <Str>"{'<delivery-uuid>'}"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"timestamp"</Prop>: <Str>"2026-03-24T12:00:00+00:00"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"organization_id"</Prop>: <Str>"{'<org-uuid>'}"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"project_id"</Prop>: <Str>"{'<project-uuid>'}"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"project_slug"</Prop>: <Str>"storefront-prod"</Str>,</CodeLine>
-        <CodeLine>  <Prop>"data"</Prop>: {'{'}</CodeLine>
-        <CodeLine>    <Prop>"user_id"</Prop>: <Str>"{'<user-uuid>'}"</Str>,</CodeLine>
-        <CodeLine>    <Prop>"email"</Prop>: <Str>"customer@example.com"</Str>,</CodeLine>
-        <CodeLine>    <Prop>"registration_method"</Prop>: <Str>"email"</Str></CodeLine>
-        <CodeLine>  {'}'}</CodeLine>
-        <CodeLine>{'}'}</CodeLine>
+        <CodeLine>When something changes, HVT can tell your other tools.</CodeLine>
+        <CodeLine></CodeLine>
+        <CodeLine>Examples</CodeLine>
+        <CodeLine></CodeLine>
+        <CodeLine>- New user created</CodeLine>
+        <CodeLine>- Password changed</CodeLine>
+        <CodeLine>- API key issued or revoked</CodeLine>
+        <CodeLine>- Teammate invited</CodeLine>
+        <CodeLine>- Login activity recorded</CodeLine>
+        <CodeLine></CodeLine>
+        <CodeLine>You also get a built-in activity history for your team.</CodeLine>
       </>
     ),
   },
@@ -352,14 +353,14 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    document.title = 'HVT | Auth infrastructure that\'s entirely yours';
+    document.title = 'HVT | Sign-in, team access, and account security in one place';
 
     upsertMeta('meta[name="description"]', () => {
       const meta = document.createElement('meta');
       meta.name = 'description';
       return meta;
     }, (meta) => {
-      meta.content = 'HVT is AGPL v3 auth infrastructure with an explicit organization to project to runtime model, available self-hosted or as a managed service at hvts.app.';
+      meta.content = 'HVT helps teams handle user signup, login, team access, social sign-in, API keys, and activity history from one product.';
     });
 
     upsertMeta('meta[property="og:title"]', () => {
@@ -367,7 +368,7 @@ export default function Landing() {
       meta.setAttribute('property', 'og:title');
       return meta;
     }, (meta) => {
-      meta.setAttribute('content', 'HVT | Auth infrastructure that\'s entirely yours');
+      meta.setAttribute('content', 'HVT | Sign-in, team access, and account security in one place');
     });
 
     upsertMeta('meta[property="og:description"]', () => {
@@ -375,7 +376,7 @@ export default function Landing() {
       meta.setAttribute('property', 'og:description');
       return meta;
     }, (meta) => {
-      meta.setAttribute('content', 'Open-source auth infrastructure with explicit org, project, API key, social config, token, audit, and webhook boundaries.');
+      meta.setAttribute('content', 'Handle customer login, team invites, social sign-in, API keys, audit history, and webhooks from one place.');
     });
 
     upsertMeta('meta[property="og:url"]', () => {
@@ -522,19 +523,21 @@ export default function Landing() {
                 className="inline-flex items-center rounded-full border border-[#27272a] bg-[#111111]/88 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]"
                 style={{ animation: 'heroFadeUp 0.6s ease-out 0.05s both' }}
               >
-                Open-source auth infrastructure for developers and teams
+                Sign-in, team access, and account security in one place
               </div>
               <h1
                 className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.12s both' }}
               >
-                Auth infrastructure that&apos;s entirely yours. The code, the model, the runtime - all of it.
+                HVT helps you manage customer accounts and team access without stitching five tools together.
               </h1>
               <p
                 className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.2s both' }}
               >
-                HVT gives teams a self-hosted auth stack with an explicit org -&gt; project -&gt; runtime chain, licensed under AGPL v3 and available as a managed service at hvts.app when they do not want to operate it themselves.
+                Use one product to let customers sign up, let teammates log in, offer Google or GitHub sign-in,
+                issue API keys, reset passwords, and keep a clear record of what changed. Start hosted now and
+                self-host later if you want full control.
               </p>
 
               <div className="mt-8 max-w-3xl" style={{ animation: 'heroFadeUp 0.8s ease-out 0.28s both' }}>
@@ -561,8 +564,8 @@ export default function Landing() {
         <section className="border-b border-[#27272a]">
           <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">Integration demo</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">The API surface is explicit because the product model is explicit.</h2>
+              <div className="text-sm font-medium text-[#a78bfa]">At a glance</div>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">What HVT helps you do, in plain language.</h2>
             </div>
 
             <div className="mt-10 rounded-[18px] border border-[#27272a] bg-[#111111] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
@@ -592,9 +595,10 @@ export default function Landing() {
           <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
               <div className="text-sm font-medium text-[#a78bfa]">How it works</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">System model</h2>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">One side for your team. One side for your users.</h2>
               <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                HVT is easiest to reason about when you separate the developer control plane from the auth runtime plane and keep the boundary visible.
+                Your team sets up apps, teammate access, and login options. Your users sign up, sign in, reset
+                passwords, and use social login. HVT keeps both sides connected and easy to manage.
               </p>
             </div>
 
@@ -603,8 +607,8 @@ export default function Landing() {
                 <div className="flex items-center gap-3">
                   <Building2 className="h-5 w-5 text-[#a78bfa]" />
                   <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Developer control plane</div>
-                    <div className="mt-1 text-lg font-semibold text-white">Org -&gt; Project -&gt; API Key -&gt; Invitations -&gt; Social config</div>
+                    <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">For your team</div>
+                    <div className="mt-1 text-lg font-semibold text-white">Set up apps, teammates, and login options</div>
                   </div>
                 </div>
                 <div className="mt-6 space-y-3">
@@ -617,7 +621,7 @@ export default function Landing() {
               <div className="flex items-center justify-center">
                 <div className="hidden h-full w-px bg-[#27272a] lg:block" />
                 <div className="rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa] lg:absolute">
-                  Boundary
+                  Shared access rules
                 </div>
               </div>
 
@@ -625,8 +629,8 @@ export default function Landing() {
                 <div className="flex items-center gap-3">
                   <Boxes className="h-5 w-5 text-[#a78bfa]" />
                   <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Auth runtime plane</div>
-                    <div className="mt-1 text-lg font-semibold text-white">Register -&gt; Login -&gt; Social auth -&gt; Token refresh -&gt; Webhooks -&gt; Audit</div>
+                    <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">For your users</div>
+                    <div className="mt-1 text-lg font-semibold text-white">Sign up, sign in, reset passwords, and stay secure</div>
                   </div>
                 </div>
                 <div className="mt-6 space-y-3">
@@ -642,8 +646,8 @@ export default function Landing() {
         <section id="features" className="scroll-mt-24 border-b border-[#27272a]">
           <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">Feature grid</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">What is already in the codebase.</h2>
+              <div className="text-sm font-medium text-[#a78bfa]">Why teams choose HVT</div>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">Everything you need to run access in one place.</h2>
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {features.map((feature) => {
@@ -665,25 +669,25 @@ export default function Landing() {
         <section id="pricing" className="scroll-mt-24 border-b border-[#27272a]">
           <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">Hosted</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">Hosted pricing is coming soon.</h2>
+              <div className="text-sm font-medium text-[#a78bfa]">Start here</div>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">Start free today, choose how to run it later.</h2>
               <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                Hosted pricing will be published soon. Until then, HVT remains fully open-source and self-hostable under AGPL v3.
+                Use the hosted version now or self-host when you are ready. Either way, HVT stays focused on user
+                accounts, team access, and clear security controls.
               </p>
             </div>
 
             <div className="mt-10 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
               <div className="flex flex-col rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">What is true today</div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Self-hosted</div>
                   <div className="mt-4 space-y-4 text-sm leading-7 text-[#d4d4d8]">
                     <p>
-                      HVT is available as open-source software under <span className="text-white">AGPL v3</span>. You can self-host
-                      it now, audit the code, and keep the full org to project to runtime model intact.
+                      HVT is open-source, so your team can run it on your own infrastructure when you want full control.
                     </p>
                     <p>
-                      The managed service at <span className="text-white">hvts.app</span> is also real, but public pricing is staying
-                      private until the hosted limits and support promises are backed by actual enforcement.
+                      That is a good fit if you want to own the stack, review the code, or keep deployment inside your
+                      own environment.
                     </p>
                   </div>
                 </div>
@@ -709,13 +713,14 @@ export default function Landing() {
                 <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#7c3aed] opacity-20 blur-[80px]"></div>
                 <div className="relative z-10 flex h-full flex-col">
                   <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-[#a78bfa] font-semibold">Managed hosting</div>
-                    <h3 className="mt-4 bg-gradient-to-r from-white to-[#a78bfa] bg-clip-text text-xl font-bold text-transparent">Free for testing</h3>
+                    <div className="text-xs uppercase tracking-[0.18em] text-[#a78bfa] font-semibold">Hosted by HVT</div>
+                    <h3 className="mt-4 bg-gradient-to-r from-white to-[#a78bfa] bg-clip-text text-xl font-bold text-transparent">Free to try today</h3>
                     <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
-                      You can use the managed version of HVT for free today. It's the perfect way to test the platform or build a demo before deciding to self-host or wait for paid tiers.
+                      You can create an account, test login flows, invite teammates, and explore the product without
+                      setting up servers first.
                     </p>
                     <div className="mt-6 rounded-2xl border border-[rgba(124,58,237,0.2)] bg-[#111111] px-4 py-4 text-sm text-[#d4d4d8]">
-                      Hosted pricing will show up here once the launch settles. Until then, <strong className="text-[#a78bfa]">sign up and try the platform for free.</strong>
+                      Hosted pricing will be shared later. Right now, <strong className="text-[#a78bfa]">you can sign up and use HVT for free while you evaluate it.</strong>
                     </div>
                   </div>
                   <div className="mt-auto pt-6">
@@ -738,7 +743,8 @@ export default function Landing() {
           <div>
             <Logo href="/" />
             <p className="mt-4 max-w-sm text-sm leading-7 text-[#a1a1aa]">
-              Open-source auth infrastructure with an explicit org to project to runtime model for teams shipping real products.
+              HVT helps you handle customer login, teammate access, social sign-in, API keys, and activity history
+              from one product.
             </p>
           </div>
 
@@ -767,7 +773,7 @@ export default function Landing() {
                   <ExternalLink className="h-4 w-4" /> Changelog
                 </a>
                 <a href={STATUS_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
-                  <ExternalLink className="h-4 w-4" /> Status
+                  <ExternalLink className="h-4 w-4" /> API health
                 </a>
               </div>
             </div>
