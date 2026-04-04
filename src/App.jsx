@@ -8,19 +8,24 @@ import Login from '@/pages/auth/Login';
 import Signup from '@/pages/auth/Signup';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
+import { VerifyEmailExpiredPage } from '@/pages/auth/VerifyEmailExpiredPage';
 import { VerifyEmailNoticePage } from '@/pages/auth/VerifyEmailNoticePage';
 import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
+import { VerifyEmailSuccessPage } from '@/pages/auth/VerifyEmailSuccessPage';
 import { GoogleCallbackPage } from '@/pages/auth/GoogleCallbackPage';
 import { GitHubCallbackPage } from '@/pages/auth/GitHubCallbackPage';
 import { InvitePage } from '@/pages/auth/InvitePage';
 import DashboardHome from '@/pages/dashboard/DashboardHome';
 import UsersPage from '@/pages/users/UsersPage';
+import PrivacyPolicyPage from '@/pages/legal/PrivacyPolicyPage';
+import TermsOfServicePage from '@/pages/legal/TermsOfServicePage';
 import { UserDetailPage } from '@/pages/users/UserDetailPage';
 import ApiKeysPage from '@/pages/api-keys/ApiKeysPage';
 import WebhooksPage from '@/pages/webhooks/WebhooksPage';
 import { WebhookDetailPage } from '@/pages/webhooks/WebhookDetailPage';
 import AuditLogsPage from '@/pages/audit/AuditLogsPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 function InviteAcceptRedirect() {
     const location = useLocation();
@@ -32,8 +37,16 @@ const router = createBrowserRouter([
     { path: '/login', element: <Login /> },
     { path: '/signup', element: <Signup /> },
     { path: '/register', element: <Navigate to="/signup" replace /> },
+    { path: '/privacy-policy', element: <PrivacyPolicyPage /> },
+    { path: '/terms-of-service', element: <TermsOfServicePage /> },
+    { path: '/verify-email', element: <VerifyEmailNoticePage /> },
+    { path: '/verify-email/expired', element: <VerifyEmailExpiredPage /> },
+    { path: '/verify-email/success', element: <VerifyEmailSuccessPage /> },
+    { path: '/verify-email/:key', element: <VerifyEmailPage /> },
     { path: '/auth/verify-email-notice', element: <VerifyEmailNoticePage /> },
     { path: '/forgot-password', element: <ForgotPasswordPage /> },
+    { path: '/reset-password/:uid/:token', element: <ResetPasswordPage /> },
+    { path: '/reset-password/:key', element: <ResetPasswordPage /> },
     { path: '/auth/password-reset/:uid/:token', element: <ResetPasswordPage /> },
     { path: '/auth/password-reset/:key', element: <ResetPasswordPage /> },
     { path: '/invite', element: <InvitePage /> },
@@ -58,7 +71,7 @@ const router = createBrowserRouter([
             { path: '/dashboard/settings', element: <SettingsPage /> },
         ],
     },
-    { path: '*', element: <Navigate to="/" replace /> },
+    { path: '*', element: <NotFoundPage /> },
 ]);
 
 export function App() {

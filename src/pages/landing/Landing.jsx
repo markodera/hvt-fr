@@ -752,6 +752,12 @@ export default function Landing() {
                 <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
                   <Github className="h-4 w-4" /> GitHub
                 </a>
+                <Link to="/privacy-policy" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
+                  <ShieldCheck className="h-4 w-4" /> Privacy Policy
+                </Link>
+                <Link to="/terms-of-service" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
+                  <ScrollText className="h-4 w-4" /> Terms of Service
+                </Link>
               </div>
             </div>
             <div>

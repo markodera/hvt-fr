@@ -314,7 +314,15 @@ export default function Signup() {
                     </form>
 
                     <p className="mt-4 text-center text-xs leading-6 text-[#71717a]">
-                        By creating an account you agree to our Terms of Service and Privacy Policy.
+                        By creating an account you agree to our{' '}
+                        <Link to="/terms-of-service" className="text-[#d4d4d8] transition-colors hover:text-white">
+                            Terms of Service
+                        </Link>{' '}
+                        and{' '}
+                        <Link to="/privacy-policy" className="text-[#d4d4d8] transition-colors hover:text-white">
+                            Privacy Policy
+                        </Link>
+                        .
                     </p>
 
                     <p className="mt-5 text-center text-sm text-[#a1a1aa]">
