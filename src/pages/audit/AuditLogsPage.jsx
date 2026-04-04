@@ -141,7 +141,7 @@ export default function AuditLogsPage() {
     return (
         <div className="space-y-6">
             {projectScoped ? (
-                <section className="flex items-center gap-3 rounded-2xl border border-[#27272a] bg-[#18181b] px-4 py-3 text-sm text-[#a1a1aa]">
+                <section className="flex items-start gap-3 rounded-2xl border border-[#27272a] bg-[#18181b] px-4 py-3 text-sm text-[#a1a1aa]">
                     <Info className="h-4 w-4 text-[#a78bfa]" />
                     <p>
                         Showing results scoped to project: <span className="font-mono text-[#c4b5fd]">{user.project_slug}</span>
@@ -204,8 +204,34 @@ export default function AuditLogsPage() {
                     <EmptyState message="No audit events match the current filters. Events are recorded when users sign in, keys are issued, invitations are sent, and projects change." />
                 ) : (
                     <>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-[980px] w-full">
+                        <div className="divide-y divide-[#27272a] md:hidden">
+                            {logs.map((log) => (
+                                <div key={log.id} className="space-y-3 px-4 py-4">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <p className="font-mono text-xs text-[#71717a]">{formatDate(log.created_at)}</p>
+                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${actionBadgeClass(log.event_type)}`}>
+                                            {log.event_type}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-2 text-sm text-[#a1a1aa]">
+                                        <p>Actor: {log.actor_email || log.actor_api_key_name || 'System'}</p>
+                                        <p>Resource: {log.target_type || 'system'}</p>
+                                        <p>IP: {log.ip_address || '-'}</p>
+                                        <p>
+                                            Project:{' '}
+                                            {log.project
+                                                ? projectScoped
+                                                    ? user.project_slug
+                                                    : String(log.project).slice(0, 8)
+                                                : 'Org'}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="hidden overflow-x-auto md:block">
+                            <table className="w-full min-w-[980px]">
                                 <thead>
                                     <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
                                         <th className="px-4 py-3 font-medium">Timestamp</th>

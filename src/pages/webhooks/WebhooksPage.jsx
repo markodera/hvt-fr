@@ -296,7 +296,7 @@ export default function WebhooksPage() {
                 <button
                     type="button"
                     onClick={openCreateDialog}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9]"
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9] sm:w-auto"
                 >
                     <Plus className="h-4 w-4" />
                     Add endpoint
@@ -304,127 +304,200 @@ export default function WebhooksPage() {
             </div>
 
             <TableCard>
-                <div className="overflow-x-auto">
-                    <table className="min-w-[980px] w-full">
-                        <thead>
-                            <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
-                                <th className="w-12 px-4 py-3 font-medium" />
-                                <th className="px-4 py-3 font-medium">Endpoint URL</th>
-                                <th className="px-4 py-3 font-medium">Project</th>
-                                <th className="px-4 py-3 font-medium">Events subscribed</th>
-                                <th className="px-4 py-3 font-medium">Last triggered</th>
-                                <th className="px-4 py-3 font-medium">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading ? Array.from({ length: 5 }).map((_, index) => <SkeletonRow key={index} />) : null}
-                            {!isLoading && isError ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-12">
-                                        <EmptyState message="Webhook endpoints could not be loaded right now." />
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {!isLoading && !isError && webhooks.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-12">
-                                        <EmptyState
-                                            message="No webhook endpoints yet. Add an endpoint to receive delivery events from HVT."
-                                            action={
-                                                <button
-                                                    type="button"
-                                                    onClick={openCreateDialog}
-                                                    className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#111111]"
-                                                >
-                                                    Add endpoint
-                                                </button>
-                                            }
-                                        />
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {!isLoading &&
-                                !isError &&
-                                webhooks.map((webhook) => {
-                                    const expanded = expandedId === webhook.id;
-                                    return (
-                                        <Fragment key={webhook.id}>
-                                            <tr className="border-b border-[#27272a] last:border-b-0">
-                                                <td className="px-4 py-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setExpandedId(expanded ? null : webhook.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#27272a] bg-[#111111] text-[#a1a1aa] transition-colors hover:bg-[#18181b] hover:text-white"
-                                                    >
-                                                        {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                                    </button>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <a
-                                                        href={webhook.url}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors hover:text-[#a78bfa]"
-                                                    >
-                                                        {truncate(webhook.url, 52)}
-                                                        <ExternalLink className="h-3.5 w-3.5" />
-                                                    </a>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="text-sm text-white">{webhook.project_name}</div>
-                                                    <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
-                                                        {webhook.project_slug}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-[#a1a1aa]">{webhook.events?.length || 0} events</td>
-                                                <td className="px-4 py-3 font-mono text-xs text-[#71717a]">
-                                                    {webhook.last_triggered_at ? formatRelativeTime(webhook.last_triggered_at) : 'Never'}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`h-2 w-2 rounded-full ${webhook.is_active ? 'bg-emerald-400' : 'bg-[#52525b]'}`} />
-                                                        <span className="text-sm text-[#a1a1aa]">{webhook.is_active ? 'Active' : 'Inactive'}</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            {expanded ? (
+                {isLoading ? (
+                    <div className="space-y-3 px-4 py-4">
+                        {Array.from({ length: 5 }).map((_, index) => (
+                            <div key={index} className="h-24 animate-pulse rounded-xl bg-[#111111]" />
+                        ))}
+                    </div>
+                ) : null}
+                {!isLoading && isError ? (
+                    <EmptyState message="Webhook endpoints could not be loaded right now." />
+                ) : null}
+                {!isLoading && !isError && webhooks.length === 0 ? (
+                    <EmptyState
+                        message="No webhook endpoints yet. Add an endpoint to receive delivery events from HVT."
+                        action={
+                            <button
+                                type="button"
+                                onClick={openCreateDialog}
+                                className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#111111]"
+                            >
+                                Add endpoint
+                            </button>
+                        }
+                    />
+                ) : null}
+                {!isLoading && !isError && webhooks.length > 0 ? (
+                    <>
+                        <div className="divide-y divide-[#27272a] md:hidden">
+                            {webhooks.map((webhook) => {
+                                const expanded = expandedId === webhook.id;
+                                return (
+                                    <div key={webhook.id} className="space-y-4 px-4 py-4">
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <a
+                                                href={webhook.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex min-w-0 items-center gap-1 break-all text-sm font-medium text-white transition-colors hover:text-[#a78bfa]"
+                                            >
+                                                {truncate(webhook.url, 52)}
+                                                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                            </a>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`h-2 w-2 rounded-full ${webhook.is_active ? 'bg-emerald-400' : 'bg-[#52525b]'}`} />
+                                                <span className="text-sm text-[#a1a1aa]">{webhook.is_active ? 'Active' : 'Inactive'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
+                                                {webhook.project_slug}
+                                            </span>
+                                            <span className="rounded-full border border-[#27272a] bg-[#111111] px-2 py-1 text-[11px] text-[#a1a1aa]">
+                                                {webhook.events?.length || 0} events
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-3 text-xs text-[#71717a] sm:grid-cols-2">
+                                            <p>Project: {webhook.project_name}</p>
+                                            <p>Last triggered: {webhook.last_triggered_at ? formatRelativeTime(webhook.last_triggered_at) : 'Never'}</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setExpandedId(expanded ? null : webhook.id)}
+                                                className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm font-medium text-white transition-colors hover:bg-[#18181b]"
+                                            >
+                                                {expanded ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}
+                                                {expanded ? 'Hide deliveries' : 'Show deliveries'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditDialog(webhook)}
+                                                className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm font-medium text-white transition-colors hover:bg-[#18181b]"
+                                            >
+                                                <Pencil className="mr-2 h-4 w-4" />
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDeleteTarget(webhook)}
+                                                className="inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                        {expanded ? (
+                                            <div className="overflow-hidden rounded-xl border border-[#27272a] bg-[#161618]">
+                                                <div className="border-b border-[#27272a] px-4 py-3">
+                                                    <p className="text-sm font-medium text-white">Recent deliveries</p>
+                                                    <p className="text-xs text-[#71717a]">
+                                                        Status code and timestamp are shown inline. Response duration is not exposed by the current API.
+                                                    </p>
+                                                </div>
+                                                <WebhookDeliveries webhookId={webhook.id} />
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="hidden overflow-x-auto md:block">
+                            <table className="w-full min-w-[980px]">
+                                <thead>
+                                    <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
+                                        <th className="w-12 px-4 py-3 font-medium" />
+                                        <th className="px-4 py-3 font-medium">Endpoint URL</th>
+                                        <th className="px-4 py-3 font-medium">Project</th>
+                                        <th className="px-4 py-3 font-medium">Events subscribed</th>
+                                        <th className="px-4 py-3 font-medium">Last triggered</th>
+                                        <th className="px-4 py-3 font-medium">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {webhooks.map((webhook) => {
+                                        const expanded = expandedId === webhook.id;
+                                        return (
+                                            <Fragment key={webhook.id}>
                                                 <tr className="border-b border-[#27272a] last:border-b-0">
-                                                    <td colSpan={6} className="bg-[#161618] px-0 py-0">
-                                                        <div className="flex flex-col gap-3 border-b border-[#27272a] px-4 py-3 md:flex-row md:items-center md:justify-between">
-                                                            <div>
-                                                                <p className="text-sm font-medium text-white">Recent deliveries</p>
-                                                                <p className="text-xs text-[#71717a]">
-                                                                    Status code and timestamp are shown inline. Response duration is not exposed by the current API.
-                                                                </p>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openEditDialog(webhook)}
-                                                                    className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm font-medium text-white transition-colors hover:bg-[#18181b]"
-                                                                >
-                                                                    <Pencil className="mr-2 h-4 w-4" />
-                                                                    Edit
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setDeleteTarget(webhook)}
-                                                                    className="inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15"
-                                                                >
-                                                                    Delete
-                                                                </button>
-                                                            </div>
+                                                    <td className="px-4 py-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setExpandedId(expanded ? null : webhook.id)}
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#27272a] bg-[#111111] text-[#a1a1aa] transition-colors hover:bg-[#18181b] hover:text-white"
+                                                        >
+                                                            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                        </button>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <a
+                                                            href={webhook.url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors hover:text-[#a78bfa]"
+                                                        >
+                                                            {truncate(webhook.url, 52)}
+                                                            <ExternalLink className="h-3.5 w-3.5" />
+                                                        </a>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="text-sm text-white">{webhook.project_name}</div>
+                                                        <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
+                                                            {webhook.project_slug}
                                                         </div>
-                                                        <WebhookDeliveries webhookId={webhook.id} />
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-[#a1a1aa]">{webhook.events?.length || 0} events</td>
+                                                    <td className="px-4 py-3 font-mono text-xs text-[#71717a]">
+                                                        {webhook.last_triggered_at ? formatRelativeTime(webhook.last_triggered_at) : 'Never'}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`h-2 w-2 rounded-full ${webhook.is_active ? 'bg-emerald-400' : 'bg-[#52525b]'}`} />
+                                                            <span className="text-sm text-[#a1a1aa]">{webhook.is_active ? 'Active' : 'Inactive'}</span>
+                                                        </div>
                                                     </td>
                                                 </tr>
-                                            ) : null}
-                                        </Fragment>
-                                    );
-                                })}
-                        </tbody>
-                    </table>
-                </div>
+                                                {expanded ? (
+                                                    <tr className="border-b border-[#27272a] last:border-b-0">
+                                                        <td colSpan={6} className="bg-[#161618] px-0 py-0">
+                                                            <div className="flex flex-col gap-3 border-b border-[#27272a] px-4 py-3 md:flex-row md:items-center md:justify-between">
+                                                                <div>
+                                                                    <p className="text-sm font-medium text-white">Recent deliveries</p>
+                                                                    <p className="text-xs text-[#71717a]">
+                                                                        Status code and timestamp are shown inline. Response duration is not exposed by the current API.
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openEditDialog(webhook)}
+                                                                        className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm font-medium text-white transition-colors hover:bg-[#18181b]"
+                                                                    >
+                                                                        <Pencil className="mr-2 h-4 w-4" />
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setDeleteTarget(webhook)}
+                                                                        className="inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15"
+                                                                    >
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <WebhookDeliveries webhookId={webhook.id} />
+                                                        </td>
+                                                    </tr>
+                                                ) : null}
+                                            </Fragment>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                ) : null}
 
                 {data?.count ? <Pagination count={data.count} page={page} onPageChange={setPage} /> : null}
             </TableCard>

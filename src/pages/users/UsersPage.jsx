@@ -98,6 +98,41 @@ function Pagination({ count, page, onPageChange, pageSize = 10 }) {
     );
 }
 
+function UserActionsMenu({ user, currentUser, roleMutation }) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 border-[#27272a] bg-[#111111] text-white hover:bg-[#18181b]"
+                >
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="border-[#27272a] bg-[#18181b]">
+                <DropdownMenuItem asChild>
+                    <Link to={`/dashboard/users/${user.id}`}>View details</Link>
+                </DropdownMenuItem>
+                {currentUser?.role === 'owner' && currentUser?.id !== user.id && user.role !== 'owner' ? (
+                    <>
+                        {user.role !== 'admin' ? (
+                            <DropdownMenuItem onClick={() => roleMutation.mutate({ id: user.id, role: 'admin' })}>
+                                Make admin
+                            </DropdownMenuItem>
+                        ) : null}
+                        {user.role !== 'member' ? (
+                            <DropdownMenuItem onClick={() => roleMutation.mutate({ id: user.id, role: 'member' })}>
+                                Make member
+                            </DropdownMenuItem>
+                        ) : null}
+                    </>
+                ) : null}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
+
 export default function UsersPage() {
     const queryClient = useQueryClient();
     const { user: currentUser } = useAuth();
@@ -163,7 +198,7 @@ export default function UsersPage() {
                     <button
                         type="button"
                         onClick={scrollToInvites}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9]"
+                        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9] sm:w-auto"
                     >
                         <UserPlus className="h-4 w-4" />
                         Invite user
@@ -172,114 +207,120 @@ export default function UsersPage() {
             </div>
 
             <TableCard>
-                <div className="overflow-x-auto">
-                    <table className="min-w-[880px] w-full">
-                        <thead>
-                            <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
-                                <th className="px-4 py-3 font-medium">Name</th>
-                                <th className="px-4 py-3 font-medium">Email</th>
-                                <th className="px-4 py-3 font-medium">Role</th>
-                                <th className="px-4 py-3 font-medium">Project</th>
-                                <th className="px-4 py-3 font-medium">Joined</th>
-                                <th className="px-4 py-3 font-medium text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading ? Array.from({ length: 6 }).map((_, index) => <SkeletonRow key={index} />) : null}
-                            {!isLoading && isError ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-12">
-                                        <EmptyState message="Users could not be loaded right now." />
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {!isLoading && !isError && users.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-12">
-                                        <EmptyState
-                                            message={
-                                                search
-                                                    ? 'No users match this search yet.'
-                                                    : 'No users yet. Invited teammates and runtime signups will appear here.'
-                                            }
-                                        />
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {!isLoading &&
-                                !isError &&
-                                users.map((user) => (
-                                    <tr key={user.id} className="border-b border-[#27272a] last:border-b-0">
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
-                                                    {initialsForUser(user)}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="truncate text-sm font-medium text-white">
-                                                        {displayName(user)}
-                                                    </p>
-                                                    <p className="truncate text-xs text-[#71717a]">
-                                                        {user.is_active ? 'Active user' : 'Inactive'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-[#a1a1aa]">{user.email}</td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${roleBadge(user.role)}`}>
-                                                {user.role_display || user.role}
+                {isLoading ? (
+                    <div className="space-y-3 px-4 py-4">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <div key={index} className="h-20 animate-pulse rounded-xl bg-[#111111]" />
+                        ))}
+                    </div>
+                ) : null}
+                {!isLoading && isError ? (
+                    <EmptyState message="Users could not be loaded right now." />
+                ) : null}
+                {!isLoading && !isError && users.length === 0 ? (
+                    <EmptyState
+                        message={
+                            search
+                                ? 'No users match this search yet.'
+                                : 'No users yet. Invited teammates and runtime signups will appear here.'
+                        }
+                    />
+                ) : null}
+                {!isLoading && !isError && users.length > 0 ? (
+                    <>
+                        <div className="divide-y divide-[#27272a] md:hidden">
+                            {users.map((user) => (
+                                <div key={user.id} className="space-y-4 px-4 py-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                            {initialsForUser(user)}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="break-words text-sm font-medium text-white">{displayName(user)}</p>
+                                            <p className="break-all text-xs text-[#71717a]">{user.email}</p>
+                                        </div>
+                                        <UserActionsMenu user={user} currentUser={currentUser} roleMutation={roleMutation} />
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${roleBadge(user.role)}`}>
+                                            {user.role_display || user.role}
+                                        </span>
+                                        {user.project_slug ? (
+                                            <span className="rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]">
+                                                {user.project_slug}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {user.project_slug ? (
-                                                <span className="rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]">
-                                                    {user.project_slug}
-                                                </span>
-                                            ) : (
-                                                <span className="text-sm text-[#71717a]">Org-wide</span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-xs text-[#71717a]">
-                                            {formatDate(user.created_at, { hour: undefined, minute: undefined })}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-9 w-9 border-[#27272a] bg-[#111111] text-white hover:bg-[#18181b]"
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent className="border-[#27272a] bg-[#18181b]">
-                                                    <DropdownMenuItem asChild>
-                                                        <Link to={`/dashboard/users/${user.id}`}>View details</Link>
-                                                    </DropdownMenuItem>
-                                                    {currentUser?.role === 'owner' && currentUser?.id !== user.id && user.role !== 'owner' ? (
-                                                        <>
-                                                            {user.role !== 'admin' ? (
-                                                                <DropdownMenuItem onClick={() => roleMutation.mutate({ id: user.id, role: 'admin' })}>
-                                                                    Make admin
-                                                                </DropdownMenuItem>
-                                                            ) : null}
-                                                            {user.role !== 'member' ? (
-                                                                <DropdownMenuItem onClick={() => roleMutation.mutate({ id: user.id, role: 'member' })}>
-                                                                    Make member
-                                                                </DropdownMenuItem>
-                                                            ) : null}
-                                                        </>
-                                                    ) : null}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </td>
+                                        ) : (
+                                            <span className="rounded-full border border-[#27272a] bg-[#111111] px-2 py-0.5 text-[11px] text-[#a1a1aa]">
+                                                Org-wide
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3 text-xs text-[#71717a] sm:grid-cols-2">
+                                        <p>Status: {user.is_active ? 'Active user' : 'Inactive'}</p>
+                                        <p>Joined: {formatDate(user.created_at, { hour: undefined, minute: undefined })}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="hidden overflow-x-auto md:block">
+                            <table className="w-full min-w-[880px]">
+                                <thead>
+                                    <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
+                                        <th className="px-4 py-3 font-medium">Name</th>
+                                        <th className="px-4 py-3 font-medium">Email</th>
+                                        <th className="px-4 py-3 font-medium">Role</th>
+                                        <th className="px-4 py-3 font-medium">Project</th>
+                                        <th className="px-4 py-3 font-medium">Joined</th>
+                                        <th className="px-4 py-3 font-medium text-right">Actions</th>
                                     </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody>
+                                    {users.map((user) => (
+                                        <tr key={user.id} className="border-b border-[#27272a] last:border-b-0">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                                        {initialsForUser(user)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-medium text-white">
+                                                            {displayName(user)}
+                                                        </p>
+                                                        <p className="truncate text-xs text-[#71717a]">
+                                                            {user.is_active ? 'Active user' : 'Inactive'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-[#a1a1aa]">{user.email}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${roleBadge(user.role)}`}>
+                                                    {user.role_display || user.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {user.project_slug ? (
+                                                    <span className="rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]">
+                                                        {user.project_slug}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-sm text-[#71717a]">Org-wide</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 font-mono text-xs text-[#71717a]">
+                                                {formatDate(user.created_at, { hour: undefined, minute: undefined })}
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <UserActionsMenu user={user} currentUser={currentUser} roleMutation={roleMutation} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                ) : null}
 
                 {data?.count ? (
                     <Pagination count={data.count} page={page} onPageChange={handlePageChange} />

@@ -1,4 +1,4 @@
-import { hvt } from '@/lib/hvt';
+﻿import { hvt } from '@/lib/hvt';
 
 function normalizeOptions(options = {}) {
     if (
@@ -22,8 +22,14 @@ function normalizeQueryArgs(params = {}, options = {}) {
     return [params, normalizeOptions(options)];
 }
 
-export function createOrg(data, options = {}) {
-    return hvt.organizations.create(data, options);
+export async function createOrg(data, options = {}) {
+    const response = await hvt.organizations.create(data, options);
+
+    if (response?.access) {
+        hvt.setAccessToken(response.access);
+    }
+
+    return response;
 }
 
 export function getCurrentOrg(options = {}) {

@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router-dom';
+﻿import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router-dom';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
@@ -25,6 +25,7 @@ import WebhooksPage from '@/pages/webhooks/WebhooksPage';
 import { WebhookDetailPage } from '@/pages/webhooks/WebhookDetailPage';
 import AuditLogsPage from '@/pages/audit/AuditLogsPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
+import { CreateOrganizationPage } from '@/pages/settings/CreateOrganizationPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 function InviteAcceptRedirect() {
@@ -62,6 +63,7 @@ const router = createBrowserRouter([
         ),
         children: [
             { path: '/dashboard', element: <DashboardHome /> },
+            { path: '/dashboard/create-organization', element: <CreateOrganizationPage /> },
             { path: '/dashboard/users', element: <UsersPage /> },
             { path: '/dashboard/users/:id', element: <UserDetailPage /> },
             { path: '/dashboard/api-keys', element: <ApiKeysPage /> },

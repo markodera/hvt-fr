@@ -20,6 +20,8 @@ const DOT_GRID_STYLE = {
     backgroundRepeat: 'repeat',
 };
 
+const processedGitHubCallbacks = new Set();
+
 function delay(ms) {
     return new Promise((resolve) => {
         window.setTimeout(resolve, ms);
@@ -133,10 +135,15 @@ export function GitHubCallbackPage() {
         async function finishSignIn() {
             const code = searchParams.get('code');
             const callbackState = searchParams.get('state');
+            const submissionKey = `${code || ''}:${callbackState || ''}`;
 
             if (!code) {
                 clearPendingSocialAuth();
                 setError('No authorization code was returned by GitHub.');
+                return;
+            }
+
+            if (processedGitHubCallbacks.has(submissionKey)) {
                 return;
             }
 
@@ -152,6 +159,7 @@ export function GitHubCallbackPage() {
             }
 
             try {
+                processedGitHubCallbacks.add(submissionKey);
                 await socialAuthGithub({
                     code,
                     callback_url: `${window.location.origin}/auth/github/callback`,

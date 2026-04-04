@@ -63,15 +63,15 @@ export function UserDetailPage() {
 
             {/* User profile card */}
             <div className="bg-bg-secondary border border-border rounded-xl p-6">
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary">
                             {user.first_name?.[0]}{user.last_name?.[0]}
                         </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-text-primary">{user.full_name}</h2>
-                            <p className="text-sm text-text-secondary">{user.email}</p>
-                            <div className="flex items-center gap-2 mt-2">
+                        <div className="min-w-0">
+                            <h2 className="break-words text-xl font-bold text-text-primary">{user.full_name}</h2>
+                            <p className="break-all text-sm text-text-secondary">{user.email}</p>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <Badge variant={user.role === 'owner' ? 'default' : 'secondary'}>
                                     {ROLE_LABELS[user.role]}
                                 </Badge>
@@ -82,7 +82,7 @@ export function UserDetailPage() {
                 </div>
 
                 {/* Details */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-6 border-t border-border">
+                <div className="grid grid-cols-1 gap-6 mt-8 pt-6 border-t border-border sm:grid-cols-2 md:grid-cols-4">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">Member since</p>
                         <p className="text-sm text-text-primary">{formatDate(user.created_at, { hour: undefined, minute: undefined })}</p>
@@ -110,7 +110,7 @@ export function UserDetailPage() {
                             <Shield className="h-5 w-5 text-primary" />
                             <h3 className="text-base font-semibold text-text-primary">Manage Role</h3>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             {ROLE_OPTIONS.filter((r) => r.value !== 'owner').map((role) => (
                                 <Button
                                     key={role.value}

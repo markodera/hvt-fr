@@ -248,7 +248,7 @@ export default function ApiKeysPage() {
                     <select
                         value={projectFilter}
                         onChange={(event) => updateProjectFilter(event.target.value)}
-                        className="h-10 min-w-[220px] rounded-md border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                        className="h-10 w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25 sm:min-w-[220px] sm:w-auto"
                     >
                         <option value="">All projects</option>
                         {projects.map((project) => (
@@ -262,7 +262,7 @@ export default function ApiKeysPage() {
                 <button
                     type="button"
                     onClick={openCreateDialog}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9]"
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9] sm:w-auto"
                 >
                     <Plus className="h-4 w-4" />
                     Issue new key
@@ -270,85 +270,121 @@ export default function ApiKeysPage() {
             </div>
 
             <TableCard>
-                <div className="overflow-x-auto">
-                    <table className="min-w-[980px] w-full">
-                        <thead>
-                            <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
-                                <th className="px-4 py-3 font-medium">Key prefix</th>
-                                <th className="px-4 py-3 font-medium">Project</th>
-                                <th className="px-4 py-3 font-medium">Created</th>
-                                <th className="px-4 py-3 font-medium">Last used</th>
-                                <th className="px-4 py-3 font-medium">Status</th>
-                                <th className="px-4 py-3 font-medium text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {apiKeysQuery.isLoading ? Array.from({ length: 6 }).map((_, index) => <SkeletonRow key={index} />) : null}
-                            {!apiKeysQuery.isLoading && apiKeysQuery.isError ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-12">
-                                        <EmptyState message="API keys could not be loaded right now." />
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {!apiKeysQuery.isLoading && !apiKeysQuery.isError && keys.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-12">
-                                        <EmptyState
-                                            message="No API keys yet. Issue a project-scoped key to connect your backend runtime to HVT."
-                                            action={
-                                                <button
-                                                    type="button"
-                                                    onClick={openCreateDialog}
-                                                    className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#111111]"
-                                                >
-                                                    Issue new key
-                                                </button>
-                                            }
-                                        />
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {!apiKeysQuery.isLoading &&
-                                !apiKeysQuery.isError &&
-                                keys.map((apiKey) => (
-                                    <tr key={apiKey.id} className="border-b border-[#27272a] last:border-b-0">
-                                        <td className="px-4 py-4">
+                {apiKeysQuery.isLoading ? (
+                    <div className="space-y-3 px-4 py-4">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <div key={index} className="h-24 animate-pulse rounded-xl bg-[#111111]" />
+                        ))}
+                    </div>
+                ) : null}
+                {!apiKeysQuery.isLoading && apiKeysQuery.isError ? (
+                    <EmptyState message="API keys could not be loaded right now." />
+                ) : null}
+                {!apiKeysQuery.isLoading && !apiKeysQuery.isError && keys.length === 0 ? (
+                    <EmptyState
+                        message="No API keys yet. Issue a project-scoped key to connect your backend runtime to HVT."
+                        action={
+                            <button
+                                type="button"
+                                onClick={openCreateDialog}
+                                className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#111111]"
+                            >
+                                Issue new key
+                            </button>
+                        }
+                    />
+                ) : null}
+                {!apiKeysQuery.isLoading && !apiKeysQuery.isError && keys.length > 0 ? (
+                    <>
+                        <div className="divide-y divide-[#27272a] md:hidden">
+                            {keys.map((apiKey) => (
+                                <div key={apiKey.id} className="space-y-4 px-4 py-4">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
                                             <div className="font-mono text-sm text-white">{apiKey.prefix}...</div>
                                             <div className="mt-1 text-xs text-[#71717a]">{apiKey.name}</div>
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <div className="text-sm text-white">{apiKey.project_name || 'Default project'}</div>
-                                            <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
-                                                {apiKey.project_slug || 'default'}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-4 font-mono text-xs text-[#71717a]">{formatDate(apiKey.created_at)}</td>
-                                        <td className="px-4 py-4 font-mono text-xs text-[#71717a]">
-                                            {apiKey.last_used_at ? formatRelativeTime(apiKey.last_used_at) : 'Never'}
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`h-2 w-2 rounded-full ${apiKey.is_active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                                                <span className="text-sm text-[#a1a1aa]">{apiKey.is_active ? 'Active' : 'Revoked'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-4 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => setRevokeTarget(apiKey)}
-                                                disabled={!apiKey.is_active}
-                                                className="inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Revoke
-                                            </button>
-                                        </td>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`h-2 w-2 rounded-full ${apiKey.is_active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                            <span className="text-sm text-[#a1a1aa]">{apiKey.is_active ? 'Active' : 'Revoked'}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-white">{apiKey.project_name || 'Default project'}</div>
+                                        <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
+                                            {apiKey.project_slug || 'default'}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3 text-xs text-[#71717a] sm:grid-cols-2">
+                                        <p>Created: {formatDate(apiKey.created_at)}</p>
+                                        <p>Last used: {apiKey.last_used_at ? formatRelativeTime(apiKey.last_used_at) : 'Never'}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRevokeTarget(apiKey)}
+                                        disabled={!apiKey.is_active}
+                                        className="inline-flex h-9 w-full items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Revoke
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="hidden overflow-x-auto md:block">
+                            <table className="w-full min-w-[980px]">
+                                <thead>
+                                    <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
+                                        <th className="px-4 py-3 font-medium">Key prefix</th>
+                                        <th className="px-4 py-3 font-medium">Project</th>
+                                        <th className="px-4 py-3 font-medium">Created</th>
+                                        <th className="px-4 py-3 font-medium">Last used</th>
+                                        <th className="px-4 py-3 font-medium">Status</th>
+                                        <th className="px-4 py-3 font-medium text-right">Actions</th>
                                     </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody>
+                                    {keys.map((apiKey) => (
+                                        <tr key={apiKey.id} className="border-b border-[#27272a] last:border-b-0">
+                                            <td className="px-4 py-4">
+                                                <div className="font-mono text-sm text-white">{apiKey.prefix}...</div>
+                                                <div className="mt-1 text-xs text-[#71717a]">{apiKey.name}</div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <div className="text-sm text-white">{apiKey.project_name || 'Default project'}</div>
+                                                <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
+                                                    {apiKey.project_slug || 'default'}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4 font-mono text-xs text-[#71717a]">{formatDate(apiKey.created_at)}</td>
+                                            <td className="px-4 py-4 font-mono text-xs text-[#71717a]">
+                                                {apiKey.last_used_at ? formatRelativeTime(apiKey.last_used_at) : 'Never'}
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`h-2 w-2 rounded-full ${apiKey.is_active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                                    <span className="text-sm text-[#a1a1aa]">{apiKey.is_active ? 'Active' : 'Revoked'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4 text-right">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRevokeTarget(apiKey)}
+                                                    disabled={!apiKey.is_active}
+                                                    className="inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Revoke
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                ) : null}
 
                 {apiKeysQuery.data?.count ? <Pagination count={apiKeysQuery.data.count} page={page} onPageChange={updatePage} /> : null}
             </TableCard>

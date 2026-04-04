@@ -20,6 +20,8 @@ const DOT_GRID_STYLE = {
     backgroundRepeat: 'repeat',
 };
 
+const processedGoogleCallbacks = new Set();
+
 function delay(ms) {
     return new Promise((resolve) => {
         window.setTimeout(resolve, ms);
@@ -134,10 +136,15 @@ export function GoogleCallbackPage() {
         async function finishSignIn() {
             const code = searchParams.get('code');
             const callbackState = searchParams.get('state');
+            const submissionKey = `${code || ''}:${callbackState || ''}`;
 
             if (!code) {
                 clearPendingSocialAuth();
                 setError('No authorization code was returned by Google.');
+                return;
+            }
+
+            if (processedGoogleCallbacks.has(submissionKey)) {
                 return;
             }
 
@@ -153,6 +160,7 @@ export function GoogleCallbackPage() {
             }
 
             try {
+                processedGoogleCallbacks.add(submissionKey);
                 await socialAuthGoogle({
                     code,
                     callback_url: `${window.location.origin}/auth/google/callback`,

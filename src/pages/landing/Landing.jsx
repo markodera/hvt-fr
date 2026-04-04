@@ -562,10 +562,50 @@ export default function Landing() {
         </section>
 
         <section className="border-b border-[#27272a]">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <div className="text-sm font-medium text-[#a78bfa]">Plain English</div>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">
+                What HVT does if you are not building the auth system yourself.
+              </h2>
+              <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
+                HVT gives your product a place to handle sign up, sign in, team invites, password resets, and
+                activity history without making you wire those pieces together from separate tools.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              <div className="rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
+                <div className="text-sm font-semibold text-white">For customers</div>
+                <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
+                  People can create accounts, log in, reset passwords, and use Google or GitHub if you turn those
+                  options on.
+                </p>
+              </div>
+              <div className="rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
+                <div className="text-sm font-semibold text-white">For your team</div>
+                <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
+                  You can set up apps and environments, invite teammates, and control who can manage access.
+                </p>
+              </div>
+              <div className="rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
+                <div className="text-sm font-semibold text-white">For operations</div>
+                <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
+                  HVT can send webhooks and keep an audit trail so other tools and internal teams can see what
+                  changed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[#27272a]">
           <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
               <div className="text-sm font-medium text-[#a78bfa]">At a glance</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">What HVT helps you do, in plain language.</h2>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">
+                What HVT helps you do, in plain language.
+              </h2>
             </div>
 
             <div className="mt-10 rounded-[18px] border border-[#27272a] bg-[#111111] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">

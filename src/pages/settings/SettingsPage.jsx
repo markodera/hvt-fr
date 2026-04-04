@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, LockKeyhole, Pencil, Trash2, UserRound } from 'lucide-react';
+import { Building2, LockKeyhole, LogOut, Pencil, Trash2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -75,9 +75,10 @@ function LoadingGrid() {
 
 export default function SettingsPage() {
     const queryClient = useQueryClient();
-    const { user, refreshSession } = useAuth();
+    const { user, refreshSession, logout } = useAuth();
     const [editingProject, setEditingProject] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const { data: org, isLoading: orgLoading } = useQuery({
         queryKey: ['organization'],
@@ -160,6 +161,16 @@ export default function SettingsPage() {
     function invalidateProjectQueries() {
         queryClient.invalidateQueries({ queryKey: ['projects'] });
         queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+    }
+
+    async function handleLogout() {
+        setIsLoggingOut(true);
+        try {
+            await logout();
+        } catch (error) {
+            setIsLoggingOut(false);
+            toast.error(getErrorMessage(error));
+        }
     }
 
     const orgMutation = useMutation({
@@ -317,6 +328,24 @@ export default function SettingsPage() {
                         </div>
                     </form>
                 </SectionCard>
+
+                <div className="md:hidden">
+                    <SectionCard
+                        label="Session"
+                        title="Sign out"
+                        description="Quick access to sign out when you are using the dashboard on mobile."
+                    >
+                        <Button
+                            type="button"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="w-full border border-[#27272a] bg-transparent text-white hover:bg-[#18181b]"
+                        >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            {isLoggingOut ? 'Signing out...' : 'Log out'}
+                        </Button>
+                    </SectionCard>
+                </div>
             </div>
 
             <SectionCard
@@ -342,7 +371,7 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3">
+                    <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-sm font-medium text-white">Allow public sign-up</p>
                             <p className="text-xs text-[#71717a]">New default-project keys inherit this setting.</p>
@@ -417,7 +446,7 @@ export default function SettingsPage() {
                                             </div>
                                             <p className="mt-2 font-mono text-xs text-[#a78bfa]">{project.slug}</p>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setEditingProject(project)}
@@ -462,7 +491,7 @@ export default function SettingsPage() {
                                     className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                                 />
                             </div>
-                            <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3">
+                            <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 md:col-span-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-white">Allow public sign-up</p>
                                     <p className="text-xs text-[#71717a]">Applies when this project key is used for runtime sign-up.</p>
@@ -476,11 +505,11 @@ export default function SettingsPage() {
                                     }
                                 />
                             </div>
-                            <div className="md:col-span-2 flex justify-end">
+                            <div className="flex justify-end md:col-span-2">
                                 <Button
                                     type="submit"
                                     disabled={projectMutation.isPending}
-                                    className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                    className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
                                 >
                                     {projectMutation.isPending ? 'Creating...' : 'Create project'}
                                 </Button>
@@ -527,7 +556,7 @@ export default function SettingsPage() {
                                 className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                             />
                         </div>
-                        <div className="flex items-center justify-between rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3">
+                        <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-sm font-medium text-white">Allow public sign-up</p>
                                 <p className="text-xs text-[#71717a]">Use this when the project should accept runtime registrations.</p>

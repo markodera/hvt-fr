@@ -169,7 +169,7 @@ export function ProjectSocialProvidersSection({ projects }) {
     return (
         <>
             <div className="space-y-6 rounded-xl border border-[#27272a] bg-[#111111] p-6">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <div className="flex items-center gap-2">
                             <Globe2 className="h-5 w-5 text-[#a78bfa]" />
@@ -183,7 +183,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                         type="button"
                         onClick={() => setCreateProviderOpen(true)}
                         disabled={!selectedProjectId || socialProviders.length >= 2}
-                        className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                        className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
                     >
                         Add provider
                     </Button>
@@ -244,7 +244,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                                         <p className="text-xs text-[#a1a1aa]">Secret ends in {provider.client_secret_last4}</p>
                                     )}
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -348,7 +348,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                             )}
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] px-4 py-3">
+                        <div className="flex flex-col gap-3 rounded-lg border border-[#27272a] bg-[#111111] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-sm font-medium text-white">Provider active</p>
                                 <p className="text-xs text-[#a1a1aa]">
@@ -427,7 +427,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                             {editForm.formState.errors.redirect_uris_text && <p className="text-xs text-danger">{editForm.formState.errors.redirect_uris_text.message}</p>}
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] px-4 py-3">
+                        <div className="flex flex-col gap-3 rounded-lg border border-[#27272a] bg-[#111111] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-sm font-medium text-white">Provider active</p>
                                 <p className="text-xs text-[#a1a1aa]">

@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
+    Building2,
     Grid2x2,
     KeyRound,
     LogOut,
@@ -25,7 +26,12 @@ const navigation = [
     { label: 'Settings', to: '/dashboard/settings', icon: Settings },
 ];
 
+const onboardingNavigation = [
+    { label: 'Create Organization', to: '/dashboard/create-organization', icon: Building2 },
+];
+
 const titleMap = [
+    { match: '/dashboard/create-organization', title: 'Create Organization' },
     { match: '/dashboard/users', title: 'Users' },
     { match: '/dashboard/api-keys', title: 'API Keys' },
     { match: '/dashboard/webhooks', title: 'Webhooks' },
@@ -91,6 +97,8 @@ export function DashboardShell({ children }) {
     const location = useLocation();
     const { user, logout } = useAuth();
     const { toggleTheme, isDark } = useTheme();
+    const hasOrganization = Boolean(user?.organization);
+    const shellNavigation = hasOrganization ? navigation : onboardingNavigation;
     const pageTitle = useMemo(() => resolveTitle(location.pathname), [location.pathname]);
     const displayName = getDisplayName(user);
     const initials = getInitials(user);
@@ -103,7 +111,7 @@ export function DashboardShell({ children }) {
                 </div>
 
                 <nav className="flex-1 space-y-1 px-3 py-4">
-                    {navigation.map((item) => (
+                    {shellNavigation.map((item) => (
                         <NavItem key={item.to} item={item} />
                     ))}
                 </nav>
@@ -162,7 +170,7 @@ export function DashboardShell({ children }) {
 
             <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[#27272a] bg-[#111111]/95 px-2 py-2 backdrop-blur md:hidden">
                 <div className="flex items-center gap-1">
-                    {navigation.map((item) => (
+                    {shellNavigation.map((item) => (
                         <NavItem key={item.to} item={item} mobile />
                     ))}
                 </div>
