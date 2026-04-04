@@ -673,19 +673,21 @@ export default function Landing() {
             </div>
 
             <div className="mt-10 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
-                <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">What is true today</div>
-                <div className="mt-4 space-y-4 text-sm leading-7 text-[#d4d4d8]">
-                  <p>
-                    HVT is available as open-source software under <span className="text-white">AGPL v3</span>. You can self-host
-                    it now, audit the code, and keep the full org to project to runtime model intact.
-                  </p>
-                  <p>
-                    The managed service at <span className="text-white">hvts.app</span> is also real, but public pricing is staying
-                    private until the hosted limits and support promises are backed by actual enforcement.
-                  </p>
+              <div className="flex flex-col rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">What is true today</div>
+                  <div className="mt-4 space-y-4 text-sm leading-7 text-[#d4d4d8]">
+                    <p>
+                      HVT is available as open-source software under <span className="text-white">AGPL v3</span>. You can self-host
+                      it now, audit the code, and keep the full org to project to runtime model intact.
+                    </p>
+                    <p>
+                      The managed service at <span className="text-white">hvts.app</span> is also real, but public pricing is staying
+                      private until the hosted limits and support promises are backed by actual enforcement.
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-auto pt-6 flex flex-col gap-3 sm:flex-row">
                   <Link
                     to="/signup"
                     className="inline-flex items-center justify-center rounded-md bg-[#7c3aed] px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]"
@@ -703,14 +705,27 @@ export default function Landing() {
                 </div>
               </div>
 
-              <div className="rounded-[18px] border border-[#27272a] bg-[#18181b] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
-                <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Managed hosting</div>
-                <h3 className="mt-4 text-xl font-semibold text-white">Free for testing</h3>
-                <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
-                  You can use the managed version of HVT for free today. It's the perfect way to test the platform or build a demo before deciding to self-host or wait for paid tiers.
-                </p>
-                <div className="mt-6 rounded-2xl border border-[#27272a] bg-[#111111] px-4 py-4 text-sm text-[#d4d4d8]">
-                  Hosted pricing will show up here once the launch settles. Until then, sign up and try the platform for free.
+              <div className="relative flex flex-col overflow-hidden rounded-[18px] border border-[rgba(124,58,237,0.4)] bg-[#18181b] p-6 shadow-[0_0_30px_rgba(124,58,237,0.15)] transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.8)] hover:shadow-[0_0_40px_rgba(124,58,237,0.25)]">
+                <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#7c3aed] opacity-20 blur-[80px]"></div>
+                <div className="relative z-10 flex h-full flex-col">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.18em] text-[#a78bfa] font-semibold">Managed hosting</div>
+                    <h3 className="mt-4 bg-gradient-to-r from-white to-[#a78bfa] bg-clip-text text-xl font-bold text-transparent">Free for testing</h3>
+                    <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
+                      You can use the managed version of HVT for free today. It's the perfect way to test the platform or build a demo before deciding to self-host or wait for paid tiers.
+                    </p>
+                    <div className="mt-6 rounded-2xl border border-[rgba(124,58,237,0.2)] bg-[#111111] px-4 py-4 text-sm text-[#d4d4d8]">
+                      Hosted pricing will show up here once the launch settles. Until then, <strong className="text-[#a78bfa]">sign up and try the platform for free.</strong>
+                    </div>
+                  </div>
+                  <div className="mt-auto pt-6">
+                    <Link
+                      to="/signup"
+                      className="inline-flex w-full items-center justify-center rounded-md bg-[#7c3aed] px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]"
+                    >
+                      Create free account
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
