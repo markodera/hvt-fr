@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     ArrowRight,
@@ -34,7 +34,7 @@ const fitCards = [
     },
     {
         title: 'You can self-host without dumbing the model down',
-        description: 'This is not a login widget pretending to be a platform. It is auth infrastructure built for a real control plane and runtime plane.',
+        description: 'This is not a login widget pretending to be something bigger. It is auth infrastructure built for a real control plane and runtime plane.',
     },
 ];
 
@@ -449,3 +449,4 @@ export function LandingPage() {
         </>
     );
 }
+
