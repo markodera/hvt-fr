@@ -27,6 +27,7 @@ import AuditLogsPage from '@/pages/audit/AuditLogsPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import { CreateOrganizationPage } from '@/pages/settings/CreateOrganizationPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import RuntimePlaygroundPage from '@/pages/runtime/RuntimePlaygroundPage';
 
 function InviteAcceptRedirect() {
     const location = useLocation();
@@ -55,6 +56,8 @@ const router = createBrowserRouter([
     { path: '/auth/verify-email/:key', element: <VerifyEmailPage /> },
     { path: '/auth/google/callback', element: <GoogleCallbackPage /> },
     { path: '/auth/github/callback', element: <GitHubCallbackPage /> },
+    { path: '/runtime-playground', element: <RuntimePlaygroundPage /> },
+    { path: '/runtime-playground/callback/:provider', element: <RuntimePlaygroundPage /> },
     {
         element: (
             <ProtectedRoute>

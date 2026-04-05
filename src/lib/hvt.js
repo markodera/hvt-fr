@@ -5,4 +5,4 @@ export const hvt = new HVTClient({
     fetch: (...args) => fetch(...args),
 });
 
-export { API_KEY_CANONICAL_SCOPES, HVTApiError };
+export { API_KEY_CANONICAL_SCOPES, HVTApiError, HVTClient };
