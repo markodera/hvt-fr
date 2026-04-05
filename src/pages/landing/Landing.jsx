@@ -525,7 +525,7 @@ export default function Landing() {
                 className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.12s both' }}
               >
-                HVT helps you manage customer accounts and team access without stitching five tools together.
+                Manage customer accounts and team access without stitching five tools together.
               </h1>
               <p
                 className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg"
@@ -787,4 +787,5 @@ export default function Landing() {
     </div>
   );
 }
+
 

@@ -5,8 +5,24 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { verifyEmail } from '@/api/auth';
 import { AuthCard } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
-import { clearPendingVerificationEmail, getPendingVerificationEmail } from '@/lib/emailVerification';
+import {
+    clearPendingVerificationEmail,
+    getPendingVerificationEmail,
+} from '@/lib/emailVerification';
 import { getErrorMessage } from '@/lib/utils';
+
+const verificationRequests = new Map();
+
+function verifyEmailOnce(key) {
+    if (!verificationRequests.has(key)) {
+        const request = verifyEmail(key)
+            .then(() => ({ ok: true }))
+            .catch((error) => ({ ok: false, error }));
+        verificationRequests.set(key, request);
+    }
+
+    return verificationRequests.get(key);
+}
 
 export function VerifyEmailPage() {
     const navigate = useNavigate();
@@ -31,23 +47,24 @@ export function VerifyEmailPage() {
                 return;
             }
 
-            try {
-                await verifyEmail(key);
-                clearPendingVerificationEmail();
-                if (!cancelled) {
-                    navigate('/verify-email/success', { replace: true });
-                }
-            } catch (error) {
-                if (!cancelled) {
-                    navigate('/verify-email/expired', {
-                        replace: true,
-                        state: {
-                            email: getPendingVerificationEmail(),
-                            message: getErrorMessage(error),
-                        },
-                    });
-                }
+            const result = await verifyEmailOnce(key);
+            if (cancelled) {
+                return;
             }
+
+            if (result.ok) {
+                clearPendingVerificationEmail();
+                navigate('/verify-email/success', { replace: true });
+                return;
+            }
+
+            navigate('/verify-email/expired', {
+                replace: true,
+                state: {
+                    email: getPendingVerificationEmail(),
+                    message: getErrorMessage(result.error),
+                },
+            });
         }
 
         finishVerification();
