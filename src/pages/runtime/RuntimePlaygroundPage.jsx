@@ -88,14 +88,74 @@ function createClient(config) {
     return new HVTClient({
         baseUrl: config.baseUrl,
         apiKey: config.apiKey,
+        credentials: 'omit',
         fetch: (...args) => fetch(...args),
     });
+}
+
+function runtimeRegister(client, payload) {
+    return client.request('/api/v1/auth/runtime/register/', {
+        method: 'POST',
+        auth: 'apiKey',
+        body: payload,
+    });
+}
+
+function getProviderLabel(provider) {
+    if (provider === 'google') return 'Google';
+    if (provider === 'github') return 'GitHub';
+    return 'Social provider';
+}
+
+function extractFirstErrorMessage(value) {
+    if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+    }
+
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const message = extractFirstErrorMessage(item);
+            if (message) return message;
+        }
+        return '';
+    }
+
+    if (!value || typeof value !== 'object') {
+        return '';
+    }
+
+    if (Array.isArray(value.non_field_errors)) {
+        return extractFirstErrorMessage(value.non_field_errors);
+    }
+
+    for (const nestedValue of Object.values(value)) {
+        const message = extractFirstErrorMessage(nestedValue);
+        if (message) return message;
+    }
+
+    return '';
+}
+
+function formatErrorDetails(value) {
+    if (!value || typeof value !== 'object') {
+        return '';
+    }
+
+    try {
+        return JSON.stringify(value, null, 2);
+    } catch {
+        return '';
+    }
 }
 
 function getErrorMessage(error) {
     if (error instanceof HVTApiError) {
         if (typeof error.detail === 'string' && error.detail.trim()) return error.detail;
+        const nestedDetailMessage = extractFirstErrorMessage(error.detail);
+        if (nestedDetailMessage) return nestedDetailMessage;
         if (error.body && typeof error.body === 'object' && error.body !== null) {
+            const nestedBodyMessage = extractFirstErrorMessage(error.body);
+            if (nestedBodyMessage) return nestedBodyMessage;
             try {
                 return JSON.stringify(error.body, null, 2);
             } catch {
@@ -107,6 +167,81 @@ function getErrorMessage(error) {
 
     if (error instanceof Error) return error.message;
     return 'An unexpected error occurred.';
+}
+
+function getFriendlyRuntimeSocialErrorMessage(message, provider, callbackUrl) {
+    const providerLabel = getProviderLabel(provider);
+
+    if (message === 'These credentials do not belong to the API key organization.') {
+        return `This ${providerLabel} account is already linked to a different organization. Use an account that belongs to this API key, or try a fresh ${providerLabel} account.`;
+    }
+
+    if (message === 'These credentials do not belong to the API key project.') {
+        return `This ${providerLabel} account belongs to the same organization but a different project. Use an account linked to this project, or switch the runtime API key to the matching project.`;
+    }
+
+    if (message === 'This user is not assigned to an organization.') {
+        return `This ${providerLabel} account is not linked to a runtime organization yet. Use an invited account for this project, or try a fresh ${providerLabel} account.`;
+    }
+
+    if (message === 'A valid callback_url is required for runtime social login.') {
+        return `The ${providerLabel} callback URL was missing. Start the flow again from the runtime playground.`;
+    }
+
+    if (message === 'This callback URL is not allowed for the configured provider.') {
+        return `This ${providerLabel} callback URL is not in the project allowlist. Add ${callbackUrl} in Settings > Social Providers before retrying.`;
+    }
+
+    if (message.includes('is not configured.')) {
+        return `No ${providerLabel} social provider is configured for this project. Go to Settings > Social Providers to add ${providerLabel} credentials.`;
+    }
+
+    if (message.includes('is misconfigured.')) {
+        return `The ${providerLabel} provider is configured, but the backend settings are incomplete. Check the project credentials and registered redirect URI, then try again.`;
+    }
+
+    if (message.includes('configuration is ambiguous')) {
+        return `More than one ${providerLabel} provider configuration matches this request. Keep only one active ${providerLabel} config for this project.`;
+    }
+
+    return message;
+}
+
+function getOAuthProviderErrorMessage(provider, oauthError, oauthErrorDescription) {
+    const providerLabel = getProviderLabel(provider);
+    const normalizedError = (oauthError || '').toLowerCase();
+    const normalizedDescription = (oauthErrorDescription || '').trim();
+
+    if (normalizedError === 'access_denied') {
+        return `${providerLabel} sign-in was cancelled before access was granted.`;
+    }
+
+    if (normalizedDescription) {
+        return `${providerLabel} returned an OAuth error: ${normalizedDescription}`;
+    }
+
+    if (normalizedError) {
+        return `${providerLabel} returned an OAuth error: ${normalizedError}`;
+    }
+
+    return `${providerLabel} sign-in failed before the callback could be completed.`;
+}
+
+function getRuntimeSocialErrorState(error, { provider, callbackUrl }) {
+    const rawMessage = getErrorMessage(error);
+    const message = getFriendlyRuntimeSocialErrorMessage(rawMessage, provider, callbackUrl);
+
+    if (error instanceof HVTApiError) {
+        return {
+            message,
+            details: formatErrorDetails(error.body || error.detail),
+        };
+    }
+
+    return {
+        message,
+        details: '',
+    };
 }
 
 function createSocialState(provider) {
@@ -176,7 +311,7 @@ function RuntimeCallbackCard() {
     const [searchParams] = useSearchParams();
     const [status, setStatus] = useState('idle');
     const [result, setResult] = useState(null);
-    const [error, setError] = useState('');
+    const [error, setError] = useState({ message: '', details: '' });
 
     useEffect(() => {
         document.title = `Runtime ${provider} callback | HVT`;
@@ -186,35 +321,51 @@ function RuntimeCallbackCard() {
         const code = searchParams.get('code');
         const callbackState = searchParams.get('state');
         const oauthError = searchParams.get('error');
+        const oauthErrorDescription = searchParams.get('error_description');
         const pending = loadPendingSocial();
 
         if (oauthError) {
             setStatus('error');
-            setError(oauthError);
+            setError({
+                message: getOAuthProviderErrorMessage(provider, oauthError, oauthErrorDescription),
+                details: '',
+            });
             return;
         }
 
         if (!provider || !code) {
             setStatus('error');
-            setError('Missing provider or code in the callback URL.');
+            setError({
+                message: 'Missing provider or authorization code in the callback URL.',
+                details: '',
+            });
             return;
         }
 
         if (!pending?.apiKey || !pending?.baseUrl || !pending?.callbackUrl) {
             setStatus('error');
-            setError('Missing saved runtime test configuration. Start the flow again from the runtime playground.');
+            setError({
+                message: 'Missing saved runtime test configuration. Start the flow again from the runtime playground.',
+                details: '',
+            });
             return;
         }
 
         if (pending.provider !== provider) {
             setStatus('error');
-            setError('The callback provider does not match the provider that started the flow.');
+            setError({
+                message: 'The callback provider does not match the provider that started the flow.',
+                details: '',
+            });
             return;
         }
 
         if (pending.state && callbackState && pending.state !== callbackState) {
             setStatus('error');
-            setError('OAuth state mismatch. Start the provider flow again.');
+            setError({
+                message: 'OAuth state mismatch. Start the provider flow again.',
+                details: '',
+            });
             return;
         }
 
@@ -242,7 +393,12 @@ function RuntimeCallbackCard() {
                 clearPendingSocial();
             })
             .catch((requestError) => {
-                setError(getErrorMessage(requestError));
+                setError(
+                    getRuntimeSocialErrorState(requestError, {
+                        provider,
+                        callbackUrl: pending.callbackUrl,
+                    }),
+                );
                 setStatus('error');
             });
     }, [provider, searchParams]);
@@ -287,8 +443,9 @@ function RuntimeCallbackCard() {
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold text-white">Runtime social sign-in failed</h1>
-                            <p className="mt-2 whitespace-pre-wrap text-sm text-[#fca5a5]">{error}</p>
+                            <p className="mt-2 whitespace-pre-wrap text-sm text-[#fca5a5]">{error.message}</p>
                         </div>
+                        {error.details ? <JsonPanel label="Error details" value={error.details} /> : null}
                     </div>
                 ) : null}
 
@@ -395,7 +552,9 @@ export default function RuntimePlaygroundPage() {
         const providerConfig = currentProviders.find((item) => item.provider === providerName);
         if (!providerConfig) {
             setOutputLabel('Runtime social providers');
-            setOutput(`Provider "${providerName}" is not configured for this project/API key.`);
+            setOutput(
+                `No ${getProviderLabel(providerName)} social provider is configured for this project.\n\nGo to Settings > Social Providers and add ${getProviderLabel(providerName)} credentials before retrying.`,
+            );
             return;
         }
 
@@ -409,15 +568,7 @@ export default function RuntimePlaygroundPage() {
         if (Array.isArray(providerConfig.redirect_uris) && !providerConfig.redirect_uris.includes(callbackUrl)) {
             setOutputLabel('Runtime social providers');
             setOutput(
-                JSON.stringify(
-                    {
-                        detail: 'The callback URL on this playground is not in the project allowlist.',
-                        callback_url: callbackUrl,
-                        allowed_redirect_uris: providerConfig.redirect_uris,
-                    },
-                    null,
-                    2,
-                ),
+                `The ${getProviderLabel(providerName)} callback URL on this playground is not in the project allowlist.\n\nAdd this callback URL in Settings > Social Providers:\n${callbackUrl}\n\nCurrent allowlist:\n${(providerConfig.redirect_uris || []).join('\n')}`,
             );
             return;
         }
@@ -504,6 +655,9 @@ export default function RuntimePlaygroundPage() {
                             <div className="mt-4 rounded-xl border border-[#312e81] bg-[#1e1b4b] px-4 py-3 text-sm text-[#c4b5fd]">
                                 Add those exact callback URLs to the project social provider redirect URI allowlist before testing runtime Google or GitHub.
                             </div>
+                            <div className="mt-4 rounded-xl border border-[#14532d] bg-[#052e16] px-4 py-3 text-sm text-[#bbf7d0]">
+                                Runtime test requests on this page are token-only on purpose. They do not reuse or overwrite the dashboard cookie session.
+                            </div>
                         </SectionCard>
 
                         <SectionCard
@@ -567,7 +721,7 @@ export default function RuntimePlaygroundPage() {
                                     disabled={busyAction === 'Runtime register'}
                                     onClick={() =>
                                         runAction('Runtime register', () =>
-                                            createClient(config).auth.register({
+                                            runtimeRegister(createClient(config), {
                                                 email: form.email,
                                                 password1: form.password,
                                                 password2: form.confirmPassword,

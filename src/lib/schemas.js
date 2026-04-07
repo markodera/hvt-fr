@@ -11,6 +11,23 @@ const redirectUrisTextSchema = z
         return lines.length > 0 && lines.every((line) => z.string().url().safeParse(line).success);
     }, 'Enter one valid redirect URI per line');
 
+const appAccessSlugPattern = /^[a-z0-9]+(?:[._:-][a-z0-9]+)*$/;
+
+const optionalProjectIdSchema = z.preprocess((value) => {
+    if (value === '' || value === undefined || value === null) {
+        return null;
+    }
+    return value;
+}, z.string().uuid('Select a valid project').nullable().optional());
+
+const appAccessSlugSchema = z
+    .string()
+    .min(1, 'Slug is required')
+    .max(100, 'Slug is too long')
+    .regex(appAccessSlugPattern, 'Use lowercase letters, numbers, and separators like ., _, :, or -');
+
+const optionalDescriptionSchema = z.string().max(1000, 'Description is too long').optional();
+
 // Auth schemas
 
 export const loginSchema = z.object({
@@ -109,6 +126,24 @@ export const createProjectSchema = z.object({
     allow_signup: z.boolean(),
 });
 
+export const projectPermissionSchema = z.object({
+    slug: appAccessSlugSchema,
+    name: z.string().min(1, 'Permission name is required').max(120, 'Permission name is too long'),
+    description: optionalDescriptionSchema,
+});
+
+export const projectRoleSchema = z.object({
+    slug: appAccessSlugSchema,
+    name: z.string().min(1, 'Role name is required').max(120, 'Role name is too long'),
+    description: optionalDescriptionSchema,
+    is_default_signup: z.boolean(),
+    permission_ids: z.array(z.string().uuid()).default([]),
+});
+
+export const projectUserRoleAssignmentSchema = z.object({
+    role_ids: z.array(z.string().uuid()).default([]),
+});
+
 export const socialProviderCreateSchema = z.object({
     provider: z.enum(['google', 'github']),
     client_id: z.string().min(1, 'Client ID is required').max(255),
@@ -124,10 +159,19 @@ export const socialProviderUpdateSchema = z.object({
     is_active: z.boolean(),
 });
 
-
 export const organizationInvitationCreateSchema = z.object({
     email: z.string().email('Enter a valid email'),
     role: z.enum(['admin', 'member']),
+    project_id: optionalProjectIdSchema,
+    app_role_ids: z.array(z.string().uuid()).default([]),
+}).superRefine((data, ctx) => {
+    if (data.app_role_ids.length > 0 && !data.project_id) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['project_id'],
+            message: 'Select a project before assigning app roles',
+        });
+    }
 });
 
 // User role schema

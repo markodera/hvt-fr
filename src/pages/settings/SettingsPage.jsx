@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ProjectSocialProvidersSection } from '@/pages/settings/ProjectSocialProvidersSection';
+import { ProjectAccessManager } from '@/components/dashboard/ProjectAccessManager';
 
 function SectionCard({ label, title, description, children }) {
     return (
@@ -520,6 +521,14 @@ export default function SettingsPage() {
             </SectionCard>
 
             <SectionCard
+                label="App Access"
+                title="Project app roles and permissions"
+                description="Owners and admins can define dynamic app permissions, bundle them into roles, and control the roles developers or invitees can receive."
+            >
+                <ProjectAccessManager projects={projects} />
+            </SectionCard>
+
+            <SectionCard
                 label="Social Providers"
                 title="Per-project provider credentials"
                 description="Google and GitHub OAuth settings are isolated per project."
@@ -603,3 +612,4 @@ export default function SettingsPage() {
         </div>
     );
 }
+

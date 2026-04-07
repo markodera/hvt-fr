@@ -1,4 +1,4 @@
-﻿import { hvt } from '@/lib/hvt';
+import { hvt } from '@/lib/hvt';
 
 function normalizeOptions(options = {}) {
     if (
@@ -20,6 +20,15 @@ function normalizeQueryArgs(params = {}, options = {}) {
         return [{}, normalizeOptions(params)];
     }
     return [params, normalizeOptions(options)];
+}
+
+function organizationRequest(path, { method = 'GET', query, body, ...options } = {}) {
+    return hvt.request(path, {
+        method,
+        query,
+        body,
+        ...normalizeOptions(options),
+    });
 }
 
 export async function createOrg(data, options = {}) {
@@ -55,6 +64,92 @@ export function updateProject(id, data, options = {}) {
 
 export function deleteProject(id, options = {}) {
     return hvt.organizations.deleteProject(id, options);
+}
+
+export function listProjectPermissions(projectId, params = {}, options = {}) {
+    const [query, requestOptions] = normalizeQueryArgs(params, options);
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/permissions/`, {
+        method: 'GET',
+        query,
+        ...requestOptions,
+    });
+}
+
+export function createProjectPermission(projectId, data, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/permissions/`, {
+        method: 'POST',
+        body: data,
+        ...options,
+    });
+}
+
+export function updateProjectPermission(projectId, permissionId, data, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/permissions/${permissionId}/`, {
+        method: 'PATCH',
+        body: data,
+        ...options,
+    });
+}
+
+export function deleteProjectPermission(projectId, permissionId, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/permissions/${permissionId}/`, {
+        method: 'DELETE',
+        ...options,
+    });
+}
+
+export function listProjectRoles(projectId, params = {}, options = {}) {
+    const [query, requestOptions] = normalizeQueryArgs(params, options);
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/roles/`, {
+        method: 'GET',
+        query,
+        ...requestOptions,
+    });
+}
+
+export function createProjectRole(projectId, data, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/roles/`, {
+        method: 'POST',
+        body: data,
+        ...options,
+    });
+}
+
+export function updateProjectRole(projectId, roleId, data, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/roles/${roleId}/`, {
+        method: 'PATCH',
+        body: data,
+        ...options,
+    });
+}
+
+export function deleteProjectRole(projectId, roleId, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/roles/${roleId}/`, {
+        method: 'DELETE',
+        ...options,
+    });
+}
+
+export function getCurrentProjectAccess(projectId, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/access/`, {
+        method: 'GET',
+        ...options,
+    });
+}
+
+export function getUserProjectAccess(projectId, userId, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/users/${userId}/roles/`, {
+        method: 'GET',
+        ...options,
+    });
+}
+
+export function replaceUserProjectRoles(projectId, userId, data, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/users/${userId}/roles/`, {
+        method: 'PUT',
+        body: data,
+        ...options,
+    });
 }
 
 export function listProjectSocialProviders(projectId, options = {}) {

@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router-dom';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
@@ -27,6 +27,7 @@ import AuditLogsPage from '@/pages/audit/AuditLogsPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import { CreateOrganizationPage } from '@/pages/settings/CreateOrganizationPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import RuntimeCommerceDemoPage from '@/pages/runtime/RuntimeCommerceDemoPage';
 import RuntimePlaygroundPage from '@/pages/runtime/RuntimePlaygroundPage';
 
 function InviteAcceptRedirect() {
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
     { path: '/auth/github/callback', element: <GitHubCallbackPage /> },
     { path: '/runtime-playground', element: <RuntimePlaygroundPage /> },
     { path: '/runtime-playground/callback/:provider', element: <RuntimePlaygroundPage /> },
+    { path: '/runtime-demo', element: <RuntimeCommerceDemoPage /> },
     {
         element: (
             <ProtectedRoute>

@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import { socialAuthGoogle } from '@/api/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { hvt } from '@/lib/hvt';
+import { getErrorMessage } from '@/lib/utils';
 import {
     SOCIAL_AUTH_ENDPOINTS,
     SOCIAL_AUTH_PROVIDERS,
@@ -20,12 +21,57 @@ const DOT_GRID_STYLE = {
     backgroundRepeat: 'repeat',
 };
 
-const processedGoogleCallbacks = new Set();
+const googleCallbackRequests = new Map();
 
 function delay(ms) {
     return new Promise((resolve) => {
         window.setTimeout(resolve, ms);
     });
+}
+
+function withTimeout(promise, ms, message) {
+    let timeoutId;
+
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+            const error = new Error(message);
+            error.code = 'timeout';
+            reject(error);
+        }, ms);
+    });
+
+    return Promise.race([promise, timeoutPromise]).finally(() => {
+        window.clearTimeout(timeoutId);
+    });
+}
+
+function runGoogleCallbackOnce(submissionKey, factory) {
+    const existingRequest = googleCallbackRequests.get(submissionKey);
+    if (existingRequest) {
+        return existingRequest;
+    }
+
+    const request = factory().finally(() => {
+        window.setTimeout(() => {
+            googleCallbackRequests.delete(submissionKey);
+        }, 1000);
+    });
+
+    googleCallbackRequests.set(submissionKey, request);
+    return request;
+}
+
+function createCallbackError(stage, userMessage, cause) {
+    if (cause instanceof Error) {
+        cause.stage = stage;
+        cause.userMessage = userMessage;
+        return cause;
+    }
+
+    const error = new Error(userMessage);
+    error.stage = stage;
+    error.userMessage = userMessage;
+    return error;
 }
 
 async function tryResolveSession(waitForSession) {
@@ -144,10 +190,6 @@ export function GoogleCallbackPage() {
                 return;
             }
 
-            if (processedGoogleCallbacks.has(submissionKey)) {
-                return;
-            }
-
             const validation = validateSocialCallback({
                 expectedProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
                 callbackState,
@@ -160,38 +202,53 @@ export function GoogleCallbackPage() {
             }
 
             try {
-                processedGoogleCallbacks.add(submissionKey);
-                await socialAuthGoogle({
-                    code,
-                    callback_url: `${window.location.origin}/auth/google/callback`,
-                });
+                await runGoogleCallbackOnce(submissionKey, async () => {
+                    let exchangeResponse;
 
-                logSocialAuthTelemetry({
-                    selectedProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
-                    callbackProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
-                    endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GOOGLE],
-                    httpStatus: 200,
-                    errorDetail: null,
-                    stage: 'exchange_complete',
-                });
-            } catch (exchangeError) {
-                logSocialAuthTelemetry({
-                    selectedProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
-                    callbackProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
-                    endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GOOGLE],
-                    httpStatus: exchangeError?.status ?? exchangeError?.response?.status ?? null,
-                    errorDetail: exchangeError?.detail || exchangeError?.response?.data?.detail || '',
-                    stage: 'exchange_failed',
-                });
-                clearPendingSocialAuth();
-                if (!cancelled) {
-                    setError('Google sign-in failed. Please try again.');
-                }
-                return;
-            }
+                    try {
+                        exchangeResponse = await withTimeout(
+                            socialAuthGoogle({
+                                code,
+                                callback_url: `${window.location.origin}/auth/google/callback`,
+                            }),
+                            12000,
+                            'Google sign-in took too long to finish.',
+                        );
+                    } catch (exchangeError) {
+                        throw createCallbackError(
+                            'exchange_failed',
+                            getErrorMessage(exchangeError) || 'Google sign-in failed. Please try again.',
+                            exchangeError,
+                        );
+                    }
 
-            try {
-                await resolveSessionWithRetries(waitForSession);
+                    if (exchangeResponse?.access) {
+                        hvt.setAccessToken(exchangeResponse.access);
+                    }
+
+                    logSocialAuthTelemetry({
+                        selectedProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
+                        callbackProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
+                        endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GOOGLE],
+                        httpStatus: 200,
+                        errorDetail: null,
+                        stage: 'exchange_complete',
+                    });
+
+                    try {
+                        await withTimeout(
+                            resolveSessionWithRetries(waitForSession),
+                            12000,
+                            'Google sign-in completed, but session confirmation took too long.',
+                        );
+                    } catch (sessionError) {
+                        throw createCallbackError(
+                            'session_resolve_failed',
+                            getErrorMessage(sessionError) || 'Your sign-in completed, but the session could not be confirmed. Please try again.',
+                            sessionError,
+                        );
+                    }
+                });
 
                 const resumeInvitationToken = consumeInvitationResumeToken();
                 clearPendingSocialAuth();
@@ -206,18 +263,18 @@ export function GoogleCallbackPage() {
                 }
 
                 navigate('/dashboard', { replace: true });
-            } catch (sessionError) {
+            } catch (callbackError) {
                 logSocialAuthTelemetry({
                     selectedProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
                     callbackProvider: SOCIAL_AUTH_PROVIDERS.GOOGLE,
                     endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GOOGLE],
-                    httpStatus: sessionError?.status ?? sessionError?.response?.status ?? null,
-                    errorDetail: sessionError?.detail || sessionError?.response?.data?.detail || '',
-                    stage: 'session_resolve_failed',
+                    httpStatus: callbackError?.status ?? callbackError?.response?.status ?? null,
+                    errorDetail: callbackError?.detail || callbackError?.response?.data?.detail || callbackError?.message || '',
+                    stage: callbackError?.stage || 'session_resolve_failed',
                 });
                 clearPendingSocialAuth();
                 if (!cancelled) {
-                    setError('Your sign-in completed, but the session could not be confirmed. Please try again.');
+                    setError(callbackError?.userMessage || 'Your sign-in completed, but the session could not be confirmed. Please try again.');
                 }
             }
         }

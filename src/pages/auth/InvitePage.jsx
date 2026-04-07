@@ -39,7 +39,7 @@ function InviteBackground() {
                 className="pointer-events-none absolute inset-0"
                 style={{
                     backgroundImage:
-                        'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 18 18%27%3E%3Ccircle cx=%279%27 cy=%279%27 r=%271.5%27 fill=%27%2327272a%27 /%3E%3C/svg%3E")',
+                        'url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 18 18%27%3E%3Ccircle cx=%279%27 cy=%279%27 r=%271.5%27 fill=%27%2327272a%27 /%3E%3C/svg%3E\")',
                     backgroundRepeat: 'repeat',
                     WebkitMaskImage:
                         'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.88) 68%, transparent 100%)',
@@ -160,7 +160,7 @@ export function InvitePage() {
             <InviteBackground />
 
             <div className="relative flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
-                <div className="w-full max-w-[440px] rounded-[20px] border border-[#27272a] bg-[#111111]/92 p-8 backdrop-blur-sm transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] sm:p-10">
+                <div className="w-full max-w-[520px] rounded-[20px] border border-[#27272a] bg-[#111111]/92 p-8 backdrop-blur-sm transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] sm:p-10">
                     <div className="flex justify-center">
                         <Wordmark />
                     </div>
@@ -168,10 +168,9 @@ export function InvitePage() {
                     <div className="mt-8 text-center">
                         <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Join {invitation.organization_name}</h1>
                         <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
-                            This invitation adds you to the organization control plane as a {invitation.role}.
+                            This invitation adds you to the organization as a {invitation.role}. If project access was preselected, it is listed below and will be attached when you accept.
                         </p>
                     </div>
-
                     <div className="mt-8 space-y-4 rounded-xl border border-[#27272a] bg-[#18181b] p-5">
                         <div className="flex flex-wrap items-center gap-2">
                             <Badge variant={statusVariant(invitation.status)}>{invitation.status}</Badge>
@@ -194,7 +193,34 @@ export function InvitePage() {
                             </p>
                         </div>
 
-                        {!isAuthenticated && (
+                        {invitation.project_name || invitation.app_roles?.length ? (
+                            <div className="rounded-xl border border-[#27272a] bg-[#111111] p-4">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project access</p>
+                                {invitation.project_name ? (
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <p className="text-sm font-medium text-white">{invitation.project_name}</p>
+                                        {invitation.project_slug ? (
+                                            <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                                {invitation.project_slug}
+                                            </Badge>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {invitation.app_roles?.length ? (
+                                        invitation.app_roles.map((role) => (
+                                            <Badge key={role.id} variant="secondary" className="text-white">
+                                                {role.name || role.slug}
+                                            </Badge>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-[#71717a]">No app roles were preselected on this invitation.</p>
+                                    )}
+                                </div>
+                            </div>
+                        ) : null}
+
+                        {!isAuthenticated ? (
                             <div className="space-y-3 rounded-xl border border-[#27272a] bg-[#111111] p-4">
                                 <p className="text-sm text-[#a1a1aa]">
                                     Sign in or create an account with <span className="font-medium text-white">{invitation.email}</span> to accept this invitation.
@@ -208,31 +234,31 @@ export function InvitePage() {
                                     </Button>
                                 </div>
                             </div>
-                        )}
+                        ) : null}
 
-                        {isAuthenticated && user?.organization && (
+                        {isAuthenticated && user?.organization ? (
                             <div className="rounded-xl border border-[#27272a] bg-[#111111] p-4 text-sm text-[#a1a1aa]">
                                 You are already signed in as <span className="font-medium text-white">{user.email}</span> and already belong to an organization. Sign in with a different account to accept this invite.
                             </div>
-                        )}
+                        ) : null}
 
-                        {isAuthenticated && !user?.organization && !emailMatches && (
+                        {isAuthenticated && !user?.organization && !emailMatches ? (
                             <div className="rounded-xl border border-[#27272a] bg-[#111111] p-4 text-sm text-[#a1a1aa]">
                                 You are signed in as <span className="font-medium text-white">{user.email}</span>, but this invitation is for <span className="font-medium text-white">{invitation.email}</span>.
                             </div>
-                        )}
+                        ) : null}
 
-                        {invitation.status !== 'pending' && (
+                        {invitation.status !== 'pending' ? (
                             <div className="rounded-xl border border-[#27272a] bg-[#111111] p-4 text-sm text-[#a1a1aa]">
                                 This invitation is no longer pending, so it cannot be accepted.
                             </div>
-                        )}
+                        ) : null}
 
-                        {canAccept && (
+                        {canAccept ? (
                             <Button onClick={() => acceptMutation.mutate()} disabled={acceptMutation.isPending} className="w-full">
                                 {acceptMutation.isPending ? 'Accepting...' : 'Accept invitation'}
                             </Button>
-                        )}
+                        ) : null}
                     </div>
                 </div>
             </div>

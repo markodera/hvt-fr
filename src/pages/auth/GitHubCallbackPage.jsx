@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import { socialAuthGithub } from '@/api/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { hvt } from '@/lib/hvt';
+import { getErrorMessage } from '@/lib/utils';
 import {
     SOCIAL_AUTH_ENDPOINTS,
     SOCIAL_AUTH_PROVIDERS,
@@ -20,12 +21,57 @@ const DOT_GRID_STYLE = {
     backgroundRepeat: 'repeat',
 };
 
-const processedGitHubCallbacks = new Set();
+const gitHubCallbackRequests = new Map();
 
 function delay(ms) {
     return new Promise((resolve) => {
         window.setTimeout(resolve, ms);
     });
+}
+
+function withTimeout(promise, ms, message) {
+    let timeoutId;
+
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+            const error = new Error(message);
+            error.code = 'timeout';
+            reject(error);
+        }, ms);
+    });
+
+    return Promise.race([promise, timeoutPromise]).finally(() => {
+        window.clearTimeout(timeoutId);
+    });
+}
+
+function runGitHubCallbackOnce(submissionKey, factory) {
+    const existingRequest = gitHubCallbackRequests.get(submissionKey);
+    if (existingRequest) {
+        return existingRequest;
+    }
+
+    const request = factory().finally(() => {
+        window.setTimeout(() => {
+            gitHubCallbackRequests.delete(submissionKey);
+        }, 1000);
+    });
+
+    gitHubCallbackRequests.set(submissionKey, request);
+    return request;
+}
+
+function createCallbackError(stage, userMessage, cause) {
+    if (cause instanceof Error) {
+        cause.stage = stage;
+        cause.userMessage = userMessage;
+        return cause;
+    }
+
+    const error = new Error(userMessage);
+    error.stage = stage;
+    error.userMessage = userMessage;
+    return error;
 }
 
 async function tryResolveSession(waitForSession) {
@@ -143,10 +189,6 @@ export function GitHubCallbackPage() {
                 return;
             }
 
-            if (processedGitHubCallbacks.has(submissionKey)) {
-                return;
-            }
-
             const validation = validateSocialCallback({
                 expectedProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
                 callbackState,
@@ -159,38 +201,53 @@ export function GitHubCallbackPage() {
             }
 
             try {
-                processedGitHubCallbacks.add(submissionKey);
-                await socialAuthGithub({
-                    code,
-                    callback_url: `${window.location.origin}/auth/github/callback`,
-                });
+                await runGitHubCallbackOnce(submissionKey, async () => {
+                    let exchangeResponse;
 
-                logSocialAuthTelemetry({
-                    selectedProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
-                    callbackProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
-                    endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GITHUB],
-                    httpStatus: 200,
-                    errorDetail: null,
-                    stage: 'exchange_complete',
-                });
-            } catch (exchangeError) {
-                logSocialAuthTelemetry({
-                    selectedProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
-                    callbackProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
-                    endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GITHUB],
-                    httpStatus: exchangeError?.status ?? exchangeError?.response?.status ?? null,
-                    errorDetail: exchangeError?.detail || exchangeError?.response?.data?.detail || '',
-                    stage: 'exchange_failed',
-                });
-                clearPendingSocialAuth();
-                if (!cancelled) {
-                    setError('GitHub sign-in failed. Please try again.');
-                }
-                return;
-            }
+                    try {
+                        exchangeResponse = await withTimeout(
+                            socialAuthGithub({
+                                code,
+                                callback_url: `${window.location.origin}/auth/github/callback`,
+                            }),
+                            12000,
+                            'GitHub sign-in took too long to finish.',
+                        );
+                    } catch (exchangeError) {
+                        throw createCallbackError(
+                            'exchange_failed',
+                            getErrorMessage(exchangeError) || 'GitHub sign-in failed. Please try again.',
+                            exchangeError,
+                        );
+                    }
 
-            try {
-                await resolveSessionWithRetries(waitForSession);
+                    if (exchangeResponse?.access) {
+                        hvt.setAccessToken(exchangeResponse.access);
+                    }
+
+                    logSocialAuthTelemetry({
+                        selectedProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
+                        callbackProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
+                        endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GITHUB],
+                        httpStatus: 200,
+                        errorDetail: null,
+                        stage: 'exchange_complete',
+                    });
+
+                    try {
+                        await withTimeout(
+                            resolveSessionWithRetries(waitForSession),
+                            12000,
+                            'GitHub sign-in completed, but session confirmation took too long.',
+                        );
+                    } catch (sessionError) {
+                        throw createCallbackError(
+                            'session_resolve_failed',
+                            getErrorMessage(sessionError) || 'Your sign-in completed, but the session could not be confirmed. Please try again.',
+                            sessionError,
+                        );
+                    }
+                });
 
                 const resumeInvitationToken = consumeInvitationResumeToken();
                 clearPendingSocialAuth();
@@ -205,18 +262,18 @@ export function GitHubCallbackPage() {
                 }
 
                 navigate('/dashboard', { replace: true });
-            } catch (sessionError) {
+            } catch (callbackError) {
                 logSocialAuthTelemetry({
                     selectedProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
                     callbackProvider: SOCIAL_AUTH_PROVIDERS.GITHUB,
                     endpointHit: SOCIAL_AUTH_ENDPOINTS[SOCIAL_AUTH_PROVIDERS.GITHUB],
-                    httpStatus: sessionError?.status ?? sessionError?.response?.status ?? null,
-                    errorDetail: sessionError?.detail || sessionError?.response?.data?.detail || '',
-                    stage: 'session_resolve_failed',
+                    httpStatus: callbackError?.status ?? callbackError?.response?.status ?? null,
+                    errorDetail: callbackError?.detail || callbackError?.response?.data?.detail || callbackError?.message || '',
+                    stage: callbackError?.stage || 'session_resolve_failed',
                 });
                 clearPendingSocialAuth();
                 if (!cancelled) {
-                    setError('Your sign-in completed, but the session could not be confirmed. Please try again.');
+                    setError(callbackError?.userMessage || 'Your sign-in completed, but the session could not be confirmed. Please try again.');
                 }
             }
         }
