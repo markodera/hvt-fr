@@ -42,6 +42,42 @@ const scopeMeta = {
     },
 };
 
+function getApiKeyStatus(apiKey) {
+    if (apiKey?.status) {
+        return apiKey.status;
+    }
+    if (!apiKey?.is_active) {
+        return 'revoked';
+    }
+    if (apiKey?.expires_at && new Date(apiKey.expires_at).getTime() <= Date.now()) {
+        return 'expired';
+    }
+    return 'active';
+}
+
+function getApiKeyStatusMeta(apiKey) {
+    const status = getApiKeyStatus(apiKey);
+    if (status === 'expired') {
+        return {
+            status,
+            dotClassName: 'bg-amber-400',
+            label: 'Expired',
+        };
+    }
+    if (status === 'revoked') {
+        return {
+            status,
+            dotClassName: 'bg-rose-400',
+            label: 'Revoked',
+        };
+    }
+    return {
+        status,
+        dotClassName: 'bg-emerald-400',
+        label: 'Active',
+    };
+}
+
 function TableCard({ children }) {
     return <section className="overflow-hidden rounded-2xl border border-[#27272a] bg-[#18181b]">{children}</section>;
 }
@@ -299,14 +335,18 @@ export default function ApiKeysPage() {
                         <div className="divide-y divide-[#27272a] md:hidden">
                             {keys.map((apiKey) => (
                                 <div key={apiKey.id} className="space-y-4 px-4 py-4">
+                                    {(() => {
+                                        const statusMeta = getApiKeyStatusMeta(apiKey);
+                                        return (
+                                            <>
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div>
                                             <div className="font-mono text-sm text-white">{apiKey.prefix}...</div>
                                             <div className="mt-1 text-xs text-[#71717a]">{apiKey.name}</div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className={`h-2 w-2 rounded-full ${apiKey.is_active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                                            <span className="text-sm text-[#a1a1aa]">{apiKey.is_active ? 'Active' : 'Revoked'}</span>
+                                            <span className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`} />
+                                            <span className="text-sm text-[#a1a1aa]">{statusMeta.label}</span>
                                         </div>
                                     </div>
                                     <div>
@@ -318,16 +358,20 @@ export default function ApiKeysPage() {
                                     <div className="grid grid-cols-1 gap-3 text-xs text-[#71717a] sm:grid-cols-2">
                                         <p>Created: {formatDate(apiKey.created_at)}</p>
                                         <p>Last used: {apiKey.last_used_at ? formatRelativeTime(apiKey.last_used_at) : 'Never'}</p>
+                                        <p>Expires: {apiKey.expires_at ? formatDate(apiKey.expires_at) : 'Never'}</p>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setRevokeTarget(apiKey)}
-                                        disabled={!apiKey.is_active}
+                                        disabled={statusMeta.status === 'revoked'}
                                         className="inline-flex h-9 w-full items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Revoke
                                     </button>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             ))}
                         </div>
@@ -347,6 +391,10 @@ export default function ApiKeysPage() {
                                 <tbody>
                                     {keys.map((apiKey) => (
                                         <tr key={apiKey.id} className="border-b border-[#27272a] last:border-b-0">
+                                            {(() => {
+                                                const statusMeta = getApiKeyStatusMeta(apiKey);
+                                                return (
+                                                    <>
                                             <td className="px-4 py-4">
                                                 <div className="font-mono text-sm text-white">{apiKey.prefix}...</div>
                                                 <div className="mt-1 text-xs text-[#71717a]">{apiKey.name}</div>
@@ -363,21 +411,27 @@ export default function ApiKeysPage() {
                                             </td>
                                             <td className="px-4 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`h-2 w-2 rounded-full ${apiKey.is_active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                                                    <span className="text-sm text-[#a1a1aa]">{apiKey.is_active ? 'Active' : 'Revoked'}</span>
+                                                    <span className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`} />
+                                                    <span className="text-sm text-[#a1a1aa]">{statusMeta.label}</span>
                                                 </div>
+                                                {apiKey.expires_at ? (
+                                                    <div className="mt-1 text-xs text-[#71717a]">Expires {formatDate(apiKey.expires_at)}</div>
+                                                ) : null}
                                             </td>
                                             <td className="px-4 py-4 text-right">
                                                 <button
                                                     type="button"
                                                     onClick={() => setRevokeTarget(apiKey)}
-                                                    disabled={!apiKey.is_active}
+                                                    disabled={statusMeta.status === 'revoked'}
                                                     className="inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     Revoke
                                                 </button>
                                             </td>
+                                                    </>
+                                                );
+                                            })()}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -390,7 +444,7 @@ export default function ApiKeysPage() {
             </TableCard>
 
             <Dialog open={createOpen} onOpenChange={(open) => (open ? setCreateOpen(true) : closeCreateDialog())}>
-                <DialogContent className="max-w-3xl border-[#27272a] bg-[#111111] text-white">
+                <DialogContent className="sm:max-w-2xl xl:max-w-4xl border-[#27272a] bg-[#111111] text-white">
                     {!createdKey ? (
                         <>
                             <DialogHeader>
@@ -400,14 +454,14 @@ export default function ApiKeysPage() {
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <form onSubmit={submitCreate} className="mt-4 space-y-5">
-                                <div className="grid gap-5 md:grid-cols-2">
-                                    <div className="space-y-2">
+                            <form onSubmit={submitCreate} className="mt-6 space-y-8">
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    <div className="space-y-2.5">
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project</Label>
                                         <select
                                             value={draft.project_id}
                                             onChange={(event) => setDraft((current) => ({ ...current, project_id: event.target.value }))}
-                                            className="h-10 w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                                            className="h-11 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
                                             required
                                         >
                                             <option value="">Select a project</option>
@@ -419,12 +473,12 @@ export default function ApiKeysPage() {
                                         </select>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-2.5">
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Environment</Label>
                                         <select
                                             value={draft.environment}
                                             onChange={(event) => setDraft((current) => ({ ...current, environment: event.target.value }))}
-                                            className="h-10 w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                                            className="h-11 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
                                         >
                                             <option value="test">Test</option>
                                             <option value="live">Live</option>
@@ -432,37 +486,37 @@ export default function ApiKeysPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid gap-5 md:grid-cols-2">
-                                    <div className="space-y-2">
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    <div className="space-y-2.5">
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Key name</Label>
                                         <Input
                                             value={draft.name}
                                             onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
                                             placeholder="Storefront runtime"
-                                            className="h-10 border-[#27272a] bg-[#18181b] text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            className="h-11 border-[#27272a] bg-[#18181b] text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                                             required
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-2.5">
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Expiry (optional)</Label>
                                         <Input
                                             type="datetime-local"
                                             value={draft.expires_at}
                                             onChange={(event) => setDraft((current) => ({ ...current, expires_at: event.target.value }))}
-                                            className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            className="h-11 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-4 rounded-2xl border border-[#27272a]/60 bg-[#0c0c0e] p-5">
                                     <div className="flex items-center justify-between">
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Scopes</Label>
                                         {!draft.scopes.length ? (
                                             <span className="text-xs text-rose-300">Select at least one scope.</span>
                                         ) : null}
                                     </div>
-                                    <div className="grid gap-3 md:grid-cols-2">
+                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                         {API_KEY_CANONICAL_SCOPES.map((scope) => {
                                             const selected = draft.scopes.includes(scope);
                                             const meta = scopeMeta[scope];
@@ -471,7 +525,7 @@ export default function ApiKeysPage() {
                                                     key={scope}
                                                     type="button"
                                                     onClick={() => toggleScope(scope)}
-                                                    className={`rounded-xl border px-4 py-3 text-left transition-colors ${
+                                                    className={`rounded-xl border px-4 py-5 text-left transition-colors ${
                                                         selected
                                                             ? 'border-[#7c3aed]/50 bg-[#7c3aed]/10 text-white'
                                                             : 'border-[#27272a] bg-[#18181b] text-[#a1a1aa] hover:border-[#7c3aed]/30'
@@ -492,6 +546,7 @@ export default function ApiKeysPage() {
                                     </div>
                                 </div>
 
+                                <div className="border-t border-[#27272a]/60 pt-6">
                                 <DialogFooter>
                                     <Button
                                         type="button"
@@ -509,6 +564,7 @@ export default function ApiKeysPage() {
                                         {createMutation.isPending ? 'Generating...' : 'Generate key'}
                                     </Button>
                                 </DialogFooter>
+                                </div>
                             </form>
                         </>
                     ) : (
@@ -532,7 +588,7 @@ export default function ApiKeysPage() {
                                         <CopyButton value={createdKey.key} className="border border-[#27272a] bg-[#111111] text-white hover:bg-[#18181b]" />
                                     </div>
                                     <div className="mt-4 overflow-x-auto rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3">
-                                        <code className="font-mono text-sm text-[#c4b5fd]">{createdKey.key}</code>
+                                        <code className="break-all font-mono text-sm text-[#c4b5fd]">{createdKey.key}</code>
                                     </div>
                                 </div>
 

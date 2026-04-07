@@ -51,14 +51,12 @@ function Toggle({ checked, onChange }) {
             role="switch"
             aria-checked={checked}
             onClick={onChange}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                checked ? 'bg-[#7c3aed]' : 'border border-[#27272a] bg-[#111111]'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-[#7c3aed]' : 'border border-[#27272a] bg-[#111111]'
+                }`}
         >
             <span
-                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
-                    checked ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'
+                    }`}
             />
         </button>
     );
@@ -427,20 +425,18 @@ export default function SettingsPage() {
                                                     </span>
                                                 ) : null}
                                                 <span
-                                                    className={`rounded-full px-2 py-0.5 text-[11px] ${
-                                                        project.is_active
+                                                    className={`rounded-full px-2 py-0.5 text-[11px] ${project.is_active
                                                             ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
                                                             : 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa]'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {project.is_active ? 'Active' : 'Inactive'}
                                                 </span>
                                                 <span
-                                                    className={`rounded-full px-2 py-0.5 text-[11px] ${
-                                                        project.allow_signup
+                                                    className={`rounded-full px-2 py-0.5 text-[11px] ${project.allow_signup
                                                             ? 'border border-[#7c3aed]/40 bg-[#7c3aed]/10 text-[#c4b5fd]'
                                                             : 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa]'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {project.allow_signup ? 'Signup open' : 'Signup closed'}
                                                 </span>

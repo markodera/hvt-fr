@@ -17,8 +17,20 @@ const webhookEventOptions = [
     { value: 'user.updated', label: 'User updated' },
     { value: 'user.deleted', label: 'User deleted' },
     { value: 'user.login', label: 'User login' },
+    { value: 'user.role.changed', label: 'User role changed' },
     { value: 'api_key.created', label: 'API key created' },
+    { value: 'api_key.expired', label: 'API key expired' },
     { value: 'api_key.revoked', label: 'API key revoked' },
+    { value: 'org.invitation.created', label: 'Invitation created' },
+    { value: 'org.invitation.accepted', label: 'Invitation accepted' },
+    { value: 'org.invitation.revoked', label: 'Invitation revoked' },
+    { value: 'org.invitation.resent', label: 'Invitation resent' },
+    { value: 'project.created', label: 'Project created' },
+    { value: 'project.updated', label: 'Project updated' },
+    { value: 'project.deleted', label: 'Project deleted' },
+    { value: 'project.social_provider.created', label: 'Social provider created' },
+    { value: 'project.social_provider.updated', label: 'Social provider updated' },
+    { value: 'project.social_provider.deleted', label: 'Social provider deleted' },
 ];
 
 function TableCard({ children }) {

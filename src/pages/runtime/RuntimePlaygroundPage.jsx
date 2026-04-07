@@ -598,7 +598,7 @@ export default function RuntimePlaygroundPage() {
 
             <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-                    <div className="space-y-4">
+                    <div className="flex flex-col items-start gap-4">
                         <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#a1a1aa] transition hover:text-white">
                             <ArrowLeft className="h-4 w-4" />
                             Back to hvts.app

@@ -1,0 +1,44 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth/google/callback
+Disallow: /auth/github/callback
+Disallow: /verify-email/
+Disallow: /reset-password/
+Disallow: /invite/
+Disallow: /auth/verify-email/
+Disallow: /auth/password-reset/
+
+# AI crawlers — welcome
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Disallow: /dashboard/
+Disallow: /api/
+
+User-agent: Claude-Web
+Allow: /
+Allow: /llms.txt
+Disallow: /dashboard/
+Disallow: /api/
+
+User-agent: Anthropic-AI
+Allow: /
+Allow: /llms.txt
+Disallow: /dashboard/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Disallow: /dashboard/
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Disallow: /dashboard/
+Disallow: /api/
+
+Sitemap: https://hvts.app/sitemap.xml

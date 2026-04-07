@@ -314,7 +314,7 @@ export function ProjectAccessManager({ projects = [] }) {
                     </div>
                 ) : (
                     <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                        <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-4">
+                        <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Roles</p>
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {currentAccess?.roles?.length ? (
@@ -328,7 +328,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                 )}
                             </div>
                         </div>
-                        <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-4">
+                        <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Permissions</p>
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {currentAccess?.permissions?.length ? (
@@ -347,8 +347,8 @@ export function ProjectAccessManager({ projects = [] }) {
             </div>
 
             <div className="grid gap-6 xl:grid-cols-2">
-                <section className="rounded-2xl border border-[#27272a] bg-[#111111] p-5">
-                    <div className="flex items-start justify-between gap-4">
+                <section className="rounded-2xl border border-[#27272a] bg-[#111111] p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <div className="flex items-center gap-2">
                                 <KeyRound className="h-5 w-5 text-[#a78bfa]" />
@@ -358,7 +358,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                 Create fine-grained permission slugs like <span className="font-mono text-[#c4b5fd]">orders.read.own</span> or <span className="font-mono text-[#c4b5fd]">classes.grade</span>.
                             </p>
                         </div>
-                        <Button onClick={openCreatePermissionDialog} className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]">
+                        <Button onClick={openCreatePermissionDialog} className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto">
                             Add permission
                         </Button>
                     </div>
@@ -374,8 +374,8 @@ export function ProjectAccessManager({ projects = [] }) {
                     ) : (
                         <div className="mt-6 space-y-3">
                             {permissions.map((permission) => (
-                                <div key={permission.id} className="rounded-xl border border-[#27272a] bg-[#18181b] p-4">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div key={permission.id} className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                         <div>
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="text-sm font-medium text-white">{permission.name}</p>
@@ -387,13 +387,13 @@ export function ProjectAccessManager({ projects = [] }) {
                                                 {permission.description || 'No description yet.'}
                                             </p>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => openEditPermissionDialog(permission)}
-                                                className="border-[#27272a] bg-transparent text-white hover:bg-[#111111]"
+                                                className="w-full border-[#27272a] bg-transparent text-white hover:bg-[#111111] sm:w-auto"
                                             >
                                                 <Pencil className="mr-2 h-4 w-4" />
                                                 Edit
@@ -403,6 +403,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                                 variant="destructive"
                                                 size="sm"
                                                 onClick={() => setDeletePermissionTarget(permission)}
+                                                className="w-full sm:w-auto"
                                             >
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 Delete
@@ -415,8 +416,8 @@ export function ProjectAccessManager({ projects = [] }) {
                     )}
                 </section>
 
-                <section className="rounded-2xl border border-[#27272a] bg-[#111111] p-5">
-                    <div className="flex items-start justify-between gap-4">
+                <section className="rounded-2xl border border-[#27272a] bg-[#111111] p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <div className="flex items-center gap-2">
                                 <ShieldCheck className="h-5 w-5 text-[#a78bfa]" />
@@ -426,7 +427,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                 Bundle permissions into reusable roles developers can assign to buyers, sellers, teachers, students, or any other app model.
                             </p>
                         </div>
-                        <Button onClick={openCreateRoleDialog} className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]">
+                        <Button onClick={openCreateRoleDialog} className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto">
                             Add role
                         </Button>
                     </div>
@@ -441,8 +442,8 @@ export function ProjectAccessManager({ projects = [] }) {
                     ) : (
                         <div className="mt-6 space-y-3">
                             {roles.map((role) => (
-                                <div key={role.id} className="rounded-xl border border-[#27272a] bg-[#18181b] p-4">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div key={role.id} className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="text-sm font-medium text-white">{role.name}</p>
@@ -468,13 +469,13 @@ export function ProjectAccessManager({ projects = [] }) {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => openEditRoleDialog(role)}
-                                                className="border-[#27272a] bg-transparent text-white hover:bg-[#111111]"
+                                                className="w-full border-[#27272a] bg-transparent text-white hover:bg-[#111111] sm:w-auto"
                                             >
                                                 <Pencil className="mr-2 h-4 w-4" />
                                                 Edit
@@ -484,6 +485,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                                 variant="destructive"
                                                 size="sm"
                                                 onClick={() => setDeleteRoleTarget(role)}
+                                                className="w-full sm:w-auto"
                                             >
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 Delete
@@ -498,14 +500,14 @@ export function ProjectAccessManager({ projects = [] }) {
             </div>
 
             <Dialog open={permissionDialogOpen} onOpenChange={(open) => (!open ? closePermissionDialog() : setPermissionDialogOpen(true))}>
-                <DialogContent className="max-w-xl border-[#27272a] bg-[#111111] text-white">
+                <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] overflow-y-auto overscroll-contain max-w-xl border-[#27272a] bg-[#111111] !p-4 text-white sm:w-full sm:!p-6">
                     <DialogHeader>
                         <DialogTitle>{editingPermission ? 'Edit project permission' : 'Create project permission'}</DialogTitle>
                         <DialogDescription className="text-[#71717a]">
                             Define a stable permission slug that application code can check at runtime.
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={permissionForm.handleSubmit(submitPermission)} className="space-y-4">
+                    <form onSubmit={permissionForm.handleSubmit(submitPermission)} className="space-y-4 pt-4 sm:pt-5">
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Permission slug</Label>
                             <Input
@@ -540,19 +542,19 @@ export function ProjectAccessManager({ projects = [] }) {
                                 <p className="text-xs text-danger">{permissionForm.formState.errors.description.message}</p>
                             ) : null}
                         </div>
-                        <DialogFooter>
+                        <DialogFooter className="gap-2">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={closePermissionDialog}
-                                className="border-[#27272a] bg-transparent text-white hover:bg-[#18181b]"
+                                className="w-full border-[#27272a] bg-transparent text-white hover:bg-[#18181b] sm:w-auto"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={createPermissionMutation.isPending || updatePermissionMutation.isPending}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
                             >
                                 {editingPermission
                                     ? updatePermissionMutation.isPending
@@ -568,14 +570,14 @@ export function ProjectAccessManager({ projects = [] }) {
             </Dialog>
 
             <Dialog open={roleDialogOpen} onOpenChange={(open) => (!open ? closeRoleDialog() : setRoleDialogOpen(true))}>
-                <DialogContent className="max-w-2xl border-[#27272a] bg-[#111111] text-white">
+                <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] overflow-y-auto overscroll-contain max-w-2xl border-[#27272a] bg-[#111111] !p-4 text-white sm:w-full sm:!p-6">
                     <DialogHeader>
                         <DialogTitle>{editingRole ? 'Edit project role' : 'Create project role'}</DialogTitle>
                         <DialogDescription className="text-[#71717a]">
                             Roles are just permission bundles. Keep the role names customer-defined and the permission slugs stable.
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={roleForm.handleSubmit(submitRole)} className="space-y-4">
+                    <form onSubmit={roleForm.handleSubmit(submitRole)} className="space-y-4 pt-4 sm:pt-5">
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Role slug</Label>
@@ -676,19 +678,19 @@ export function ProjectAccessManager({ projects = [] }) {
                             ) : null}
                         </div>
 
-                        <DialogFooter>
+                        <DialogFooter className="gap-2">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={closeRoleDialog}
-                                className="border-[#27272a] bg-transparent text-white hover:bg-[#18181b]"
+                                className="w-full border-[#27272a] bg-transparent text-white hover:bg-[#18181b] sm:w-auto"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={createRoleMutation.isPending || updateRoleMutation.isPending}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
                             >
                                 {editingRole
                                     ? updateRoleMutation.isPending

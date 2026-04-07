@@ -1,0 +1,69 @@
+# HVT — Open-Source Authentication Platform
+
+> HVT is an open-source, self-hostable authentication infrastructure platform.
+> It is a developer-focused alternative to Auth0, Firebase Auth, and Clerk.
+
+## What HVT Does
+
+HVT provides two separate planes for authentication:
+
+1. **Developer Control Plane** — A dashboard where team owners create organizations, projects, API keys, invite members, configure social auth providers, and monitor audit logs.
+2. **Auth Runtime Plane** — A set of API endpoints that handle end-user registration, login, JWT token issuance/refresh, social OAuth (Google, GitHub), and webhook event delivery — all scoped to a specific project and organization.
+
+## Core Concepts
+
+- **Organizations**: Map to teams or companies. Every resource lives under an organization.
+- **Projects**: Map to apps or environments within an organization (e.g. "Storefront Prod", "Admin Staging"). API keys, social providers, and runtime auth are scoped per project.
+- **API Keys**: Project-scoped keys used by backend services to authenticate runtime requests. Keys carry explicit scopes like `auth:runtime`, `users:read`, `webhooks:read`.
+- **JWT Claims**: Access and refresh tokens carry `org_id`, `project_id`, and `role` claims, so tenant boundary enforcement survives token decode — not just queryset filters.
+- **Social Auth**: Google and GitHub OAuth credentials are configured per project, so one misconfigured provider doesn't affect other projects.
+- **Audit Logs**: Every meaningful action (login, key creation, invite acceptance, project changes) is logged with full org/project context.
+- **Webhooks**: Login, registration, user changes, and API key activity emit events to downstream systems via configurable webhook endpoints.
+- **RBAC**: Owner → Admin → Member role hierarchy with explicit invitation and acceptance flow.
+
+## Key URLs
+
+- Homepage: https://hvts.app
+- Documentation: https://docs.hvts.app
+- Runtime Playground: https://hvts.app/runtime-playground
+- Sign Up: https://hvts.app/signup
+- Login: https://hvts.app/login
+- Privacy Policy: https://hvts.app/privacy-policy
+- Terms of Service: https://hvts.app/terms-of-service
+
+## API Surface
+
+The HVT API is available at `https://api.hvts.app/api/v1/`.
+
+### Runtime Auth Endpoints (API-Key authenticated)
+
+- `POST /api/v1/auth/runtime/register/` — Register an end user under the API key's project
+- `POST /api/v1/auth/runtime/login/` — Login an end user, returns JWT access + refresh tokens
+- `POST /api/v1/auth/runtime/token/refresh/` — Refresh an expired access token
+- `POST /api/v1/auth/runtime/social/google/` — Complete Google OAuth login
+- `POST /api/v1/auth/runtime/social/github/` — Complete GitHub OAuth login
+- `GET /api/v1/auth/runtime/social/providers/` — List configured social providers for the API key's project
+
+### Control Plane Endpoints (JWT authenticated)
+
+- `GET /api/v1/organizations/current/` — Get current organization details
+- `GET /api/v1/organizations/current/projects/` — List projects
+- `GET /api/v1/organizations/current/keys/` — List API keys
+- `GET /api/v1/organizations/current/members/` — List org members
+- `GET /api/v1/organizations/current/webhooks/` — List webhook endpoints
+- `GET /api/v1/organizations/current/audit-logs/` — List audit events
+
+## Who HVT Is For
+
+- SaaS developers building multi-tenant products
+- Teams that need explicit tenant boundaries in their auth layer
+- Developers who want to self-host their authentication infrastructure
+- Products that require audit trails, webhook integrations, and per-project social auth configuration
+
+## Technology
+
+- Backend: Django + Django REST Framework (Python)
+- Frontend Dashboard: React + Vite + Tailwind CSS
+- Database: PostgreSQL
+- Auth: JWT (access + refresh) with httpOnly cookies
+- Deployment: Self-hostable, also available as managed service at hvts.app

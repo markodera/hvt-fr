@@ -1,7 +1,9 @@
 import { createContext, useState, useEffect, useCallback, useRef } from 'react';
 
 import { getMe, login as apiLogin, logout as apiLogout } from '@/api/auth';
-import { hvt } from '@/lib/hvt';
+import { hvt, isAuthFailure, refreshDashboardSession } from '@/lib/hvt';
+
+const INITIAL_SESSION_TIMEOUT_MS = 10000;
 
 export const AuthContext = createContext(null);
 
@@ -23,25 +25,58 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         let cancelled = false;
         const controller = new AbortController();
-        const timeoutId = window.setTimeout(() => controller.abort(), 5000);
+        const timeoutId = window.setTimeout(() => controller.abort(), INITIAL_SESSION_TIMEOUT_MS);
 
-        getMe({ signal: controller.signal })
-            .then((data) => {
-                if (!cancelled) {
-                    setUser(data);
+        async function bootstrapSession() {
+            try {
+                const data = await getMe({ signal: controller.signal });
+                if (cancelled) {
+                    return;
                 }
-            })
-            .catch(() => {
-                if (!cancelled) {
+
+                setUser(data);
+
+                if (!hvt.accessToken) {
+                    refreshDashboardSession().catch(() => {
+                        // Cookie auth already proved the session is valid. If this silent
+                        // refresh misses, keep the current session and let the next request retry.
+                    });
+                }
+            } catch (error) {
+                if (cancelled) {
+                    return;
+                }
+
+                if (controller.signal.aborted) {
                     setUser((currentUser) => currentUser ?? null);
+                    return;
                 }
-            })
-            .finally(() => {
+
+                try {
+                    await refreshDashboardSession();
+                    const data = await getMe({ signal: controller.signal });
+                    if (!cancelled) {
+                        setUser(data);
+                    }
+                } catch (refreshError) {
+                    if (!cancelled) {
+                        if (isAuthFailure(error) || isAuthFailure(refreshError)) {
+                            hvt.setAccessToken(null);
+                            setUser(null);
+                        } else {
+                            setUser((currentUser) => currentUser ?? null);
+                        }
+                    }
+                }
+            } finally {
                 window.clearTimeout(timeoutId);
                 if (!cancelled) {
                     setIsLoading(false);
                 }
-            });
+            }
+        }
+
+        bootstrapSession();
 
         return () => {
             cancelled = true;
@@ -66,7 +101,7 @@ export function AuthProvider({ children }) {
             setUser(me);
             return me;
         } catch (error) {
-            if (clearOnError) {
+            if (clearOnError && isAuthFailure(error)) {
                 hvt.setAccessToken(null);
                 setUser(null);
             }
