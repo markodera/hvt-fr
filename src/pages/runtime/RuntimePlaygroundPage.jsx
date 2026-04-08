@@ -605,13 +605,13 @@ export default function RuntimePlaygroundPage() {
                         </Link>
                         <Logo />
                     </div>
-                    <div className="rounded-full border border-[#27272a] bg-[#111111] px-4 py-2 text-xs uppercase tracking-[0.18em] text-[#a78bfa]">
+                    <div className="rounded-full border border-[#27272a] bg-[#111111] px-4 py-2 text-center text-xs uppercase tracking-[0.18em] text-[#a78bfa]">
                         Internal runtime test surface
                     </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-                    <div className="space-y-6">
+                    <div className="min-w-0 space-y-6">
                         <SectionCard
                             title="Runtime auth playground"
                             description="Use this page to test the real SDK against api.hvts.app before wiring your own app. Keep live keys here only in your own browser."
@@ -796,7 +796,7 @@ export default function RuntimePlaygroundPage() {
                                             </div>
                                             <div className="mt-3 space-y-1 text-xs text-[#a1a1aa]">
                                                 <div>Allowed redirect URIs</div>
-                                                <ul className="space-y-1 font-mono text-[11px] text-[#d4d4d8]">
+                                                <ul className="space-y-1 break-all font-mono text-[11px] text-[#d4d4d8]">
                                                     {(providerConfig.redirect_uris || []).map((uri) => (
                                                         <li key={uri}>{uri}</li>
                                                     ))}
@@ -813,7 +813,7 @@ export default function RuntimePlaygroundPage() {
                         </SectionCard>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="min-w-0 space-y-6">
                         <SectionCard
                             title="Test vs live keys"
                             description="This is what the code enforces today."

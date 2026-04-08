@@ -26,6 +26,39 @@
     <meta name="twitter:title" content="HVT | Open-Source Authentication Platform" />
     <meta name="twitter:description" content="Self-hostable Auth0 alternative with project-scoped API keys, JWT rotation, RBAC, social auth, webhooks, and audit logs." />
     <meta name="twitter:image" content="https://hvts.app/og-image.png" />
+
+    <!-- JSON-LD Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hvts.app/#organization",
+          "name": "HVT",
+          "url": "https://hvts.app",
+          "logo": "https://hvts.app/favicon.svg",
+          "description": "Open-source, self-hostable authentication platform and Auth0 alternative."
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "HVT",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Cloud, Self-Hosted",
+          "url": "https://hvts.app",
+          "description": "Self-hostable Auth0 alternative with project-scoped API keys, JWT rotation, RBAC, social auth, webhooks, and audit logs.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "publisher": {
+            "@id": "https://hvts.app/#organization"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
