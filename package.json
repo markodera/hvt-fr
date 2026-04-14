@@ -1,8 +1,32 @@
 {
   "name": "hvt-dashboard",
+  "description": "React dashboard and marketing site for the HVT open-source authentication platform.",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
+  "homepage": "https://github.com/markodera/hvt-dashboard",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/markodera/hvt-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/markodera/hvt-dashboard/issues"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "dashboard",
+    "react",
+    "vite",
+    "self-hosted",
+    "oauth",
+    "jwt"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

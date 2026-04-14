@@ -1,16 +1,77 @@
-# React + Vite
+# HVT Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend application for the HVT open-source authentication platform. This repo contains the public marketing site, the authenticated control-plane dashboard, and the runtime playground used to exercise HVT auth flows against a running API.
 
-Currently, two official plugins are available:
+## What ships here
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Public landing pages for **https://hvts.app**
+- Auth flows for signup, login, password reset, invitations, and email verification
+- Organization dashboard for projects, members, API keys, webhooks, audit logs, and settings
+- Runtime playground pages that exercise the HVT SDK against a configured backend
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 18
+- Vite 5
+- React Router 6
+- Tailwind CSS 3
+- TanStack Query 5
+- React Hook Form + Zod
+- Radix UI primitives
+- Local vendored `@hvt/sdk` package from [`vendor/hvt-sdk-0.1.0.tgz`](./vendor/hvt-sdk-0.1.0.tgz)
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Node.js 20+
+- npm 10+
+- A running HVT API instance, typically the sibling backend repo on `http://localhost:8000`
+
+## Quick Start
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+The Vite dev server starts on `http://localhost:5173` by default.
+
+## Environment Variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `VITE_API_URL` | Yes | Base origin for the HVT API. Use `http://localhost:8000` for local backend development. |
+| `VITE_PUBLIC_DOCS_URL` | No | Overrides the docs link shown in the dashboard and landing pages. |
+| `VITE_PUBLIC_STATUS_URL` | No | Overrides the status/health link shown in the UI. |
+| `VITE_RUNTIME_API_KEY` | No | Public runtime key used only by the runtime playground flows. Do not commit real keys. |
+
+## Available Scripts
+
+- `npm run dev` starts the Vite development server
+- `npm run build` creates a production build in `dist/`
+- `npm run lint` runs ESLint across the repo
+- `npm run preview` serves the built app locally
+
+## Local Development Notes
+
+- The app expects the backend to manage auth cookies and CSRF behavior.
+- `vite.config.js` proxies `/api/*` traffic to the local backend during development.
+- This repo stays `private: true` in `package.json` intentionally so the dashboard is not accidentally published to npm.
+
+## Open Source
+- License: [GNU Affero General Public License v3.0 only](LICENSE).
+- Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- Security policy: [SECURITY.md](./SECURITY.md)
+
+## Related Repositories
+
+- Backend/API: `../hvt`
+- SDK: `../hvt-sdk`
+- Docs site: `../hvt-docs`
+
+## Public Endpoints
+
+- Main app: [hvts.app](https://hvts.app)
+- Direct API base URL: [api.hvts.app](https://api.hvts.app)
+- Documentation: [docs.hvts.app](https://docs.hvts.app)

@@ -1,39 +1,48 @@
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { resendVerificationEmail } from '@/api/auth';
+import { resendRuntimeScopedVerificationEmail, resendVerificationEmail } from '@/api/auth';
 import { AuthCard, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { getPendingVerificationEmail } from '@/lib/emailVerification';
+import { buildRuntimeAuthPath, isRuntimeAuthSearch } from '@/lib/runtimeAuth';
 import { getErrorMessage } from '@/lib/utils';
 
 export function VerifyEmailExpiredPage() {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [isSending, setIsSending] = useState(false);
+    const runtimeMode = isRuntimeAuthSearch(searchParams);
+    const verifyNoticePath = buildRuntimeAuthPath('/verify-email', searchParams);
+    const loginPath = runtimeMode ? '/runtime-playground' : buildRuntimeAuthPath('/login', searchParams);
 
     const email = useMemo(() => location.state?.email || getPendingVerificationEmail(), [location.state?.email]);
     const message =
         location.state?.message || 'This verification link has expired or already been used. Request a new one.';
 
     useEffect(() => {
-        document.title = 'Verification link expired | HVT';
-    }, []);
+        document.title = runtimeMode ? 'Runtime verification link expired | HVT' : 'Verification link expired | HVT';
+    }, [runtimeMode]);
 
     const handleRequestNewLink = async () => {
         if (!email) {
-            navigate('/verify-email', { replace: true });
+            navigate(verifyNoticePath, { replace: true });
             return;
         }
 
         setIsSending(true);
         try {
-            await resendVerificationEmail({ email });
+            if (runtimeMode) {
+                await resendRuntimeScopedVerificationEmail({ email });
+            } else {
+                await resendVerificationEmail({ email });
+            }
             toast.success('A fresh verification email has been sent.');
-            navigate('/verify-email', {
+            navigate(verifyNoticePath, {
                 replace: true,
                 state: { email },
             });
@@ -66,7 +75,7 @@ export function VerifyEmailExpiredPage() {
                             'Request new link'
                         )}
                     </button>
-                    <Link to="/login" className={AUTH_TEXT_LINK_CLASS}>
+                    <Link to={loginPath} className={AUTH_TEXT_LINK_CLASS}>
                         Back to sign in
                     </Link>
                 </div>

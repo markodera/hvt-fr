@@ -1,14 +1,15 @@
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
-import { requestPasswordReset } from '@/api/auth';
+import { requestPasswordReset, requestRuntimeScopedPasswordReset } from '@/api/auth';
 import { AuthCard, AuthCardHeader, AuthFieldError, AUTH_INPUT_CLASS, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
+import { buildRuntimeAuthPath, isRuntimeAuthSearch } from '@/lib/runtimeAuth';
 import { getErrorMessage } from '@/lib/utils';
 
 const forgotPasswordSchema = z.object({
@@ -16,7 +17,10 @@ const forgotPasswordSchema = z.object({
 });
 
 export function ForgotPasswordPage() {
+    const [searchParams] = useSearchParams();
     const [submittedEmail, setSubmittedEmail] = useState('');
+    const runtimeMode = isRuntimeAuthSearch(searchParams);
+    const loginPath = runtimeMode ? '/runtime-playground' : buildRuntimeAuthPath('/login', searchParams);
     const {
         register,
         handleSubmit,
@@ -29,12 +33,16 @@ export function ForgotPasswordPage() {
     });
 
     useEffect(() => {
-        document.title = 'Reset password | HVT';
-    }, []);
+        document.title = runtimeMode ? 'Reset runtime password | HVT' : 'Reset password | HVT';
+    }, [runtimeMode]);
 
     const onSubmit = async ({ email }) => {
         try {
-            await requestPasswordReset({ email });
+            if (runtimeMode) {
+                await requestRuntimeScopedPasswordReset({ email });
+            } else {
+                await requestPasswordReset({ email });
+            }
             setSubmittedEmail(email);
         } catch (error) {
             toast.error(getErrorMessage(error));
@@ -46,7 +54,11 @@ export function ForgotPasswordPage() {
             <AuthCard>
                 <AuthCardHeader
                     title="Reset your password"
-                    subtitle="Enter your email and we'll send you a reset link."
+                    subtitle={
+                        runtimeMode
+                            ? "Enter your email and we'll send a reset link for this app account."
+                            : "Enter your email and we'll send you a reset link."
+                    }
                 />
 
                 <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
@@ -88,7 +100,7 @@ export function ForgotPasswordPage() {
                 ) : null}
 
                 <div className="mt-6 text-center">
-                    <Link to="/login" className={AUTH_TEXT_LINK_CLASS}>
+                    <Link to={loginPath} className={AUTH_TEXT_LINK_CLASS}>
                         Back to sign in
                     </Link>
                 </div>
@@ -96,4 +108,3 @@ export function ForgotPasswordPage() {
         </AuthLayout>
     );
 }
-

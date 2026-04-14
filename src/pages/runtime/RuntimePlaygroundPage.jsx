@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, ExternalLink, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
 
 import { Logo } from '@/components/Logo';
 import { HVTApiError, HVTClient } from '@/lib/hvt';
@@ -101,6 +101,22 @@ function runtimeRegister(client, payload) {
     });
 }
 
+function runtimePasswordResetRequest(client, payload) {
+    return client.request('/api/v1/auth/runtime/password/reset/', {
+        method: 'POST',
+        auth: 'apiKey',
+        body: payload,
+    });
+}
+
+function runtimeResendVerification(client, payload) {
+    return client.request('/api/v1/auth/runtime/register/resend-email/', {
+        method: 'POST',
+        auth: 'apiKey',
+        body: payload,
+    });
+}
+
 function getProviderLabel(provider) {
     if (provider === 'google') return 'Google';
     if (provider === 'github') return 'GitHub';
@@ -148,12 +164,34 @@ function formatErrorDetails(value) {
     }
 }
 
+function formatRateLimitMessage(detail) {
+    if (!detail || typeof detail !== 'object') {
+        return '';
+    }
+
+    const message = typeof detail.message === 'string' ? detail.message.trim() : '';
+    if (!message) {
+        return '';
+    }
+
+    const retryAfter = typeof detail.retry_after_human === 'string' ? detail.retry_after_human.trim() : '';
+    if (!retryAfter || message.toLowerCase().includes(retryAfter.toLowerCase())) {
+        return message;
+    }
+
+    return `${message} Try again in ${retryAfter}.`;
+}
+
 function getErrorMessage(error) {
     if (error instanceof HVTApiError) {
         if (typeof error.detail === 'string' && error.detail.trim()) return error.detail;
+        const throttledDetailMessage = formatRateLimitMessage(error.detail);
+        if (throttledDetailMessage) return throttledDetailMessage;
         const nestedDetailMessage = extractFirstErrorMessage(error.detail);
         if (nestedDetailMessage) return nestedDetailMessage;
         if (error.body && typeof error.body === 'object' && error.body !== null) {
+            const throttledBodyMessage = formatRateLimitMessage(error.body?.detail || error.body);
+            if (throttledBodyMessage) return throttledBodyMessage;
             const nestedBodyMessage = extractFirstErrorMessage(error.body);
             if (nestedBodyMessage) return nestedBodyMessage;
             try {
@@ -167,6 +205,20 @@ function getErrorMessage(error) {
 
     if (error instanceof Error) return error.message;
     return 'An unexpected error occurred.';
+}
+
+function getRuntimeRegisterGuidance(message) {
+    const normalized = (message || '').toLowerCase();
+
+    if (
+        (normalized.includes('already') && normalized.includes('e-mail')) ||
+        (normalized.includes('already') && normalized.includes('email')) ||
+        normalized.includes('already registered')
+    ) {
+        return `${message}\n\nExisting users cannot join a new project through runtime signup. Sign in instead, accept a project invite, or ask an admin to assign project access.`;
+    }
+
+    return message;
 }
 
 function getFriendlyRuntimeSocialErrorMessage(message, provider, callbackUrl) {
@@ -514,7 +566,8 @@ export default function RuntimePlaygroundPage() {
             const normalized = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
             setOutput(normalized);
         } catch (error) {
-            setOutput(getErrorMessage(error));
+            const message = getErrorMessage(error);
+            setOutput(label === 'Runtime register' ? getRuntimeRegisterGuidance(message) : message);
         } finally {
             setBusyAction('');
         }
@@ -750,7 +803,40 @@ export default function RuntimePlaygroundPage() {
                                     {busyAction === 'Runtime login' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
                                     Sign runtime user in
                                 </button>
+                                <button
+                                    type="button"
+                                    className={buttonClassName('secondary')}
+                                    disabled={busyAction === 'Runtime password reset'}
+                                    onClick={() =>
+                                        runAction('Runtime password reset', () =>
+                                            runtimePasswordResetRequest(createClient(config), {
+                                                email: form.email,
+                                            }),
+                                        )
+                                    }
+                                >
+                                    {busyAction === 'Runtime password reset' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                                    Send reset email
+                                </button>
+                                <button
+                                    type="button"
+                                    className={buttonClassName('secondary')}
+                                    disabled={busyAction === 'Runtime resend verification'}
+                                    onClick={() =>
+                                        runAction('Runtime resend verification', () =>
+                                            runtimeResendVerification(createClient(config), {
+                                                email: form.email,
+                                            }),
+                                        )
+                                    }
+                                >
+                                    {busyAction === 'Runtime resend verification' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                                    Resend verification
+                                </button>
                             </div>
+                            <p className="mt-4 text-xs leading-6 text-[#71717a]">
+                                Runtime signup is create-only. If the email already exists, use sign-in, invite accept, or dashboard project-role assignment instead of trying to register again.
+                            </p>
                         </SectionCard>
 
                         <SectionCard
@@ -784,15 +870,17 @@ export default function RuntimePlaygroundPage() {
                                                     <div className="text-sm font-semibold text-white">{providerConfig.provider}</div>
                                                     <div className="mt-1 font-mono text-xs text-[#a1a1aa]">{providerConfig.project_slug}</div>
                                                 </div>
-                                                <a
-                                                    href={providerConfig.authorization_url}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="inline-flex items-center gap-1 text-xs text-[#a78bfa]"
-                                                >
-                                                    Provider authorize URL
-                                                    <ExternalLink className="h-3.5 w-3.5" />
-                                                </a>
+                                                <div className="text-right">
+                                                    <div className="text-[11px] uppercase tracking-[0.16em] text-[#71717a]">
+                                                        Provider authorize base URL
+                                                    </div>
+                                                    <div className="mt-1 font-mono text-[11px] text-[#a78bfa]">
+                                                        {providerConfig.authorization_url}
+                                                    </div>
+                                                    <div className="mt-1 text-[11px] text-[#71717a]">
+                                                        Use the social buttons above. This base URL is not a complete OAuth request.
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="mt-3 space-y-1 text-xs text-[#a1a1aa]">
                                                 <div>Allowed redirect URIs</div>

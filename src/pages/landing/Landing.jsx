@@ -29,8 +29,13 @@ const DOT_GRID_STYLE = {
   backgroundRepeat: 'repeat',
 };
 
+const SEO_TITLE = 'HVT | Open-Source Auth for Projects, Roles, and Permissions';
+const SEO_DESCRIPTION =
+  'Open-source, self-hostable Auth0 alternative with project-scoped auth, roles, permissions, API keys, social login, audit logs, and webhooks.';
+
 const featureStripItems = [
   'Open-source auth',
+  'Roles and permissions',
   'Project-scoped runtime',
   'Google and GitHub login',
   'API keys',
@@ -38,7 +43,7 @@ const featureStripItems = [
   'Webhooks',
 ];
 
-const chainNodes = ['Organisation', 'Project', 'API key', 'Runtime', 'Audit'];
+const chainNodes = ['Organisation', 'Project', 'Roles', 'Permissions', 'Runtime user'];
 
 const controlPlaneNodes = [
   {
@@ -120,6 +125,12 @@ const features = [
     title: 'Team roles and invites',
     description:
       'Invite teammates, control who owns what, and keep staff access separate from customer auth.',
+  },
+  {
+    icon: LockKeyhole,
+    title: 'Roles and permissions per project',
+    description:
+      'Define roles, assign permissions, and control what each user type can do - all scoped to the project. Works for simple apps and multi-role platforms alike.',
   },
   {
     icon: ScrollText,
@@ -349,14 +360,14 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    document.title = 'HVT | Open-source auth infrastructure for products and teams';
+    document.title = SEO_TITLE;
 
     upsertMeta('meta[name="description"]', () => {
       const meta = document.createElement('meta');
       meta.name = 'description';
       return meta;
     }, (meta) => {
-      meta.content = 'HVT is open-source auth infrastructure for organisations, projects, API keys, runtime auth, audit history, and webhooks.';
+      meta.content = SEO_DESCRIPTION;
     });
 
     upsertMeta('meta[property="og:title"]', () => {
@@ -364,7 +375,7 @@ export default function Landing() {
       meta.setAttribute('property', 'og:title');
       return meta;
     }, (meta) => {
-      meta.setAttribute('content', 'HVT | Open-source auth infrastructure for products and teams');
+      meta.setAttribute('content', SEO_TITLE);
     });
 
     upsertMeta('meta[property="og:description"]', () => {
@@ -372,7 +383,23 @@ export default function Landing() {
       meta.setAttribute('property', 'og:description');
       return meta;
     }, (meta) => {
-      meta.setAttribute('content', 'Open-source auth infrastructure for organisations, projects, runtime auth, API keys, audit history, and webhooks.');
+      meta.setAttribute('content', SEO_DESCRIPTION);
+    });
+
+    upsertMeta('meta[name="twitter:title"]', () => {
+      const meta = document.createElement('meta');
+      meta.name = 'twitter:title';
+      return meta;
+    }, (meta) => {
+      meta.content = SEO_TITLE;
+    });
+
+    upsertMeta('meta[name="twitter:description"]', () => {
+      const meta = document.createElement('meta');
+      meta.name = 'twitter:description';
+      return meta;
+    }, (meta) => {
+      meta.content = SEO_DESCRIPTION;
     });
 
     upsertMeta('meta[property="og:url"]', () => {
@@ -525,17 +552,27 @@ export default function Landing() {
                 className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.12s both' }}
               >
-                Open-source auth infrastructure for customer accounts, team access, and runtime auth.
+                Authentication infrastructure that gives every project its own world.
               </h1>
+              <p
+                className="mt-5 max-w-3xl text-sm leading-7 text-[#71717a] sm:text-base"
+                style={{ animation: 'heroFadeUp 0.7s ease-out 0.18s both' }}
+              >
+                Building auth from scratch takes weeks. Paying for Auth0 costs more than your MVP budget. HVT gives
+                you a better option.
+              </p>
               <p
                 className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.2s both' }}
               >
-                HVT gives you one model for organisation, project, API key, and runtime auth. Start on hvts.app
-                now, or self-host later under AGPL v3 without changing how your product is structured.
+                Open source, self-hostable, with roles and permissions ready on day one. Keep organisation,
+                project, API key, and runtime auth in one explicit model from setup to sign-in.
               </p>
 
               <div className="mt-8 max-w-3xl" style={{ animation: 'heroFadeUp 0.8s ease-out 0.28s both' }}>
+                <div className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-[#71717a]">
+                  Project model
+                </div>
                 <ChainDiagram />
               </div>
 
@@ -604,7 +641,7 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_164px_minmax(0,1fr)] lg:items-stretch">
+            <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px_minmax(0,1fr)] lg:items-stretch">
               <div className="rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
                 <div className="flex items-center gap-3">
                   <Building2 className="h-5 w-5 text-[#a78bfa]" />
@@ -622,14 +659,24 @@ export default function Landing() {
 
               <div className="flex items-center justify-center lg:block">
                 <div className="flex justify-center lg:hidden">
-                  <div className="rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">
-                    Shared access rules
+                  <div className="rounded-[18px] border border-[#3f3f46] bg-[#18181b] px-4 py-3 text-center">
+                    <div className="text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">
+                      Roles and permissions
+                    </div>
+                    <div className="mt-1 text-xs leading-5 text-[#a1a1aa]">
+                      Define roles and permission sets scoped to each project.
+                    </div>
                   </div>
                 </div>
                 <div className="hidden h-full flex-col items-center lg:flex">
                   <div className="min-h-10 w-px flex-1 bg-[#27272a]" />
-                  <div className="my-4 whitespace-nowrap rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">
-                    Shared access rules
+                  <div className="my-4 rounded-[18px] border border-[#3f3f46] bg-[#18181b] px-4 py-3 text-center">
+                    <div className="whitespace-nowrap text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">
+                      Roles and permissions
+                    </div>
+                    <div className="mt-1 text-xs leading-5 text-[#a1a1aa]">
+                      Define roles and permission sets scoped to each project.
+                    </div>
                   </div>
                   <div className="min-h-10 w-px flex-1 bg-[#27272a]" />
                 </div>
@@ -659,8 +706,8 @@ export default function Landing() {
               <div className="text-sm font-medium text-[#a78bfa]">Why HVT feels different</div>
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">The model is the product, not an add-on.</h2>
               <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                HVT is built around one explicit chain: organisation, project, API key, runtime auth, audit logs,
-                and webhooks. That is the default shape of the product, not an enterprise extra.
+                HVT is built around one explicit model: organisation, project, roles, permissions, runtime auth,
+                audit logs, and webhooks. That is the default shape of the product, not an enterprise extra.
               </p>
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -757,7 +804,7 @@ export default function Landing() {
           <div>
             <Logo href="/" />
             <p className="mt-4 max-w-sm text-sm leading-7 text-[#a1a1aa]">
-              Open-source auth infrastructure for organisations, projects, runtime auth, audit history, and webhooks.
+              Project-scoped auth with roles, permissions, audit logs, and webhooks.
             </p>
           </div>
 

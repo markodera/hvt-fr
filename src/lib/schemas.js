@@ -27,6 +27,14 @@ const appAccessSlugSchema = z
     .regex(appAccessSlugPattern, 'Use lowercase letters, numbers, and separators like ., _, :, or -');
 
 const optionalDescriptionSchema = z.string().max(1000, 'Description is too long').optional();
+const optionalFrontendUrlSchema = z.preprocess((value) => {
+    if (typeof value !== 'string') {
+        return value;
+    }
+
+    const normalized = value.trim();
+    return normalized === '' ? '' : normalized;
+}, z.union([z.literal(''), z.string().url('Enter a valid frontend URL')]));
 
 // Auth schemas
 
@@ -124,6 +132,7 @@ export const createProjectSchema = z.object({
         'Slug must contain only lowercase letters, numbers, and hyphens'
     ),
     allow_signup: z.boolean(),
+    frontend_url: optionalFrontendUrlSchema,
 });
 
 export const projectPermissionSchema = z.object({

@@ -108,12 +108,12 @@ export default function SettingsPage() {
 
     const projectForm = useForm({
         resolver: zodResolver(createProjectSchema),
-        defaultValues: { name: '', slug: '', allow_signup: false },
+        defaultValues: { name: '', slug: '', allow_signup: false, frontend_url: '' },
     });
 
     const editProjectForm = useForm({
         resolver: zodResolver(createProjectSchema),
-        defaultValues: { name: '', slug: '', allow_signup: false },
+        defaultValues: { name: '', slug: '', allow_signup: false, frontend_url: '' },
     });
 
     useEffect(() => {
@@ -131,6 +131,7 @@ export default function SettingsPage() {
             name: '',
             slug: '',
             allow_signup: org.allow_signup,
+            frontend_url: '',
         });
     }, [org, orgForm, projectForm]);
 
@@ -154,6 +155,7 @@ export default function SettingsPage() {
             name: editingProject.name,
             slug: editingProject.slug,
             allow_signup: editingProject.allow_signup,
+            frontend_url: editingProject.frontend_url || '',
         });
     }, [editProjectForm, editingProject]);
 
@@ -204,7 +206,7 @@ export default function SettingsPage() {
         mutationFn: createProject,
         onSuccess: () => {
             invalidateProjectQueries();
-            projectForm.reset({ name: '', slug: '', allow_signup: org?.allow_signup ?? false });
+            projectForm.reset({ name: '', slug: '', allow_signup: org?.allow_signup ?? false, frontend_url: '' });
             toast.success('Project created');
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -398,7 +400,7 @@ export default function SettingsPage() {
             <SectionCard
                 label="Projects"
                 title="Project boundaries"
-                description="Projects scope API keys, runtime tokens, social providers, and sign-up controls."
+                description="Projects scope API keys, runtime tokens, social providers, sign-up controls, and runtime email destinations."
             >
                 <div className="space-y-4">
                     {projectsLoading ? (
@@ -442,6 +444,11 @@ export default function SettingsPage() {
                                                 </span>
                                             </div>
                                             <p className="mt-2 font-mono text-xs text-[#a78bfa]">{project.slug}</p>
+                                            {project.frontend_url ? (
+                                                <p className="mt-2 break-all text-xs text-[#a1a1aa]">
+                                                    Runtime frontend: <span className="font-mono text-[#d4d4d8]">{project.frontend_url}</span>
+                                                </p>
+                                            ) : null}
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             <button
@@ -487,6 +494,17 @@ export default function SettingsPage() {
                                     {...projectForm.register('slug')}
                                     className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                                 />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Runtime frontend URL</Label>
+                                <Input
+                                    {...projectForm.register('frontend_url')}
+                                    placeholder="https://app.example.com"
+                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                />
+                                <p className="text-xs text-[#71717a]">
+                                    Optional. Runtime verification and password-reset emails will link to this frontend when this project API key is used.
+                                </p>
                             </div>
                             <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 md:col-span-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
@@ -537,7 +555,7 @@ export default function SettingsPage() {
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold tracking-[-0.03em] text-white">Edit project</DialogTitle>
                         <DialogDescription className="text-[#71717a]">
-                            Update the project name, slug, and sign-up behaviour.
+                            Update the project name, slug, sign-up behavior, and runtime email destination.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -560,6 +578,17 @@ export default function SettingsPage() {
                                 {...editProjectForm.register('slug')}
                                 className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Runtime frontend URL</Label>
+                            <Input
+                                {...editProjectForm.register('frontend_url')}
+                                placeholder="https://app.example.com"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                            />
+                            <p className="text-xs text-[#71717a]">
+                                Optional. Runtime verification and password-reset emails for this project will target this frontend.
+                            </p>
                         </div>
                         <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -608,4 +637,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-

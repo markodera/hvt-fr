@@ -1,31 +1,37 @@
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Mail } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { resendVerificationEmail } from '@/api/auth';
+import { resendRuntimeScopedVerificationEmail, resendVerificationEmail } from '@/api/auth';
 import { AuthCard, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import { getPendingVerificationEmail, setPendingVerificationEmail } from '@/lib/emailVerification';
 import { buildInvitationAuthPath, getPendingInvitationToken } from '@/lib/invitations';
+import { buildRuntimeAuthPath, isRuntimeAuthSearch } from '@/lib/runtimeAuth';
 import { getErrorMessage } from '@/lib/utils';
 
 export function VerifyEmailNoticePage() {
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [cooldown, setCooldown] = useState(0);
     const [flashSent, setFlashSent] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const runtimeMode = isRuntimeAuthSearch(searchParams);
 
     const inviteToken = location.state?.inviteToken || getPendingInvitationToken();
     const email = useMemo(
         () => location.state?.email || getPendingVerificationEmail(),
         [location.state?.email],
     );
+    const loginPath = runtimeMode
+        ? '/runtime-playground'
+        : buildInvitationAuthPath(buildRuntimeAuthPath('/login', searchParams), inviteToken);
 
     useEffect(() => {
-        document.title = 'Verify email | HVT';
-    }, []);
+        document.title = runtimeMode ? 'Verify runtime email | HVT' : 'Verify email | HVT';
+    }, [runtimeMode]);
 
     useEffect(() => {
         if (location.state?.email) {
@@ -57,7 +63,11 @@ export function VerifyEmailNoticePage() {
         if (!email || cooldown > 0) return;
         setIsSending(true);
         try {
-            await resendVerificationEmail({ email });
+            if (runtimeMode) {
+                await resendRuntimeScopedVerificationEmail({ email });
+            } else {
+                await resendVerificationEmail({ email });
+            }
             setPendingVerificationEmail(email);
             setFlashSent(true);
             setCooldown(30);
@@ -80,7 +90,9 @@ export function VerifyEmailNoticePage() {
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Check your email</h1>
                         <p className="text-sm leading-6 text-[#a1a1aa]">
-                            We sent a verification link to the address below. Click the link to activate your account.
+                            {runtimeMode
+                                ? 'We sent a verification link for this app account. Click the link to activate it.'
+                                : 'We sent a verification link to the address below. Click the link to activate your account.'}
                         </p>
                     </div>
 
@@ -109,8 +121,8 @@ export function VerifyEmailNoticePage() {
                         )}
                     </button>
 
-                    <Link to={buildInvitationAuthPath('/login', inviteToken)} className={AUTH_TEXT_LINK_CLASS}>
-                        Wrong email? Sign in with a different account
+                    <Link to={loginPath} className={AUTH_TEXT_LINK_CLASS}>
+                        {runtimeMode ? 'Return to runtime playground' : 'Wrong email? Sign in with a different account'}
                     </Link>
 
                     <p className="text-xs leading-6 text-[#71717a]">Check your spam folder if you don&apos;t see it.</p>

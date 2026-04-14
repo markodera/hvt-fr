@@ -1,11 +1,16 @@
 import { AuthLayout } from '@/layouts/AuthLayout';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
 import { AuthCard, AUTH_PRIMARY_BUTTON_CLASS } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
+import { isRuntimeAuthSearch } from '@/lib/runtimeAuth';
 
 export function VerifyEmailSuccessPage() {
+    const [searchParams] = useSearchParams();
+    const runtimeMode = isRuntimeAuthSearch(searchParams);
+    const destination = runtimeMode ? '/runtime-playground' : '/dashboard';
+
     return (
         <AuthLayout>
             <AuthCard>
@@ -17,15 +22,16 @@ export function VerifyEmailSuccessPage() {
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Email verified</h1>
                         <p className="text-sm leading-6 text-[#a1a1aa]">
-                            Your account is active. You&apos;re ready to go.
+                            {runtimeMode
+                                ? 'Your app account is active. You can return to sign-in.'
+                                : 'Your account is active. You&apos;re ready to go.'}
                         </p>
                     </div>
-                    <Link to="/dashboard" className={AUTH_PRIMARY_BUTTON_CLASS}>
-                        Go to dashboard
+                    <Link to={destination} className={AUTH_PRIMARY_BUTTON_CLASS}>
+                        {runtimeMode ? 'Open runtime playground' : 'Go to dashboard'}
                     </Link>
                 </div>
             </AuthCard>
         </AuthLayout>
     );
 }
-

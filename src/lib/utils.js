@@ -6,7 +6,7 @@ export function cn(...inputs) {
 }
 
 export function formatDate(dateString, options = {}) {
-    if (!dateString) return '—';
+    if (!dateString) return '-';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
@@ -19,7 +19,7 @@ export function formatDate(dateString, options = {}) {
 }
 
 export function formatRelativeTime(dateString) {
-    if (!dateString) return '—';
+    if (!dateString) return '-';
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
@@ -38,7 +38,25 @@ export function formatRelativeTime(dateString) {
 export function truncate(str, maxLength = 50) {
     if (!str) return '';
     if (str.length <= maxLength) return str;
-    return `${str.slice(0, maxLength)}…`;
+    return `${str.slice(0, maxLength)}...`;
+}
+
+function formatThrottledMessage(detail) {
+    if (!detail || typeof detail !== 'object') {
+        return '';
+    }
+
+    const message = typeof detail.message === 'string' ? detail.message.trim() : '';
+    if (!message) {
+        return '';
+    }
+
+    const retryAfter = typeof detail.retry_after_human === 'string' ? detail.retry_after_human.trim() : '';
+    if (!retryAfter || message.toLowerCase().includes(retryAfter.toLowerCase())) {
+        return message;
+    }
+
+    return `${message} Try again in ${retryAfter}.`;
 }
 
 export function getErrorMessage(error) {
@@ -47,10 +65,16 @@ export function getErrorMessage(error) {
     }
 
     if (typeof error.message === 'string' && error.message.trim()) {
-        if (error.detail && typeof error.detail === 'string') {
+        if (typeof error.detail === 'string') {
             return error.detail;
         }
+
         if (typeof error.detail === 'object' && error.detail !== null) {
+            const throttledMessage = formatThrottledMessage(error.detail);
+            if (throttledMessage) {
+                return throttledMessage;
+            }
+
             const values = Object.values(error.detail);
             if (values.length > 0) {
                 const firstError = values[0];
@@ -69,6 +93,11 @@ export function getErrorMessage(error) {
     if (typeof data.message === 'string') return data.message;
 
     if (typeof data.detail === 'object' && data.detail !== null) {
+        const throttledMessage = formatThrottledMessage(data.detail);
+        if (throttledMessage) {
+            return throttledMessage;
+        }
+
         const values = Object.values(data.detail);
         if (values.length > 0) {
             const firstError = values[0];
@@ -77,6 +106,11 @@ export function getErrorMessage(error) {
     }
 
     if (typeof data === 'object' && data !== null) {
+        const throttledMessage = formatThrottledMessage(data);
+        if (throttledMessage) {
+            return throttledMessage;
+        }
+
         const keys = Object.keys(data).filter((key) => !['status', 'code', 'error'].includes(key));
         if (keys.length > 0) {
             const firstError = data[keys[0]];

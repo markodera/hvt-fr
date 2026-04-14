@@ -1,4 +1,11 @@
 import { hvt } from '@/lib/hvt';
+import {
+    confirmRuntimePasswordReset,
+    requestRuntimePasswordReset,
+    resendRuntimeVerificationEmail,
+    validateRuntimePasswordResetToken,
+    verifyRuntimeEmail,
+} from '@/lib/runtimeAuth';
 
 function normalizeOptions(options = {}) {
     if (
@@ -48,6 +55,10 @@ export function requestPasswordReset(data, options = {}) {
     return hvt.auth.passwordReset(data, options);
 }
 
+export function requestRuntimeScopedPasswordReset(data, options = {}) {
+    return requestRuntimePasswordReset(data, options);
+}
+
 function resolveResetTokenPath(tokenOrKey) {
     if (typeof tokenOrKey === 'string') {
         return tokenOrKey;
@@ -67,6 +78,10 @@ export function validatePasswordResetToken(data, options = {}) {
     });
 }
 
+export function validateRuntimeScopedPasswordResetToken(data, options = {}) {
+    return validateRuntimePasswordResetToken(data, options);
+}
+
 export function confirmPasswordReset(tokenOrKey, data, options = {}) {
     const path = resolveResetTokenPath(tokenOrKey);
     const uid = tokenOrKey?.uid || tokenOrKey?.uidb64;
@@ -80,6 +95,10 @@ export function confirmPasswordReset(tokenOrKey, data, options = {}) {
         auth: 'none',
         ...options,
     });
+}
+
+export function confirmRuntimeScopedPasswordReset(tokenOrKey, data, options = {}) {
+    return confirmRuntimePasswordReset(tokenOrKey, data, options);
 }
 
 export function changePassword(data, options = {}) {
@@ -101,6 +120,14 @@ export function verifyEmail(key, options = {}) {
         auth: 'none',
         ...options,
     });
+}
+
+export function verifyRuntimeScopedEmail(key, options = {}) {
+    return verifyRuntimeEmail(key, options);
+}
+
+export function resendRuntimeScopedVerificationEmail(data, options = {}) {
+    return resendRuntimeVerificationEmail(data, options);
 }
 
 export function listSocialProviders(options = {}) {

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listUsers } from '@/api/users';
 import { OrganizationInvitationsSection } from '@/pages/users/OrganizationInvitationsSection';

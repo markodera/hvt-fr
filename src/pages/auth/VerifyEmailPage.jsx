@@ -1,43 +1,48 @@
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { verifyEmail } from '@/api/auth';
+import { verifyEmail, verifyRuntimeScopedEmail } from '@/api/auth';
 import { AuthCard } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
 import {
     clearPendingVerificationEmail,
     getPendingVerificationEmail,
 } from '@/lib/emailVerification';
+import { buildRuntimeAuthPath, isRuntimeAuthSearch } from '@/lib/runtimeAuth';
 import { getErrorMessage } from '@/lib/utils';
 
 const verificationRequests = new Map();
 
-function verifyEmailOnce(key) {
-    if (!verificationRequests.has(key)) {
-        const request = verifyEmail(key)
+function verifyEmailOnce(cacheKey, requestFactory) {
+    if (!verificationRequests.has(cacheKey)) {
+        const request = requestFactory()
             .then(() => ({ ok: true }))
             .catch((error) => ({ ok: false, error }));
-        verificationRequests.set(key, request);
+        verificationRequests.set(cacheKey, request);
     }
 
-    return verificationRequests.get(key);
+    return verificationRequests.get(cacheKey);
 }
 
 export function VerifyEmailPage() {
     const navigate = useNavigate();
     const { key } = useParams();
+    const [searchParams] = useSearchParams();
+    const runtimeMode = isRuntimeAuthSearch(searchParams);
+    const expiredPath = buildRuntimeAuthPath('/verify-email/expired', searchParams);
+    const successPath = buildRuntimeAuthPath('/verify-email/success', searchParams);
 
     useEffect(() => {
-        document.title = 'Verifying email | HVT';
-    }, []);
+        document.title = runtimeMode ? 'Verifying runtime email | HVT' : 'Verifying email | HVT';
+    }, [runtimeMode]);
 
     useEffect(() => {
         let cancelled = false;
 
         async function finishVerification() {
             if (!key) {
-                navigate('/verify-email/expired', {
+                navigate(expiredPath, {
                     replace: true,
                     state: {
                         email: getPendingVerificationEmail(),
@@ -47,18 +52,20 @@ export function VerifyEmailPage() {
                 return;
             }
 
-            const result = await verifyEmailOnce(key);
+            const result = await verifyEmailOnce(`${runtimeMode ? 'runtime' : 'control'}:${key}`, () =>
+                runtimeMode ? verifyRuntimeScopedEmail(key) : verifyEmail(key),
+            );
             if (cancelled) {
                 return;
             }
 
             if (result.ok) {
                 clearPendingVerificationEmail();
-                navigate('/verify-email/success', { replace: true });
+                navigate(successPath, { replace: true });
                 return;
             }
 
-            navigate('/verify-email/expired', {
+            navigate(expiredPath, {
                 replace: true,
                 state: {
                     email: getPendingVerificationEmail(),
@@ -72,7 +79,7 @@ export function VerifyEmailPage() {
         return () => {
             cancelled = true;
         };
-    }, [key, navigate]);
+    }, [expiredPath, key, navigate, runtimeMode, successPath]);
 
     return (
         <AuthLayout>
@@ -93,4 +100,3 @@ export function VerifyEmailPage() {
         </AuthLayout>
     );
 }
-

@@ -6,6 +6,7 @@ import {
     KeyRound,
     Loader2,
     Lock,
+    Mail,
     PackageCheck,
     ShieldCheck,
     ShoppingBag,
@@ -184,6 +185,20 @@ function deriveFallbackAccess(claims) {
     };
 }
 
+function getRuntimeRegisterGuidance(message) {
+    const normalized = (message || '').toLowerCase();
+
+    if (
+        (normalized.includes('already') && normalized.includes('e-mail')) ||
+        (normalized.includes('already') && normalized.includes('email')) ||
+        normalized.includes('already registered')
+    ) {
+        return `${message} Existing users cannot join a new project through runtime signup. Sign in instead, accept a project invite, or ask an admin to assign project access.`;
+    }
+
+    return message;
+}
+
 async function hydrateRuntimeSession(config, accessToken) {
     const claims = decodeJwtPayload(accessToken);
     const client = createRuntimeClient({
@@ -338,6 +353,56 @@ export default function RuntimeCommerceDemoPage() {
 
             setNotice(response?.detail || 'Runtime registration submitted. Check e-mail verification before login.');
         } catch (nextError) {
+            setError(getRuntimeRegisterGuidance(getErrorMessage(nextError)));
+        } finally {
+            setBusyAction('');
+        }
+    }
+
+    async function handlePasswordResetRequest() {
+        setBusyAction('reset');
+        setError('');
+        setNotice('');
+
+        try {
+            const client = createRuntimeClient({
+                baseUrl: config.baseUrl,
+                apiKey: config.apiKey,
+            });
+            await client.request('/api/v1/auth/runtime/password/reset/', {
+                method: 'POST',
+                auth: 'apiKey',
+                body: {
+                    email: form.email,
+                },
+            });
+            setNotice('If that runtime account exists for this project, a password reset email has been sent.');
+        } catch (nextError) {
+            setError(getErrorMessage(nextError));
+        } finally {
+            setBusyAction('');
+        }
+    }
+
+    async function handleResendVerification() {
+        setBusyAction('resend');
+        setError('');
+        setNotice('');
+
+        try {
+            const client = createRuntimeClient({
+                baseUrl: config.baseUrl,
+                apiKey: config.apiKey,
+            });
+            await client.request('/api/v1/auth/runtime/register/resend-email/', {
+                method: 'POST',
+                auth: 'apiKey',
+                body: {
+                    email: form.email,
+                },
+            });
+            setNotice('If that runtime account is still pending verification in this project, a fresh verification email has been sent.');
+        } catch (nextError) {
             setError(getErrorMessage(nextError));
         } finally {
             setBusyAction('');
@@ -486,10 +551,18 @@ export default function RuntimeCommerceDemoPage() {
                                         {busyAction === 'register' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserRound className="mr-2 h-4 w-4" />}
                                         Register
                                     </Button>
+                                    <Button type="button" variant="secondary" disabled={busyAction === 'reset'} className="h-11" onClick={handlePasswordResetRequest}>
+                                        {busyAction === 'reset' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                                        Send reset email
+                                    </Button>
+                                    <Button type="button" variant="outline" disabled={busyAction === 'resend'} className="h-11" onClick={handleResendVerification}>
+                                        {busyAction === 'resend' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PackageCheck className="mr-2 h-4 w-4" />}
+                                        Resend verification
+                                    </Button>
                                 </div>
 
                                 <p className="text-xs text-[#71717a]">
-                                    Runtime registration still follows HVT verification rules. Use sign-in after the account is active.
+                                    Runtime registration still follows HVT verification rules. Existing users must sign in or accept an invite; signup does not attach them to another project.
                                 </p>
                             </form>
                         </SectionCard>

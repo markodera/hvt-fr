@@ -7,9 +7,15 @@ import { Check, Eye, EyeOff, LockKeyhole, ShieldAlert } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
-import { confirmPasswordReset, validatePasswordResetToken } from '@/api/auth';
+import {
+    confirmPasswordReset,
+    confirmRuntimeScopedPasswordReset,
+    validatePasswordResetToken,
+    validateRuntimeScopedPasswordResetToken,
+} from '@/api/auth';
 import { AuthCard, AuthFieldError, AUTH_INPUT_CLASS, AUTH_PRIMARY_BUTTON_CLASS, AUTH_TEXT_LINK_CLASS, ButtonSpinner } from '@/components/auth/AuthShell';
 import { Logo } from '@/components/Logo';
+import { buildRuntimeAuthPath, isRuntimeAuthSearch } from '@/lib/runtimeAuth';
 import { getErrorMessage } from '@/lib/utils';
 
 const resetPasswordSchema = z
@@ -86,7 +92,7 @@ function isTokenInvalidError(error) {
     return detail.includes('invalid') || detail.includes('expired') || detail.includes('used');
 }
 
-function ExpiredResetState({ message }) {
+function ExpiredResetState({ message, forgotPasswordPath }) {
     return (
         <AuthCard>
             <div className="space-y-6 text-center">
@@ -100,7 +106,7 @@ function ExpiredResetState({ message }) {
                         {message || 'This reset link has expired or already been used.'}
                     </p>
                 </div>
-                <Link to="/forgot-password" className={AUTH_PRIMARY_BUTTON_CLASS}>
+                <Link to={forgotPasswordPath} className={AUTH_PRIMARY_BUTTON_CLASS}>
                     Request a new link
                 </Link>
             </div>
@@ -115,6 +121,9 @@ export function ResetPasswordPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [status, setStatus] = useState('loading');
     const [expiredMessage, setExpiredMessage] = useState('');
+    const runtimeMode = isRuntimeAuthSearch(searchParams);
+    const forgotPasswordPath = buildRuntimeAuthPath('/forgot-password', searchParams);
+    const loginPath = runtimeMode ? '/runtime-playground' : buildRuntimeAuthPath('/login', searchParams);
 
     const parsedToken = useMemo(
         () => parseResetToken(searchParams.get('token'), params.uid, params.token),
@@ -139,8 +148,8 @@ export function ResetPasswordPage() {
     const strength = useMemo(() => getStrengthVisuals(password), [password]);
 
     useEffect(() => {
-        document.title = 'Set new password | HVT';
-    }, []);
+        document.title = runtimeMode ? 'Set new runtime password | HVT' : 'Set new password | HVT';
+    }, [runtimeMode]);
 
     useEffect(() => {
         let cancelled = false;
@@ -153,10 +162,15 @@ export function ResetPasswordPage() {
             }
 
             try {
-                await validatePasswordResetToken({
+                const payload = {
                     uid: parsedToken.uid,
                     token: parsedToken.token,
-                });
+                };
+                if (runtimeMode) {
+                    await validateRuntimeScopedPasswordResetToken(payload);
+                } else {
+                    await validatePasswordResetToken(payload);
+                }
                 if (!cancelled) {
                     setStatus('ready');
                 }
@@ -173,19 +187,22 @@ export function ResetPasswordPage() {
         return () => {
             cancelled = true;
         };
-    }, [parsedToken]);
+    }, [parsedToken, runtimeMode]);
 
     const onSubmit = async (values) => {
         try {
-            await confirmPasswordReset(
-                {
-                    uid: parsedToken.uid,
-                    token: parsedToken.token,
-                },
-                values,
-            );
+            const tokenPayload = {
+                uid: parsedToken.uid,
+                token: parsedToken.token,
+            };
+
+            if (runtimeMode) {
+                await confirmRuntimeScopedPasswordReset(tokenPayload, values);
+            } else {
+                await confirmPasswordReset(tokenPayload, values);
+            }
             toast.success('Password updated. Sign in with your new password.');
-            navigate('/login', {
+            navigate(loginPath, {
                 replace: true,
                 state: {
                     toastMessage: 'Password updated. Sign in with your new password.',
@@ -225,7 +242,7 @@ export function ResetPasswordPage() {
     if (status === 'expired') {
         return (
             <AuthLayout>
-                <ExpiredResetState message={expiredMessage} />
+                <ExpiredResetState message={expiredMessage} forgotPasswordPath={forgotPasswordPath} />
             </AuthLayout>
         );
     }
@@ -239,7 +256,9 @@ export function ResetPasswordPage() {
                         <div className="space-y-2">
                             <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Set new password</h1>
                             <p className="text-sm leading-6 text-[#a1a1aa]">
-                                Choose a strong password for your HVT account.
+                                {runtimeMode
+                                    ? 'Choose a strong password for this app account.'
+                                    : 'Choose a strong password for your HVT account.'}
                             </p>
                         </div>
                     </div>

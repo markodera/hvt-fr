@@ -35,6 +35,8 @@ export function buildInvitationAcceptPath(token) {
 
 export function buildInvitationAuthPath(basePath, token) {
     if (!token) return basePath;
-    const params = new URLSearchParams({ invite_token: token });
-    return `${basePath}?${params.toString()}`;
+    const [pathname, rawQuery = ''] = String(basePath).split('?');
+    const params = new URLSearchParams(rawQuery);
+    params.set('invite_token', token);
+    return `${pathname}?${params.toString()}`;
 }
