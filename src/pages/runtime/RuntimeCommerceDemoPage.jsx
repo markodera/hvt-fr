@@ -254,6 +254,7 @@ function PermissionChip({ permission, active }) {
 }
 
 export default function RuntimeCommerceDemoPage() {
+    usePageTitle('Live Permission Renderer');
     const [config, setConfig] = useState(() => loadConfig());
     const [session, setSession] = useState(() => loadSession());
     const [form, setForm] = useState({

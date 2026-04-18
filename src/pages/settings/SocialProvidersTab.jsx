@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listProjects } from '@/api/organizations';
 import { ProjectSocialProvidersSection } from '@/pages/settings/ProjectSocialProvidersSection';
@@ -12,7 +12,7 @@ export function SocialProvidersTab() {
         queryFn: listProjects,
     });
 
-    const projects = projectsData?.results ?? projectsData ?? [];
+    const projects = useMemo(() => projectsData?.results ?? projectsData ?? [], [projectsData]);
 
     useEffect(() => {
         if (projects.length > 0 && !selectedProjectId) {

@@ -63,7 +63,8 @@ export function OrganizationInvitationsSection() {
     const invitations = normalizeCollection(data);
     const projects = normalizeCollection(projectsData);
     const selectedProjectId = form.watch('project_id') || null;
-    const selectedAppRoleIds = form.watch('app_role_ids') || [];
+    const selectedAppRoleIdsValue = form.watch('app_role_ids');
+    const selectedAppRoleIds = useMemo(() => selectedAppRoleIdsValue || [], [selectedAppRoleIdsValue]);
 
     const { data: projectRolesData, isLoading: projectRolesLoading } = useQuery({
         queryKey: ['projectRoles', selectedProjectId, 'invite-form'],

@@ -178,7 +178,7 @@ export default function WebhooksPage() {
         queryFn: () => listProjects({ page_size: 100 }),
     });
 
-    const projects = projectsQuery.data?.results ?? [];
+    const projects = useMemo(() => projectsQuery.data?.results ?? [], [projectsQuery.data?.results]);
     const defaultProjectId = useMemo(
         () => projects.find((project) => project.is_default)?.id || projects[0]?.id || '',
         [projects]

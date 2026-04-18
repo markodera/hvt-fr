@@ -76,9 +76,9 @@ Yes! You can also simulate and test Role-Based Access Control (RBAC) and permiss
 
 ## Related Repositories
 
-- Backend/API: `../hvt`
-- SDK: `../hvt-sdk`
-- Docs site: `../hvt-docs`
+- Backend/API: [github.com/markodera/hvt](https://github.com/markodera/hvt)
+- SDK: [github.com/markodera/hvt-sdk](https://github.com/markodera/hvt-sdk)
+- Docs site: [github.com/markodera/hvt-docs](https://github.com/markodera/hvt-docs)
 
 ## Public Endpoints
 
