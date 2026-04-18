@@ -133,7 +133,10 @@ function UserActionsMenu({ user, currentUser, roleMutation }) {
     );
 }
 
+import { usePageTitle } from '@/hooks/usePageTitle';
+
 export default function UsersPage() {
+    usePageTitle('Users');
     const queryClient = useQueryClient();
     const { user: currentUser } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();

@@ -90,7 +90,10 @@ function withinDateRange(value, from, to) {
     return true;
 }
 
+import { usePageTitle } from '@/hooks/usePageTitle';
+
 export default function AuditLogsPage() {
+    usePageTitle('Audit Logs');
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const eventType = searchParams.get('event_type') || '';

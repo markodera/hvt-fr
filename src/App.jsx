@@ -59,7 +59,7 @@ const router = createBrowserRouter([
     { path: '/auth/github/callback', element: <GitHubCallbackPage /> },
     { path: '/runtime-playground', element: <RuntimePlaygroundPage /> },
     { path: '/runtime-playground/callback/:provider', element: <RuntimePlaygroundPage /> },
-    { path: '/runtime-demo', element: <Navigate to="/runtime-playground" replace /> },
+    { path: '/runtime-demo', element: <RuntimeCommerceDemoPage /> },
     {
         element: (
             <ProtectedRoute>

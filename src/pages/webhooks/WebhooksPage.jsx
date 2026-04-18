@@ -162,7 +162,10 @@ function buildDraft(projectId = '') {
     };
 }
 
+import { usePageTitle } from '@/hooks/usePageTitle';
+
 export default function WebhooksPage() {
+    usePageTitle('Webhooks');
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [dialogOpen, setDialogOpen] = useState(false);

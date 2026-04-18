@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { API_KEY_CANONICAL_SCOPES } from '@/lib/hvt';
 import { formatDate, formatRelativeTime, getErrorMessage } from '@/lib/utils';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const scopeMeta = {
     'organization:read': {
@@ -146,6 +147,7 @@ function buildInitialDraft(projectId = '') {
 }
 
 export default function ApiKeysPage() {
+    usePageTitle('API Keys');
     const queryClient = useQueryClient();
     const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(Number(searchParams.get('page') || 1));

@@ -14,6 +14,7 @@ import { listApiKeys } from '@/api/apiKeys';
 import { listAuditLogs } from '@/api/auditLogs';
 import { listProjects } from '@/api/organizations';
 import { listUsers } from '@/api/users';
+import { getWebhookSummary } from '@/api/webhooks';
 import { formatDate, formatRelativeTime } from '@/lib/utils';
 
 function Card({ children, className = '' }) {
@@ -66,7 +67,10 @@ function auditResource(log) {
     return log.target_type || log.project || 'system';
 }
 
+import { usePageTitle } from '@/hooks/usePageTitle';
+
 export default function DashboardHome() {
+    usePageTitle('Dashboard');
     const { data: usersData, isLoading: usersLoading } = useQuery({
         queryKey: ['dashboard-users-count'],
         queryFn: () => listUsers({ page: 1, page_size: 1 }),
@@ -91,10 +95,25 @@ export default function DashboardHome() {
         queryFn: () => listAuditLogs({ page_size: 5 }),
     });
 
+    const {
+        data: webhookSummary,
+        isLoading: webhookSummaryLoading,
+        isError: webhookSummaryError,
+    } = useQuery({
+        queryKey: ['dashboard-webhook-summary'],
+        queryFn: getWebhookSummary,
+    });
+
     const projects = useMemo(() => projectsData?.results ?? projectsData ?? [], [projectsData]);
     const apiKeys = useMemo(() => apiKeysData?.results ?? [], [apiKeysData]);
     const auditEvents = useMemo(() => auditData?.results ?? [], [auditData]);
     const activeProjects = projects.filter((project) => project.is_active).length;
+    const webhookEvents24h =
+        webhookSummary?.total_deliveries_24h ??
+        webhookSummary?.deliveries_24h ??
+        webhookSummary?.webhook_events_24h ??
+        webhookSummary?.count_24h ??
+        0;
 
     return (
         <div className="space-y-6">
@@ -129,12 +148,23 @@ export default function DashboardHome() {
                         helper="Project-scoped keys available to your apps"
                     />
                 )}
-                <StatCard
-                    icon={Webhook}
-                    label="Webhook Events"
-                    value={0}
-                    helper="24h aggregate is not exposed by the current API yet"
-                />
+                {webhookSummaryLoading ? (
+                    <SkeletonBlock className="h-[132px]" />
+                ) : webhookSummaryError ? (
+                    <StatCard
+                        icon={Webhook}
+                        label="Webhook Events"
+                        value="-"
+                        helper="Could not load 24h deliveries"
+                    />
+                ) : (
+                    <StatCard
+                        icon={Webhook}
+                        label="Webhook Events"
+                        value={webhookEvents24h}
+                        helper="Deliveries in the last 24 hours"
+                    />
+                )}
             </section>
 
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">

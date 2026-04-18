@@ -11,6 +11,26 @@ function normalizeQueryArgs(params = {}, options = {}) {
     return [params, options];
 }
 
+function normalizeOptions(options = {}) {
+    if (
+        options &&
+        typeof options === 'object' &&
+        ('queryKey' in options || 'pageParam' in options || 'meta' in options)
+    ) {
+        return options.signal ? { signal: options.signal } : {};
+    }
+
+    return options;
+}
+
+export async function getWebhookSummary(options = {}) {
+    const requestOptions = normalizeOptions(options);
+    return hvt.request('/api/v1/organizations/current/webhooks/summary/', {
+        method: 'GET',
+        ...requestOptions,
+    });
+}
+
 export function listWebhooks(params = {}, options = {}) {
     const [query, requestOptions] = normalizeQueryArgs(params, options);
     return hvt.organizations.listWebhooks(query, requestOptions);

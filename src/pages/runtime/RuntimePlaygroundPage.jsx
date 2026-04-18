@@ -514,7 +514,10 @@ function RuntimeCallbackCard() {
     );
 }
 
+import { usePageTitle } from '@/hooks/usePageTitle';
+
 export default function RuntimePlaygroundPage() {
+    usePageTitle('Runtime Playground');
     const { provider } = useParams();
     const [config, setConfig] = useState(() => loadConfig());
     const [form, setForm] = useState({
@@ -652,14 +655,22 @@ export default function RuntimePlaygroundPage() {
             <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex flex-col items-start gap-4">
-                        <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#a1a1aa] transition hover:text-white">
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to hvts.app
+                          <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#a1a1aa] transition hover:text-white">
+                              <ArrowLeft className="h-4 w-4" />
+                              Back to Dashboard
                         </Link>
                         <Logo />
                     </div>
-                    <div className="rounded-full border border-[#27272a] bg-[#111111] px-4 py-2 text-center text-xs uppercase tracking-[0.18em] text-[#a78bfa]">
-                        Internal runtime test surface
+                    <div className="flex items-center gap-4">
+                        <div className="rounded-full border border-[#27272a] bg-[#111111] px-4 py-2 text-center text-xs uppercase tracking-[0.18em] text-[#a78bfa]">
+                            Internal runtime test surface
+                        </div>
+                        <Link
+                            to="/runtime-demo"
+                            className="rounded-full border border-[#7c3aed]/20 bg-[#7c3aed]/10 px-4 py-2 text-[13px] font-semibold text-[#c4b5fd] transition-colors hover:border-[#7c3aed]/40 hover:bg-[#7c3aed]/20"
+                        >
+                            Open Roles Demo →
+                        </Link>
                     </div>
                 </div>
 

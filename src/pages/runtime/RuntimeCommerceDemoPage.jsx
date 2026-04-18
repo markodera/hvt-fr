@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
     ArrowLeft,
     Boxes,
@@ -24,9 +25,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { HVTApiError, HVTClient } from '@/lib/hvt';
 import { getErrorMessage } from '@/lib/utils';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const CONFIG_STORAGE_KEY = 'hvt.runtime_demo.config';
 const SESSION_STORAGE_KEY = 'hvt.runtime_demo.session';
+
+const AUTH_SURFACE = {
+    backgroundImage:
+        'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 18 18%27%3E%3Ccircle cx=%279%27 cy=%279%27 r=%271.5%27 fill=%27%2327272a%27 /%3E%3C/svg%3E")',
+    backgroundRepeat: 'repeat',
+};
 
 const PERMISSION_BLUEPRINT = [
     { slug: 'catalog.read', label: 'Catalog read', description: 'Lets the user see the storefront catalog.' },
@@ -416,37 +424,43 @@ export default function RuntimeCommerceDemoPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.16),_transparent_36%),linear-gradient(180deg,_#09090b_0%,_#09090b_100%)] text-white">
+        <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-white" style={AUTH_SURFACE}>
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                    background:
+                        'radial-gradient(circle at top center, rgba(124,58,237,0.15), transparent 56%)',
+                }}
+            />
+            <Helmet>
+                <title>HVT Runtime Demo - Live Permission Renderer</title>
+                <meta name="description" content="This page reads the permission slugs embedded in your HVT runtime tokens and renders UI modules based on your exact granted capabilities. It automatically adjusts to whatever roles and permissions you configure in your project." />
+            </Helmet>
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <Logo className="h-10 w-10" />
-                            <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b8b94]">Runtime Demo</p>
-                                <h1 className="text-3xl font-semibold tracking-[-0.03em] text-white">Commerce app reference build</h1>
-                            </div>
-                        </div>
-                        <p className="mt-3 max-w-3xl text-sm text-[#a1a1aa]">
-                            This page shows how a customer app should consume HVT runtime tokens, load live project access,
-                            and gate buyer, seller, delivery, and admin surfaces by permission slug instead of hard-coded role names.
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Badge variant="warning">Internal testing surface</Badge>
-                        <Badge variant="secondary">Token-only demo</Badge>
-                        <Link
-                            to="/runtime-playground"
-                            className="inline-flex items-center gap-2 rounded-full border border-[#2f2f35] px-4 py-2 text-sm text-[#d4d4d8] transition hover:border-[#4c1d95] hover:text-white"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                            Runtime playground
+                <div className="mb-6 max-w-3xl">
+                    <div className="mb-8 flex flex-col items-start gap-4">
+                          <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#a1a1aa] transition hover:text-white">
+                              <ArrowLeft className="h-4 w-4" />
+                              Back to Dashboard
                         </Link>
+                        <Logo />
+                    </div>
+                    <div>
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b8b94]">Runtime Demo</p>
+                        <h1 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-white">Live Permission Renderer</h1>
+                        <p className="mt-3 text-sm text-white/60 leading-relaxed">
+                            This page reads the permission slugs embedded in your HVT runtime tokens and renders UI modules based on your exact granted capabilities. It automatically adjusts to whatever roles and permissions you configure in your project.
+                        </p>
                     </div>
                 </div>
 
-                <div className="mb-6 rounded-3xl border border-[#4c1d95]/40 bg-[#12091f] p-4 text-sm text-[#d8b4fe]">
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                    <Badge variant="warning">Internal testing surface</Badge>
+                    <Badge variant="secondary">Token-only demo</Badge>
+                </div>
+
+                <div className="mb-6 rounded-2xl border border-[#4c1d95]/30 bg-[#05020a] p-4 text-sm text-[#d8b4fe]">
                     Do not ship a browser app that exposes a live project API key. This page is only an internal reference surface.
                     A production app should keep the HVT runtime API key on its own backend and forward auth requests server-side.
                 </div>
@@ -532,7 +546,7 @@ export default function RuntimeCommerceDemoPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Confirm password</Label>
+                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a] whitespace-nowrap truncate">Confirm</Label>
                                         <Input
                                             type="password"
                                             value={form.confirmPassword}

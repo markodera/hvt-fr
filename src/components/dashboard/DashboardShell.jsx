@@ -7,6 +7,7 @@ import {
     KeyRound,
     LogOut,
     Moon,
+    PlaySquare,
     ScrollText,
     Settings,
     SunMedium,
@@ -26,6 +27,7 @@ const navigation = [
     { label: 'Webhooks', to: '/dashboard/webhooks', icon: Webhook },
     { label: 'Audit Logs', to: '/dashboard/audit-logs', icon: ScrollText },
     { label: 'Settings', to: '/dashboard/settings', icon: Settings },
+    { label: 'Playground', to: '/runtime-playground', icon: PlaySquare, external: true },
 ];
 
 const onboardingNavigation = [

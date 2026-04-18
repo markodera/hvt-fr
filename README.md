@@ -48,6 +48,16 @@ The Vite dev server starts on `http://localhost:5173` by default.
 ## Available Scripts
 
 - `npm run dev` starts the Vite development server
+
+## Runtime Playground
+
+The **Runtime Playground** is a built-in sandbox that lets you test authentication flows (Login, Registration, Social Auth, Session verification, etc.) against your running HVT API directly from the browser. 
+
+You can access the Playground from the primary sidebar navigation inside the Dashboard, or directly at `/runtime-playground`. It uses the `VITE_RUNTIME_API_KEY` (if provided) and local browser storage to simulate a frontend client integrating with your HVT backend.
+
+### Testing Roles and Permissions (RBAC)
+
+Yes! You can also simulate and test Role-Based Access Control (RBAC) and permissions. Navigate to the **Commerce Demo** (`/runtime-demo`) to see a real-world example of how HVT evaluates permission slugs and role claims encoded directly inside your session tokens to gate UI components and features.
 - `npm run build` creates a production build in `dist/`
 - `npm run lint` runs ESLint across the repo
 - `npm run preview` serves the built app locally

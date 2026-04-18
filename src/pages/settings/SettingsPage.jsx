@@ -72,7 +72,10 @@ function LoadingGrid() {
     );
 }
 
+import { usePageTitle } from '@/hooks/usePageTitle';
+
 export default function SettingsPage() {
+    usePageTitle('Settings');
     const queryClient = useQueryClient();
     const { user, refreshSession, logout } = useAuth();
     const [editingProject, setEditingProject] = useState(null);

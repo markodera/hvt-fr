@@ -8,8 +8,11 @@ import { listAuditLogs } from '@/api/auditLogs';
 import { listUsers } from '@/api/users';
 import { listApiKeys } from '@/api/apiKeys';
 import { formatRelativeTime } from '@/lib/utils';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export function DashboardPage() {
+    usePageTitle('Dashboard');
+
     const { data: usersData } = useQuery({
         queryKey: ['users', { page: 1, page_size: 1 }],
         queryFn: () => listUsers({ page: 1, page_size: 1 }),
