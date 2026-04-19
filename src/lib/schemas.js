@@ -36,6 +36,38 @@ const optionalFrontendUrlSchema = z.preprocess((value) => {
     return normalized === '' ? '' : normalized;
 }, z.union([z.literal(''), z.string().url('Enter a valid frontend URL')]));
 
+function splitMultilineValues(value) {
+    return String(value || '')
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+}
+
+function isValidOrigin(value) {
+    try {
+        const url = new URL(value);
+        return (
+            (url.protocol === 'http:' || url.protocol === 'https:') &&
+            !url.username &&
+            !url.password &&
+            (url.pathname === '' || url.pathname === '/') &&
+            !url.search &&
+            !url.hash
+        );
+    } catch {
+        return false;
+    }
+}
+
+const optionalAllowedOriginsTextSchema = z.preprocess((value) => {
+    if (typeof value !== 'string') {
+        return '';
+    }
+    return value;
+}, z.string().refine((value) => splitMultilineValues(value).every(isValidOrigin), {
+    message: 'Enter one valid origin per line, for example https://app.example.com or http://localhost:3000',
+}));
+
 // Auth schemas
 
 export const loginSchema = z.object({
@@ -133,6 +165,7 @@ export const createProjectSchema = z.object({
     ),
     allow_signup: z.boolean(),
     frontend_url: optionalFrontendUrlSchema,
+    allowed_origins_text: optionalAllowedOriginsTextSchema,
 });
 
 export const projectPermissionSchema = z.object({

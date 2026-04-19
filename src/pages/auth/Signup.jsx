@@ -19,10 +19,8 @@ import { DOCS_URL } from '@/lib/appLinks';
 
 const signupSchema = z
     .object({
-        full_name: z
-            .string()
-            .min(3, 'Enter your full name')
-            .refine((value) => value.trim().split(/\s+/).length >= 2, 'Enter first and last name'),
+        first_name: z.string().min(1, 'Enter your first name'),
+        last_name: z.string().min(1, 'Enter your last name'),
         email: z.string().email('Enter a valid email address'),
         password: z.string().min(8, 'Password must be at least 8 characters'),
         confirm_password: z.string().min(1, 'Confirm your password'),
@@ -43,14 +41,6 @@ function GoogleIcon() {
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
         </svg>
     );
-}
-
-function splitFullName(value) {
-    const pieces = value.trim().split(/\s+/);
-    return {
-        first_name: pieces[0],
-        last_name: pieces.slice(1).join(' '),
-    };
 }
 
 function ChainDiagram() {
@@ -98,7 +88,8 @@ export default function Signup() {
     } = useForm({
         resolver: zodResolver(signupSchema),
         defaultValues: {
-            full_name: '',
+            first_name: '',
+            last_name: '',
             email: '',
             password: '',
             confirm_password: '',
@@ -132,13 +123,12 @@ export default function Signup() {
 
     const onSubmit = async (values) => {
         try {
-            const { first_name, last_name } = splitFullName(values.full_name);
             await apiRegister({
                 email: values.email,
                 password1: values.password,
                 password2: values.confirm_password,
-                first_name,
-                last_name,
+                first_name: values.first_name.trim(),
+                last_name: values.last_name.trim(),
             });
             setPendingVerificationEmail(values.email);
             toast.success('Verification email sent.');
@@ -232,19 +222,36 @@ export default function Signup() {
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="space-y-2">
-                            <label htmlFor="signup-name" className="text-sm font-medium text-white">
-                                Full name
-                            </label>
-                            <input
-                                id="signup-name"
-                                type="text"
-                                autoComplete="name"
-                                className={AUTH_INPUT_CLASS}
-                                placeholder="Jane Builder"
-                                {...register('full_name')}
-                            />
-                            <AuthFieldError>{errors.full_name?.message}</AuthFieldError>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <label htmlFor="signup-first-name" className="text-sm font-medium text-white">
+                                    First name
+                                </label>
+                                <input
+                                    id="signup-first-name"
+                                    type="text"
+                                    autoComplete="given-name"
+                                    className={AUTH_INPUT_CLASS}
+                                    placeholder="Jane"
+                                    {...register('first_name')}
+                                />
+                                <AuthFieldError>{errors.first_name?.message}</AuthFieldError>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label htmlFor="signup-last-name" className="text-sm font-medium text-white">
+                                    Last name
+                                </label>
+                                <input
+                                    id="signup-last-name"
+                                    type="text"
+                                    autoComplete="family-name"
+                                    className={AUTH_INPUT_CLASS}
+                                    placeholder="Builder"
+                                    {...register('last_name')}
+                                />
+                                <AuthFieldError>{errors.last_name?.message}</AuthFieldError>
+                            </div>
                         </div>
 
                         <div className="space-y-2">

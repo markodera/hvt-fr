@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck } from 'l
 
 import { Logo } from '@/components/Logo';
 import { HVTApiError, HVTClient } from '@/lib/hvt';
+import { normalizeApiBaseUrl, resolveApiBaseUrl } from '@/lib/apiBaseUrl';
 
 const CONFIG_STORAGE_KEY = 'hvt.runtime_playground.config';
 const PROVIDERS_STORAGE_KEY = 'hvt.runtime_playground.providers';
@@ -25,7 +26,7 @@ function getDefaultOrigin() {
 function getDefaultConfig() {
     const origin = getDefaultOrigin();
     return {
-        baseUrl: import.meta.env.VITE_API_URL || 'https://api.hvts.app',
+        baseUrl: resolveApiBaseUrl(import.meta.env.VITE_API_URL, origin),
         apiKey: '',
         googleCallbackUrl: `${origin}/runtime-playground/callback/google`,
         githubCallbackUrl: `${origin}/runtime-playground/callback/github`,
@@ -37,9 +38,11 @@ function loadConfig() {
 
     try {
         const saved = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY) || '{}');
+        const defaults = getDefaultConfig();
         return {
-            ...getDefaultConfig(),
+            ...defaults,
             ...saved,
+            baseUrl: normalizeApiBaseUrl(saved.baseUrl) || defaults.baseUrl,
         };
     } catch {
         return getDefaultConfig();
@@ -86,7 +89,7 @@ function clearPendingSocial() {
 
 function createClient(config) {
     return new HVTClient({
-        baseUrl: config.baseUrl,
+        baseUrl: normalizeApiBaseUrl(config?.baseUrl) || getDefaultConfig().baseUrl,
         apiKey: config.apiKey,
         credentials: 'omit',
         fetch: (...args) => fetch(...args),

@@ -19,6 +19,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { RoleGate } from '@/components/RoleGate';
 import { formatDate, getErrorMessage } from '@/lib/utils';
 import { ROLE_LABELS, ROLE_OPTIONS } from '@/lib/constants';
+import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 
 const selectClassName =
     'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25';
@@ -163,10 +164,10 @@ export function UserDetailPage() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary">
-                            {user.first_name?.[0]}{user.last_name?.[0]}
+                            {getUserInitials(user)}
                         </div>
                         <div className="min-w-0">
-                            <h2 className="break-words text-xl font-bold text-text-primary">{user.full_name}</h2>
+                            <h2 className="break-words text-xl font-bold text-text-primary">{getUserDisplayName(user)}</h2>
                             <p className="break-all text-sm text-text-secondary">{user.email}</p>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <Badge variant={user.role === 'owner' ? 'default' : 'secondary'}>

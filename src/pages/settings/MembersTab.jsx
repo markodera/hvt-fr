@@ -5,6 +5,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { User, MoreHorizontal, Shield, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 
 export function MembersTab() {
     const { data: usersData, isLoading: usersLoading } = useQuery({
@@ -36,11 +37,11 @@ export function MembersTab() {
                                 <div key={user.id} className="p-4 flex items-center justify-between hover:bg-[#27272a]/20 transition-colors">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-[#27272a] flex items-center justify-center text-white font-medium">
-                                            {user.first_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || <User className="w-5 h-5 text-[#a1a1aa]" />}
+                                            {getUserInitials(user, '') || <User className="w-5 h-5 text-[#a1a1aa]" />}
                                         </div>
                                         <div>
                                             <div className="text-sm font-medium text-white flex items-center gap-2">
-                                                {user.first_name} {user.last_name}
+                                                {getUserDisplayName(user)}
                                                 {user.role === 'owner' && (
                                                     <Badge variant="outline" className="bg-[#7c3aed]/10 text-[#7c3aed] border-[#7c3aed]/20 text-xs">
                                                         <Shield className="w-3 h-3 mr-1" />

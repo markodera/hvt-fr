@@ -1,4 +1,5 @@
 import { HVTClient } from '@/lib/hvt';
+import { resolveApiBaseUrl } from '@/lib/apiBaseUrl';
 
 const RUNTIME_QUERY_VALUE = '1';
 
@@ -51,15 +52,10 @@ export function hasRuntimePublicApiKey() {
 }
 
 function getRuntimeBaseUrl() {
-    if (import.meta.env.VITE_API_URL) {
-        return import.meta.env.VITE_API_URL;
-    }
-
-    if (typeof window !== 'undefined' && window.location?.origin) {
-        return window.location.origin;
-    }
-
-    return '';
+    return resolveApiBaseUrl(
+        import.meta.env.VITE_API_URL,
+        typeof window !== 'undefined' ? window.location?.origin || '' : '',
+    );
 }
 
 function createRuntimeClient() {

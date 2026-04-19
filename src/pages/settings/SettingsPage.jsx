@@ -72,6 +72,37 @@ function LoadingGrid() {
     );
 }
 
+const textareaClassName = 'min-h-[120px] w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white placeholder:text-[#52525b] focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/25';
+
+function splitMultilineValues(value = '') {
+    return String(value)
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+}
+
+function formatAllowedOrigins(origins = []) {
+    return (origins || []).join('\n');
+}
+
+function buildProjectFormDefaults(project = null, fallbackAllowSignup = false) {
+    return {
+        name: project?.name || '',
+        slug: project?.slug || '',
+        allow_signup: project?.allow_signup ?? fallbackAllowSignup,
+        frontend_url: project?.frontend_url || '',
+        allowed_origins_text: formatAllowedOrigins(project?.allowed_origins || []),
+    };
+}
+
+function toProjectPayload(values) {
+    const { allowed_origins_text, ...rest } = values;
+    return {
+        ...rest,
+        allowed_origins: splitMultilineValues(allowed_origins_text),
+    };
+}
+
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function SettingsPage() {
@@ -111,12 +142,12 @@ export default function SettingsPage() {
 
     const projectForm = useForm({
         resolver: zodResolver(createProjectSchema),
-        defaultValues: { name: '', slug: '', allow_signup: false, frontend_url: '' },
+        defaultValues: buildProjectFormDefaults(),
     });
 
     const editProjectForm = useForm({
         resolver: zodResolver(createProjectSchema),
-        defaultValues: { name: '', slug: '', allow_signup: false, frontend_url: '' },
+        defaultValues: buildProjectFormDefaults(),
     });
 
     useEffect(() => {
@@ -130,12 +161,7 @@ export default function SettingsPage() {
             allow_signup: org.allow_signup,
         });
 
-        projectForm.reset({
-            name: '',
-            slug: '',
-            allow_signup: org.allow_signup,
-            frontend_url: '',
-        });
+        projectForm.reset(buildProjectFormDefaults(null, org.allow_signup));
     }, [org, orgForm, projectForm]);
 
     useEffect(() => {
@@ -154,12 +180,7 @@ export default function SettingsPage() {
             return;
         }
 
-        editProjectForm.reset({
-            name: editingProject.name,
-            slug: editingProject.slug,
-            allow_signup: editingProject.allow_signup,
-            frontend_url: editingProject.frontend_url || '',
-        });
+        editProjectForm.reset(buildProjectFormDefaults(editingProject));
     }, [editProjectForm, editingProject]);
 
     function invalidateProjectQueries() {
@@ -209,7 +230,7 @@ export default function SettingsPage() {
         mutationFn: createProject,
         onSuccess: () => {
             invalidateProjectQueries();
-            projectForm.reset({ name: '', slug: '', allow_signup: org?.allow_signup ?? false, frontend_url: '' });
+            projectForm.reset(buildProjectFormDefaults(null, org?.allow_signup ?? false));
             toast.success('Project created');
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -452,6 +473,11 @@ export default function SettingsPage() {
                                                     Runtime frontend: <span className="font-mono text-[#d4d4d8]">{project.frontend_url}</span>
                                                 </p>
                                             ) : null}
+                                            {project.allowed_origins?.length ? (
+                                                <p className="mt-2 break-all text-xs text-[#a1a1aa]">
+                                                    Extra runtime origins: <span className="font-mono text-[#d4d4d8]">{project.allowed_origins.join(', ')}</span>
+                                                </p>
+                                            ) : null}
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             <button
@@ -483,7 +509,7 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium text-white">Create project</p>
                         <p className="mt-1 text-sm text-[#71717a]">Use a separate project for each app or environment.</p>
 
-                        <form onSubmit={projectForm.handleSubmit((values) => projectMutation.mutate(values))} className="mt-4 grid gap-4 md:grid-cols-2">
+                        <form onSubmit={projectForm.handleSubmit((values) => projectMutation.mutate(toProjectPayload(values)))} className="mt-4 grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project name</Label>
                                 <Input
@@ -505,8 +531,26 @@ export default function SettingsPage() {
                                     placeholder="https://app.example.com"
                                     className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                                 />
+                                {projectForm.formState.errors.frontend_url ? (
+                                    <p className="text-xs text-rose-300">{projectForm.formState.errors.frontend_url.message}</p>
+                                ) : null}
                                 <p className="text-xs text-[#71717a]">
                                     Optional. Runtime verification and password-reset emails will link to this frontend when this project API key is used.
+                                </p>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Allowed origins</Label>
+                                <textarea
+                                    {...projectForm.register('allowed_origins_text')}
+                                    rows={4}
+                                    placeholder={`https://preview.example.com\nhttp://localhost:3000`}
+                                    className={textareaClassName}
+                                />
+                                {projectForm.formState.errors.allowed_origins_text ? (
+                                    <p className="text-xs text-rose-300">{projectForm.formState.errors.allowed_origins_text.message}</p>
+                                ) : null}
+                                <p className="text-xs text-[#71717a]">
+                                    Optional. One origin per line. Live runtime keys accept browser requests only from these origins plus the runtime frontend URL above. Test keys also allow localhost automatically.
                                 </p>
                             </div>
                             <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 md:col-span-2 sm:flex-row sm:items-center sm:justify-between">
@@ -564,7 +608,7 @@ export default function SettingsPage() {
 
                     <form
                         onSubmit={editProjectForm.handleSubmit((values) =>
-                            updateProjectMutation.mutate({ id: editingProject.id, data: values })
+                            updateProjectMutation.mutate({ id: editingProject.id, data: toProjectPayload(values) })
                         )}
                         className="mt-4 space-y-4"
                     >
@@ -589,8 +633,26 @@ export default function SettingsPage() {
                                 placeholder="https://app.example.com"
                                 className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                             />
+                            {editProjectForm.formState.errors.frontend_url ? (
+                                <p className="text-xs text-rose-300">{editProjectForm.formState.errors.frontend_url.message}</p>
+                            ) : null}
                             <p className="text-xs text-[#71717a]">
                                 Optional. Runtime verification and password-reset emails for this project will target this frontend.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Allowed origins</Label>
+                            <textarea
+                                {...editProjectForm.register('allowed_origins_text')}
+                                rows={4}
+                                placeholder={`https://preview.example.com\nhttp://localhost:3000`}
+                                className={textareaClassName}
+                            />
+                            {editProjectForm.formState.errors.allowed_origins_text ? (
+                                <p className="text-xs text-rose-300">{editProjectForm.formState.errors.allowed_origins_text.message}</p>
+                            ) : null}
+                            <p className="text-xs text-[#71717a]">
+                                Optional. One origin per line. Live runtime keys are limited to these origins plus the runtime frontend URL.
                             </p>
                         </div>
                         <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">

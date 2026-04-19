@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { HVTApiError, HVTClient } from '@/lib/hvt';
+import { normalizeApiBaseUrl, resolveApiBaseUrl } from '@/lib/apiBaseUrl';
 import { getErrorMessage } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -124,7 +125,10 @@ function decodeJwtPayload(token) {
 
 function getDefaultConfig() {
     return {
-        baseUrl: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
+        baseUrl: resolveApiBaseUrl(
+            import.meta.env.VITE_API_URL,
+            typeof window !== 'undefined' ? window.location?.origin || '' : '',
+        ),
         apiKey: '',
     };
 }
@@ -136,7 +140,12 @@ function loadConfig() {
 
     try {
         const saved = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY) || '{}');
-        return { ...getDefaultConfig(), ...saved };
+        const defaults = getDefaultConfig();
+        return {
+            ...defaults,
+            ...saved,
+            baseUrl: normalizeApiBaseUrl(saved.baseUrl) || defaults.baseUrl,
+        };
     } catch {
         return getDefaultConfig();
     }
@@ -173,7 +182,7 @@ function saveSession(session) {
 
 function createRuntimeClient({ baseUrl, apiKey, accessToken } = {}) {
     return new HVTClient({
-        baseUrl,
+        baseUrl: normalizeApiBaseUrl(baseUrl) || getDefaultConfig().baseUrl,
         apiKey: apiKey || null,
         accessToken: accessToken || null,
         credentials: 'omit',

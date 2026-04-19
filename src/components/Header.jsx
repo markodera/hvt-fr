@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -56,17 +57,17 @@ export function Header() {
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="gap-2">
                                 <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
-                                    {user.first_name?.[0]}{user.last_name?.[0]}
+                                    {getUserInitials(user)}
                                 </div>
                                 <span className="text-sm text-text-primary hidden sm:inline">
-                                    {user.full_name || user.email}
+                                    {getUserDisplayName(user)}
                                 </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuLabel>
                                 <div>
-                                    <p className="text-sm font-medium text-text-primary">{user.full_name}</p>
+                                    <p className="text-sm font-medium text-text-primary">{getUserDisplayName(user)}</p>
                                     <p className="text-xs text-text-muted">{user.email}</p>
                                 </div>
                             </DropdownMenuLabel>

@@ -1,6 +1,10 @@
 import { API_KEY_CANONICAL_SCOPES, HVTApiError, HVTClient } from '@hvt/sdk';
+import { resolveApiBaseUrl } from '@/lib/apiBaseUrl';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = resolveApiBaseUrl(
+    import.meta.env.VITE_API_URL,
+    typeof window !== 'undefined' ? window.location.origin : '',
+);
 const rawFetch = (...args) => fetch(...args);
 
 const PUBLIC_AUTH_PATH_PREFIXES = [

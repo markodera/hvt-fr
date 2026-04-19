@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS } from '@/lib/constants';
 import { Logo } from '@/components/Logo';
+import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 
 const iconMap = {
     LayoutDashboard,
@@ -70,11 +71,11 @@ export function Sidebar() {
                 <div className="px-3 py-4 border-t border-border/50">
                     <div className="flex items-center gap-3 px-3 py-2">
                         <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary shrink-0">
-                            {user.first_name?.[0]}{user.last_name?.[0]}
+                            {getUserInitials(user)}
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-white truncate">
-                                {user.full_name || user.email}
+                                {getUserDisplayName(user)}
                             </p>
                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>

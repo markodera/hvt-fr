@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 
 function TableCard({ children }) {
     return (
@@ -23,7 +24,7 @@ function TableCard({ children }) {
 function SkeletonRow() {
     return (
         <tr className="border-b border-[#27272a] last:border-b-0">
-            {Array.from({ length: 6 }).map((_, index) => (
+            {Array.from({ length: 7 }).map((_, index) => (
                 <td key={index} className="px-4 py-3">
                     <div className="h-5 animate-pulse rounded bg-[#1c1c1f]" />
                 </td>
@@ -53,20 +54,88 @@ function roleBadge(role) {
     return 'border border-[#3f3f46] bg-[#111111] text-[#a1a1aa]';
 }
 
-function initialsForUser(user) {
-    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
-    if (fullName) {
-        return fullName
-            .split(/\s+/)
-            .slice(0, 2)
-            .map((part) => part[0]?.toUpperCase())
-            .join('');
-    }
-    return (user.email || 'HV').slice(0, 2).toUpperCase();
+function displayName(user) {
+    return getUserDisplayName(user);
 }
 
-function displayName(user) {
-    return user.full_name?.trim() || user.email;
+function getUserAppRoles(user) {
+    return Array.isArray(user?.app_roles) ? user.app_roles : [];
+}
+
+function getAppRoleLabel(user, appRole) {
+    const baseLabel = appRole?.name || appRole?.slug || 'Assigned role';
+    if (!appRole?.project_slug || appRole.project_slug === user?.project_slug) {
+        return baseLabel;
+    }
+    return `${appRole.project_slug}: ${baseLabel}`;
+}
+
+function AppRolesBadges({ user, limit = 2, className = '' }) {
+    const appRoles = getUserAppRoles(user);
+
+    if (appRoles.length === 0) {
+        return <span className={`text-sm text-[#71717a] ${className}`.trim()}>No app role</span>;
+    }
+
+    const visibleRoles = appRoles.slice(0, limit);
+    const remainingCount = appRoles.length - visibleRoles.length;
+
+    return (
+        <div className={`flex flex-wrap gap-1.5 ${className}`.trim()}>
+            {visibleRoles.map((appRole) => (
+                <span
+                    key={appRole.id}
+                    className="inline-flex max-w-full items-center whitespace-nowrap rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 text-[11px] font-medium text-[#d4d4d8]"
+                    title={getAppRoleLabel(user, appRole)}
+                >
+                    {getAppRoleLabel(user, appRole)}
+                </span>
+            ))}
+            {remainingCount > 0 ? (
+                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-[#27272a] bg-[#18181b] px-2 py-0.5 text-[11px] text-[#a1a1aa]">
+                    +{remainingCount} more
+                </span>
+            ) : null}
+        </div>
+    );
+}
+
+function ProjectBadge({ projectSlug }) {
+    if (!projectSlug) {
+        return <span className="text-sm text-[#71717a]">Org-wide</span>;
+    }
+
+    return (
+        <span
+            className="inline-flex items-center whitespace-nowrap rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]"
+            title={projectSlug}
+        >
+            {projectSlug}
+        </span>
+    );
+}
+
+function truncateMiddle(value, start = 14, end = 12) {
+    const normalized = String(value || '');
+    if (normalized.length <= start + end + 3) {
+        return normalized;
+    }
+    return `${normalized.slice(0, start)}...${normalized.slice(-end)}`;
+}
+
+function formatCompactDate(value) {
+    if (!value) {
+        return 'Unknown';
+    }
+
+    try {
+        return new Intl.DateTimeFormat(undefined, {
+            day: 'numeric',
+            month: 'short',
+        }).format(new Date(value));
+    } catch {
+        return formatDate(value, { hour: undefined, minute: undefined });
+    }
 }
 
 function Pagination({ count, page, onPageChange, pageSize = 10 }) {
@@ -236,7 +305,7 @@ export default function UsersPage() {
                                 <div key={user.id} className="space-y-4 px-4 py-4">
                                     <div className="flex items-start gap-3">
                                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
-                                            {initialsForUser(user)}
+                                            {getUserInitials(user)}
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <p className="break-words text-sm font-medium text-white">{displayName(user)}</p>
@@ -248,15 +317,11 @@ export default function UsersPage() {
                                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${roleBadge(user.role)}`}>
                                             {user.role_display || user.role}
                                         </span>
-                                        {user.project_slug ? (
-                                            <span className="rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]">
-                                                {user.project_slug}
-                                            </span>
-                                        ) : (
-                                            <span className="rounded-full border border-[#27272a] bg-[#111111] px-2 py-0.5 text-[11px] text-[#a1a1aa]">
-                                                Org-wide
-                                            </span>
-                                        )}
+                                        <ProjectBadge projectSlug={user.project_slug} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[11px] uppercase tracking-[0.18em] text-[#71717a]">App roles</p>
+                                        <AppRolesBadges user={user} limit={4} />
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 text-xs text-[#71717a] sm:grid-cols-2">
                                         <p>Status: {user.is_active ? 'Active user' : 'Inactive'}</p>
@@ -267,24 +332,25 @@ export default function UsersPage() {
                         </div>
 
                         <div className="hidden overflow-x-auto md:block">
-                            <table className="w-full min-w-[880px]">
+                            <table className="w-full min-w-[1080px] table-fixed">
                                 <thead>
                                     <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
-                                        <th className="px-4 py-3 font-medium">Name</th>
-                                        <th className="px-4 py-3 font-medium">Email</th>
-                                        <th className="px-4 py-3 font-medium">Role</th>
-                                        <th className="px-4 py-3 font-medium">Project</th>
-                                        <th className="px-4 py-3 font-medium">Joined</th>
-                                        <th className="px-4 py-3 font-medium text-right">Actions</th>
+                                        <th className="w-[28%] px-3 py-3 font-medium">Name</th>
+                                        <th className="w-[29%] px-3 py-3 font-medium">Email</th>
+                                        <th className="w-[10%] px-3 py-3 font-medium whitespace-nowrap">Role</th>
+                                        <th className="w-[12%] px-3 py-3 font-medium whitespace-nowrap">Project</th>
+                                        <th className="w-[9%] px-3 py-3 font-medium whitespace-nowrap">App role</th>
+                                        <th className="w-[7%] px-3 py-3 font-medium whitespace-nowrap">Joined</th>
+                                        <th className="w-[5%] px-3 py-3 font-medium text-right whitespace-nowrap">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {users.map((user) => (
                                         <tr key={user.id} className="border-b border-[#27272a] last:border-b-0">
-                                            <td className="px-4 py-3">
+                                            <td className="px-3 py-3 align-top">
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
-                                                        {initialsForUser(user)}
+                                                        {getUserInitials(user)}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="truncate text-sm font-medium text-white">
@@ -296,25 +362,24 @@ export default function UsersPage() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-[#a1a1aa]">{user.email}</td>
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${roleBadge(user.role)}`}>
+                                            <td className="px-3 py-3 align-top text-sm text-[#a1a1aa]" title={user.email}>
+                                                <span className="block truncate">{truncateMiddle(user.email, 16, 12)}</span>
+                                            </td>
+                                            <td className="px-3 py-3 align-top">
+                                                <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${roleBadge(user.role)}`}>
                                                     {user.role_display || user.role}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                {user.project_slug ? (
-                                                    <span className="rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]">
-                                                        {user.project_slug}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-sm text-[#71717a]">Org-wide</span>
-                                                )}
+                                            <td className="px-3 py-3 align-top">
+                                                <ProjectBadge projectSlug={user.project_slug} />
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-xs text-[#71717a]">
-                                                {formatDate(user.created_at, { hour: undefined, minute: undefined })}
+                                            <td className="px-3 py-3 align-top">
+                                                <AppRolesBadges user={user} />
                                             </td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td className="px-3 py-3 align-top font-mono text-xs text-[#71717a] whitespace-nowrap">
+                                                {formatCompactDate(user.created_at)}
+                                            </td>
+                                            <td className="px-3 py-3 align-top text-right">
                                                 <UserActionsMenu user={user} currentUser={currentUser} roleMutation={roleMutation} />
                                             </td>
                                         </tr>

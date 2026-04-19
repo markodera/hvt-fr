@@ -19,6 +19,7 @@ import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { DOCS_URL } from '@/lib/appLinks';
 import { useTheme } from '@/hooks/useTheme';
+import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 
 const navigation = [
     { label: 'Dashboard', to: '/dashboard', icon: Grid2x2 },
@@ -42,24 +43,6 @@ const titleMap = [
     { match: '/dashboard/audit-logs', title: 'Audit Logs' },
     { match: '/dashboard/settings', title: 'Settings' },
 ];
-
-function getInitials(user) {
-    const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
-    if (fullName) {
-        return fullName
-            .split(/\s+/)
-            .slice(0, 2)
-            .map((part) => part[0]?.toUpperCase())
-            .join('');
-    }
-
-    return (user?.email || 'HV').slice(0, 2).toUpperCase();
-}
-
-function getDisplayName(user) {
-    const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
-    return fullName || user?.email || 'HVT user';
-}
 
 function resolveTitle(pathname) {
     const matched = titleMap.find((item) => pathname.startsWith(item.match));
@@ -104,8 +87,8 @@ export function DashboardShell({ children }) {
     const hasOrganization = Boolean(user?.organization);
     const shellNavigation = hasOrganization ? navigation : onboardingNavigation;
     const pageTitle = useMemo(() => resolveTitle(location.pathname), [location.pathname]);
-    const displayName = getDisplayName(user);
-    const initials = getInitials(user);
+    const displayName = getUserDisplayName(user);
+    const initials = getUserInitials(user);
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white">
