@@ -103,10 +103,16 @@ const features = [
       'Run HVT yourself under AGPL v3 or use the hosted product first. The model stays the same either way.',
   },
   {
+    icon: Boxes,
+    title: 'Zero Cross-Tenant Data Leakage',
+    description:
+      'HVT uses strict, database-level partitioning. Build multiple apps and keep your user pools 100% isolated.',
+  },
+  {
     icon: KeyRound,
     title: 'Project-scoped runtime',
     description:
-      'Keep apps and environments separated with their own project settings, runtime auth context, and API keys.',
+      'Keep apps and environments perfectly separated. True data isolation ensures a user signing up for Project A has absolutely zero crossover with Project B, even if they use the exact same email address.',
   },
   {
     icon: GitBranchPlus,
