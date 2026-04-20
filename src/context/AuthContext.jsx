@@ -5,6 +5,7 @@ import { hvt, isAuthFailure, refreshDashboardSession } from '@/lib/hvt';
 
 const INITIAL_SESSION_TIMEOUT_MS = 10000;
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
 
 function delay(ms) {
