@@ -13,13 +13,6 @@ const redirectUrisTextSchema = z
 
 const appAccessSlugPattern = /^[a-z0-9]+(?:[._:-][a-z0-9]+)*$/;
 
-const optionalProjectIdSchema = z.preprocess((value) => {
-    if (value === '' || value === undefined || value === null) {
-        return null;
-    }
-    return value;
-}, z.string().uuid('Select a valid project').nullable().optional());
-
 const appAccessSlugSchema = z
     .string()
     .min(1, 'Slug is required')
@@ -179,11 +172,19 @@ export const projectRoleSchema = z.object({
     name: z.string().min(1, 'Role name is required').max(120, 'Role name is too long'),
     description: optionalDescriptionSchema,
     is_default_signup: z.boolean(),
+    is_self_assignable: z.boolean(),
     permission_ids: z.array(z.string().uuid()).default([]),
 });
 
 export const projectUserRoleAssignmentSchema = z.object({
-    role_ids: z.array(z.string().uuid()).default([]),
+    role_slugs: z.array(appAccessSlugSchema).default([]),
+});
+
+export const projectUserInvitationCreateSchema = z.object({
+    email: z.string().email('Enter a valid email'),
+    first_name: z.string().max(100, 'First name is too long').default(''),
+    last_name: z.string().max(100, 'Last name is too long').default(''),
+    role_slugs: z.array(appAccessSlugSchema).default([]),
 });
 
 export const socialProviderCreateSchema = z.object({
@@ -204,16 +205,6 @@ export const socialProviderUpdateSchema = z.object({
 export const organizationInvitationCreateSchema = z.object({
     email: z.string().email('Enter a valid email'),
     role: z.enum(['admin', 'member']),
-    project_id: optionalProjectIdSchema,
-    app_role_ids: z.array(z.string().uuid()).default([]),
-}).superRefine((data, ctx) => {
-    if (data.app_role_ids.length > 0 && !data.project_id) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['project_id'],
-            message: 'Select a project before assigning app roles',
-        });
-    }
 });
 
 // User role schema

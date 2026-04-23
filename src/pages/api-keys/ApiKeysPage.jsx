@@ -8,12 +8,14 @@ import { createApiKey, listApiKeys, revokeApiKey } from '@/api/apiKeys';
 import { listProjects } from '@/api/organizations';
 import { CopyButton } from '@/components/CopyButton';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { PermissionDenied } from '@/components/PermissionDenied';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { API_KEY_CANONICAL_SCOPES } from '@/lib/hvt';
 import { formatDate, formatRelativeTime, getErrorMessage } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 const scopeMeta = {
@@ -148,6 +150,7 @@ function buildInitialDraft(projectId = '') {
 
 export default function ApiKeysPage() {
     usePageTitle('API Keys');
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(Number(searchParams.get('page') || 1));
@@ -202,6 +205,11 @@ export default function ApiKeysPage() {
             toast.error(getErrorMessage(error));
         },
     });
+
+    // Check if user has permission to access API keys (owner only)
+    if (!user || user.role !== 'owner') {
+        return <PermissionDenied featureName="API Keys" />;
+    }
 
     const keys = apiKeysQuery.data?.results ?? [];
 

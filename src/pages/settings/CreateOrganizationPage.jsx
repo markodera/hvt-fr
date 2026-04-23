@@ -138,7 +138,7 @@ export function CreateOrganizationPage() {
                         <div>
                             <p className="text-sm font-medium text-white">Allow public sign-up</p>
                             <p className="text-xs leading-6 text-[#71717a]">
-                                Turn this on if you want the default project to accept runtime registrations immediately.
+                                Turn this on if you want the default project to accept app registrations immediately.
                             </p>
                         </div>
                         <Toggle

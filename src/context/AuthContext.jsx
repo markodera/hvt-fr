@@ -4,6 +4,7 @@ import { getMe, login as apiLogin, logout as apiLogout } from '@/api/auth';
 import { hvt, isAuthFailure, refreshDashboardSession } from '@/lib/hvt';
 
 const INITIAL_SESSION_TIMEOUT_MS = 10000;
+const DASHBOARD_AUTH_EXEMPT_PATH_PREFIXES = ['/runtime-playground', '/runtime-demo'];
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
@@ -12,6 +13,12 @@ function delay(ms) {
     return new Promise((resolve) => {
         window.setTimeout(resolve, ms);
     });
+}
+
+function shouldSkipDashboardBootstrap(pathname) {
+    return DASHBOARD_AUTH_EXEMPT_PATH_PREFIXES.some(
+        (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
 }
 
 export function AuthProvider({ children }) {
@@ -24,6 +31,12 @@ export function AuthProvider({ children }) {
     }, [user]);
 
     useEffect(() => {
+        const currentPathname = typeof window === 'undefined' ? '' : window.location.pathname || '';
+        if (shouldSkipDashboardBootstrap(currentPathname)) {
+            setIsLoading(false);
+            return undefined;
+        }
+
         let cancelled = false;
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), INITIAL_SESSION_TIMEOUT_MS);

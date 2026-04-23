@@ -152,6 +152,30 @@ export function replaceUserProjectRoles(projectId, userId, data, options = {}) {
     });
 }
 
+export function listRuntimeInvitations(params = {}, options = {}) {
+    const [query, requestOptions] = normalizeQueryArgs(params, options);
+    return organizationRequest('/api/v1/runtime/invitations/', {
+        method: 'GET',
+        query,
+        ...requestOptions,
+    });
+}
+
+export function createRuntimeInvitation(data, options = {}) {
+    return organizationRequest('/api/v1/runtime/invitations/', {
+        method: 'POST',
+        body: data,
+        ...options,
+    });
+}
+
+export function revokeRuntimeInvitation(invitationId, options = {}) {
+    return organizationRequest(`/api/v1/runtime/invitations/${invitationId}/`, {
+        method: 'DELETE',
+        ...options,
+    });
+}
+
 export function listProjectSocialProviders(projectId, options = {}) {
     return hvt.organizations.listProjectSocialProviders(projectId, options);
 }

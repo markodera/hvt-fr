@@ -424,7 +424,7 @@ export default function SettingsPage() {
             <SectionCard
                 label="Projects"
                 title="Project boundaries"
-                description="Projects scope API keys, runtime tokens, social providers, sign-up controls, and runtime email destinations."
+                description="Projects scope API keys, app tokens, social providers, sign-up controls, and app email destinations."
             >
                 <div className="space-y-4">
                     {projectsLoading ? (
@@ -470,12 +470,12 @@ export default function SettingsPage() {
                                             <p className="mt-2 font-mono text-xs text-[#a78bfa]">{project.slug}</p>
                                             {project.frontend_url ? (
                                                 <p className="mt-2 break-all text-xs text-[#a1a1aa]">
-                                                    Runtime frontend: <span className="font-mono text-[#d4d4d8]">{project.frontend_url}</span>
+                                                    App frontend: <span className="font-mono text-[#d4d4d8]">{project.frontend_url}</span>
                                                 </p>
                                             ) : null}
                                             {project.allowed_origins?.length ? (
                                                 <p className="mt-2 break-all text-xs text-[#a1a1aa]">
-                                                    Extra runtime origins: <span className="font-mono text-[#d4d4d8]">{project.allowed_origins.join(', ')}</span>
+                                                    Extra app origins: <span className="font-mono text-[#d4d4d8]">{project.allowed_origins.join(', ')}</span>
                                                 </p>
                                             ) : null}
                                         </div>
@@ -525,7 +525,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2 md:col-span-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Runtime frontend URL</Label>
+                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">App frontend URL</Label>
                                 <Input
                                     {...projectForm.register('frontend_url')}
                                     placeholder="https://app.example.com"
@@ -535,7 +535,7 @@ export default function SettingsPage() {
                                     <p className="text-xs text-rose-300">{projectForm.formState.errors.frontend_url.message}</p>
                                 ) : null}
                                 <p className="text-xs text-[#71717a]">
-                                    Optional. Runtime verification and password-reset emails will link to this frontend when this project API key is used.
+                                    Optional. Verification and password-reset emails will link to this frontend when this project API key is used.
                                 </p>
                             </div>
                             <div className="space-y-2 md:col-span-2">
@@ -550,13 +550,13 @@ export default function SettingsPage() {
                                     <p className="text-xs text-rose-300">{projectForm.formState.errors.allowed_origins_text.message}</p>
                                 ) : null}
                                 <p className="text-xs text-[#71717a]">
-                                    Optional. One origin per line. Live runtime keys accept browser requests only from these origins plus the runtime frontend URL above. Test keys also allow localhost automatically.
+                                    Optional. One origin per line. Live app keys accept browser requests only from these origins plus the app frontend URL above. Test keys also allow localhost automatically.
                                 </p>
                             </div>
                             <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 md:col-span-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-white">Allow public sign-up</p>
-                                    <p className="text-xs text-[#71717a]">Applies when this project key is used for runtime sign-up.</p>
+                                    <p className="text-xs text-[#71717a]">Applies when this project key is used for app sign-up.</p>
                                 </div>
                                 <Toggle
                                     checked={projectForm.watch('allow_signup')}
@@ -602,7 +602,7 @@ export default function SettingsPage() {
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold tracking-[-0.03em] text-white">Edit project</DialogTitle>
                         <DialogDescription className="text-[#71717a]">
-                            Update the project name, slug, sign-up behavior, and runtime email destination.
+                            Update the project name, slug, sign-up behavior, and app email destination.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -627,7 +627,7 @@ export default function SettingsPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Runtime frontend URL</Label>
+                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">App frontend URL</Label>
                             <Input
                                 {...editProjectForm.register('frontend_url')}
                                 placeholder="https://app.example.com"
@@ -637,7 +637,7 @@ export default function SettingsPage() {
                                 <p className="text-xs text-rose-300">{editProjectForm.formState.errors.frontend_url.message}</p>
                             ) : null}
                             <p className="text-xs text-[#71717a]">
-                                Optional. Runtime verification and password-reset emails for this project will target this frontend.
+                                Optional. Verification and password-reset emails for this project will target this frontend.
                             </p>
                         </div>
                         <div className="space-y-2">
@@ -652,13 +652,13 @@ export default function SettingsPage() {
                                 <p className="text-xs text-rose-300">{editProjectForm.formState.errors.allowed_origins_text.message}</p>
                             ) : null}
                             <p className="text-xs text-[#71717a]">
-                                Optional. One origin per line. Live runtime keys are limited to these origins plus the runtime frontend URL.
+                                Optional. One origin per line. Live app keys are limited to these origins plus the app frontend URL.
                             </p>
                         </div>
                         <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-sm font-medium text-white">Allow public sign-up</p>
-                                <p className="text-xs text-[#71717a]">Use this when the project should accept runtime registrations.</p>
+                                <p className="text-xs text-[#71717a]">Use this when the project should accept app registrations.</p>
                             </div>
                             <Toggle
                                 checked={editProjectForm.watch('allow_signup')}

@@ -92,7 +92,7 @@ export function ProjectsTab() {
     return (
         <section>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#71717a] mb-2">Project Boundaries</p>
-            <p className="text-sm text-[#a1a1aa] mb-6">Projects define the boundary for API keys, runtime auth, and providers.</p>
+            <p className="text-sm text-[#a1a1aa] mb-6">Projects define the boundary for API keys, app auth, and providers.</p>
 
             {/* Table */}
             <div className="overflow-x-auto rounded-xl border border-[#27272a] bg-[#18181b] mb-8">

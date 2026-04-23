@@ -6,10 +6,12 @@ import { toast } from 'sonner';
 import { listProjects } from '@/api/organizations';
 import { createWebhook, deleteWebhook, getWebhookDeliveries, listWebhooks, updateWebhook } from '@/api/webhooks';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { PermissionDenied } from '@/components/PermissionDenied';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
 import { formatDate, formatRelativeTime, getErrorMessage, truncate } from '@/lib/utils';
 
 const webhookEventOptions = [
@@ -166,6 +168,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function WebhooksPage() {
     usePageTitle('Webhooks');
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -229,6 +232,11 @@ export default function WebhooksPage() {
             toast.error(getErrorMessage(error));
         },
     });
+
+    // Check if user has permission to access webhooks (owner or admin)
+    if (!user || !['owner', 'admin'].includes(user.role)) {
+        return <PermissionDenied featureName="Webhooks" />;
+    }
 
     const webhooks = data?.results ?? [];
     const selectedEvents = draft.events || [];

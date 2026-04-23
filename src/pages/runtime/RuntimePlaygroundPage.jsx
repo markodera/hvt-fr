@@ -3,12 +3,14 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
 
 import { Logo } from '@/components/Logo';
+import { Badge } from '@/components/ui/badge';
 import { HVTApiError, HVTClient } from '@/lib/hvt';
 import { normalizeApiBaseUrl, resolveApiBaseUrl } from '@/lib/apiBaseUrl';
 
 const CONFIG_STORAGE_KEY = 'hvt.runtime_playground.config';
 const PROVIDERS_STORAGE_KEY = 'hvt.runtime_playground.providers';
 const SOCIAL_PENDING_STORAGE_KEY = 'hvt.runtime_playground.pending_social';
+const SESSION_STORAGE_KEY = 'hvt.runtime_playground.session';
 
 const AUTH_SURFACE = {
     backgroundImage:
@@ -87,10 +89,40 @@ function clearPendingSocial() {
     sessionStorage.removeItem(SOCIAL_PENDING_STORAGE_KEY);
 }
 
+function saveSession(session) {
+    if (typeof window === 'undefined') return;
+
+    if (!session) {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        return;
+    }
+
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+function loadSession() {
+    if (typeof window === 'undefined') return null;
+
+    try {
+        return JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || 'null');
+    } catch {
+        return null;
+    }
+}
+
 function createClient(config) {
     return new HVTClient({
         baseUrl: normalizeApiBaseUrl(config?.baseUrl) || getDefaultConfig().baseUrl,
         apiKey: config.apiKey,
+        credentials: 'omit',
+        fetch: (...args) => fetch(...args),
+    });
+}
+
+function createAuthenticatedClient(config, accessToken) {
+    return new HVTClient({
+        baseUrl: normalizeApiBaseUrl(config?.baseUrl) || getDefaultConfig().baseUrl,
+        accessToken,
         credentials: 'omit',
         fetch: (...args) => fetch(...args),
     });
@@ -213,6 +245,18 @@ function getErrorMessage(error) {
 function getRuntimeRegisterGuidance(message) {
     const normalized = (message || '').toLowerCase();
 
+    if (normalized.includes('cannot be self-assigned')) {
+        return `${message}\n\nUse a self-assignable project role slug, or leave the role blank and assign access later from the dashboard.`;
+    }
+
+    if (normalized.includes('does not exist in this project')) {
+        return `${message}\n\nUse a valid project role slug for the API key project, or leave the role blank and continue without self-assignment.`;
+    }
+
+    if (normalized.includes('control plane role') || normalized.includes('control-plane role')) {
+        return `${message}\n\nOnly project roles can be requested during runtime signup. Dashboard roles must stay in the control plane.`;
+    }
+
     if (
         (normalized.includes('already') && normalized.includes('e-mail')) ||
         (normalized.includes('already') && normalized.includes('email')) ||
@@ -296,6 +340,76 @@ function getRuntimeSocialErrorState(error, { provider, callbackUrl }) {
     return {
         message,
         details: '',
+    };
+}
+
+function decodeJwtPayload(token) {
+    if (!token || typeof token !== 'string') {
+        return {};
+    }
+
+    try {
+        const [, payload] = token.split('.');
+        if (!payload) {
+            return {};
+        }
+
+        const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+        return JSON.parse(atob(padded));
+    } catch {
+        return {};
+    }
+}
+
+function deriveFallbackAccess(claims) {
+    const roleSlugs = Array.isArray(claims.app_roles) ? claims.app_roles : [];
+
+    return {
+        roles: roleSlugs.map((slug) => ({
+            id: slug,
+            slug,
+            name: slug.replace(/[._:-]+/g, ' '),
+        })),
+        permissions: Array.isArray(claims.app_permissions) ? claims.app_permissions : [],
+    };
+}
+
+async function hydrateRuntimeSession(config, accessToken) {
+    const claims = decodeJwtPayload(accessToken);
+    const client = createAuthenticatedClient(config, accessToken);
+    const me = await client.request('/api/v1/auth/runtime/me/', {
+        method: 'GET',
+    });
+    const projectId = me?.project || claims.project_id || null;
+
+    let access = deriveFallbackAccess(claims);
+    let accessSource = 'claims';
+    let accessError = '';
+
+    if (projectId) {
+        try {
+            access = await client.request(`/api/v1/organizations/current/projects/${projectId}/access/`, {
+                method: 'GET',
+            });
+            accessSource = 'project_access';
+        } catch (error) {
+            if (!(error instanceof HVTApiError)) {
+                throw error;
+            }
+
+            accessError = getErrorMessage(error);
+        }
+    }
+
+    return {
+        accessToken,
+        claims,
+        me,
+        access,
+        accessSource,
+        accessError,
+        hydratedAt: new Date().toISOString(),
     };
 }
 
@@ -442,8 +556,29 @@ function RuntimeCallbackCard() {
 
         setStatus('loading');
         request
-            .then((payload) => {
-                setResult(payload);
+            .then(async (payload) => {
+                if (payload?.access) {
+                    try {
+                        const session = await hydrateRuntimeSession(
+                            {
+                                baseUrl: pending.baseUrl,
+                            },
+                            payload.access,
+                        );
+                        saveSession(session);
+                        setResult({
+                            auth: payload,
+                            session,
+                        });
+                    } catch (hydrationError) {
+                        setResult({
+                            auth: payload,
+                            access_hydration_error: getErrorMessage(hydrationError),
+                        });
+                    }
+                } else {
+                    setResult(payload);
+                }
                 setStatus('success');
                 clearPendingSocial();
             })
@@ -527,9 +662,11 @@ export default function RuntimePlaygroundPage() {
         firstName: '',
         lastName: '',
         email: '',
+        roleSlug: '',
         password: '',
         confirmPassword: '',
     });
+    const [session, setSession] = useState(() => loadSession());
     const [providers, setProviders] = useState(() => loadProviders());
     const [outputLabel, setOutputLabel] = useState('Result');
     const [output, setOutput] = useState('Run a runtime auth action to see the response here.');
@@ -548,6 +685,10 @@ export default function RuntimePlaygroundPage() {
         document.title = 'Runtime playground | HVT';
     }, [provider]);
 
+    useEffect(() => {
+        saveSession(session);
+    }, [session]);
+
     if (provider) {
         return (
             <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-white" style={AUTH_SURFACE}>
@@ -564,16 +705,17 @@ export default function RuntimePlaygroundPage() {
         );
     }
 
-    const runAction = async (label, action) => {
+    const runAction = async (label, action, { onSuccess, formatError } = {}) => {
         setBusyAction(label);
         setOutputLabel(label);
         try {
             const result = await action();
-            const normalized = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+            const nextResult = onSuccess ? await onSuccess(result) : result;
+            const normalized = typeof nextResult === 'string' ? nextResult : JSON.stringify(nextResult, null, 2);
             setOutput(normalized);
         } catch (error) {
-            const message = getErrorMessage(error);
-            setOutput(label === 'Runtime register' ? getRuntimeRegisterGuidance(message) : message);
+            const message = formatError ? formatError(error) : getErrorMessage(error);
+            setOutput(message);
         } finally {
             setBusyAction('');
         }
@@ -590,6 +732,40 @@ export default function RuntimePlaygroundPage() {
 
     const handleFormChange = (field, value) => {
         setForm((current) => ({ ...current, [field]: value }));
+    };
+
+    const resolveRuntimeAuthResult = async (result) => {
+        if (!result?.access) {
+            return result;
+        }
+
+        const hydratedSession = await hydrateRuntimeSession(config, result.access);
+        setSession(hydratedSession);
+
+        return {
+            auth: result,
+            session: hydratedSession,
+        };
+    };
+
+    const reloadAccess = () =>
+        runAction(
+            'Runtime access',
+            async () => {
+                if (!session?.accessToken) {
+                    throw new Error('No runtime session is loaded yet.');
+                }
+
+                const hydratedSession = await hydrateRuntimeSession(config, session.accessToken);
+                setSession(hydratedSession);
+                return hydratedSession;
+            },
+        );
+
+    const clearSessionState = () => {
+        setSession(null);
+        setOutputLabel('Runtime session');
+        setOutput('Cleared the saved runtime session for this playground.');
     };
 
     const fetchProviders = () =>
@@ -760,6 +936,18 @@ export default function RuntimePlaygroundPage() {
                                         type="email"
                                     />
                                 </label>
+                                <label className="space-y-2 text-sm text-[#a1a1aa] md:col-span-2">
+                                    <span className="block font-medium text-white">Role slug</span>
+                                    <input
+                                        className={inputClassName()}
+                                        value={form.roleSlug}
+                                        onChange={(event) => handleFormChange('roleSlug', event.target.value)}
+                                        placeholder="seller"
+                                    />
+                                    <span className="block text-xs leading-6 text-[#71717a]">
+                                        Optional. Only self-assignable project roles can be requested during signup.
+                                    </span>
+                                </label>
                                 <label className="space-y-2 text-sm text-[#a1a1aa]">
                                     <span className="block font-medium text-white">Password</span>
                                     <input
@@ -787,14 +975,21 @@ export default function RuntimePlaygroundPage() {
                                     className={buttonClassName()}
                                     disabled={busyAction === 'Runtime register'}
                                     onClick={() =>
-                                        runAction('Runtime register', () =>
-                                            runtimeRegister(createClient(config), {
-                                                email: form.email,
-                                                password1: form.password,
-                                                password2: form.confirmPassword,
-                                                first_name: form.firstName,
-                                                last_name: form.lastName,
-                                            }),
+                                        runAction(
+                                            'Runtime register',
+                                            () =>
+                                                runtimeRegister(createClient(config), {
+                                                    email: form.email,
+                                                    password1: form.password,
+                                                    password2: form.confirmPassword,
+                                                    first_name: form.firstName,
+                                                    last_name: form.lastName,
+                                                    ...(form.roleSlug.trim() ? { role_slug: form.roleSlug.trim() } : {}),
+                                                }),
+                                            {
+                                                onSuccess: resolveRuntimeAuthResult,
+                                                formatError: (error) => getRuntimeRegisterGuidance(getErrorMessage(error)),
+                                            },
                                         )
                                     }
                                 >
@@ -806,11 +1001,16 @@ export default function RuntimePlaygroundPage() {
                                     className={buttonClassName('secondary')}
                                     disabled={busyAction === 'Runtime login'}
                                     onClick={() =>
-                                        runAction('Runtime login', () =>
-                                            createClient(config).auth.runtimeLogin({
-                                                email: form.email,
-                                                password: form.password,
-                                            }),
+                                        runAction(
+                                            'Runtime login',
+                                            () =>
+                                                createClient(config).auth.runtimeLogin({
+                                                    email: form.email,
+                                                    password: form.password,
+                                                }),
+                                            {
+                                                onSuccess: resolveRuntimeAuthResult,
+                                            },
                                         )
                                     }
                                 >
@@ -849,7 +1049,7 @@ export default function RuntimePlaygroundPage() {
                                 </button>
                             </div>
                             <p className="mt-4 text-xs leading-6 text-[#71717a]">
-                                Runtime signup is create-only. If the email already exists, use sign-in, invite accept, or dashboard project-role assignment instead of trying to register again.
+                                Runtime signup is create-only. If the email already exists, use sign-in, invite accept, or dashboard project-role assignment instead of trying to register again. Only self-assignable project roles can be requested here.
                             </p>
                         </SectionCard>
 
@@ -916,6 +1116,105 @@ export default function RuntimePlaygroundPage() {
                     </div>
 
                     <div className="min-w-0 space-y-6">
+                        <SectionCard
+                            title="Resolved project access"
+                            description="After runtime sign-in, this panel resolves the current project roles and effective permissions for the token in this browser."
+                        >
+                            {session ? (
+                                <div className="space-y-4">
+                                    <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-4">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <p className="text-sm font-semibold text-white">
+                                                {session.me?.full_name || session.me?.email || 'Signed-in user'}
+                                            </p>
+                                            <Badge variant={session.accessSource === 'project_access' ? 'success' : 'warning'}>
+                                                {session.accessSource === 'project_access' ? 'Live access' : 'Token claims fallback'}
+                                            </Badge>
+                                        </div>
+                                        <p className="mt-1 break-all text-sm text-[#a1a1aa]">
+                                            {session.me?.email || 'No user email resolved'}
+                                        </p>
+                                        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                                            {session.me?.project_slug || session.claims?.project_slug ? (
+                                                <span className="rounded-full border border-[#27272a] bg-[#111111] px-3 py-1 font-mono text-[#c4b5fd]">
+                                                    {session.me?.project_slug || session.claims?.project_slug}
+                                                </span>
+                                            ) : null}
+                                            {session.me?.project || session.claims?.project_id ? (
+                                                <span className="rounded-full border border-[#27272a] bg-[#111111] px-3 py-1 font-mono text-[#a1a1aa]">
+                                                    {(session.me?.project || session.claims?.project_id)}
+                                                </span>
+                                            ) : null}
+                                            {session.hydratedAt ? (
+                                                <span className="rounded-full border border-[#27272a] bg-[#111111] px-3 py-1 text-[#71717a]">
+                                                    {new Date(session.hydratedAt).toLocaleString()}
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                    </div>
+
+                                    {session.accessError ? (
+                                        <div className="rounded-xl border border-[#7c2d12] bg-[#431407] px-4 py-3 text-sm text-[#fdba74]">
+                                            The project access endpoint could not be loaded, so this panel is showing role and permission claims from the token instead.
+                                            <div className="mt-2 whitespace-pre-wrap text-xs text-[#fed7aa]">{session.accessError}</div>
+                                        </div>
+                                    ) : null}
+
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project roles</p>
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            {session.access?.roles?.length ? (
+                                                session.access.roles.map((role) => (
+                                                    <Badge key={role.id || role.slug} variant="secondary" className="text-white">
+                                                        {role.name || role.slug}
+                                                    </Badge>
+                                                ))
+                                            ) : (
+                                                <span className="text-sm text-[#71717a]">No project roles resolved for this token.</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Effective permissions</p>
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            {session.access?.permissions?.length ? (
+                                                session.access.permissions.map((permission) => (
+                                                    <span
+                                                        key={permission}
+                                                        className="inline-flex items-center rounded-full border border-[#27272a] bg-[#111111] px-3 py-1 font-mono text-[11px] text-[#d4d4d8]"
+                                                    >
+                                                        {permission}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-sm text-[#71717a]">No permissions resolved for this token.</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-3">
+                                        <button
+                                            type="button"
+                                            className={buttonClassName('secondary')}
+                                            disabled={busyAction === 'Runtime access'}
+                                            onClick={reloadAccess}
+                                        >
+                                            {busyAction === 'Runtime access' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                                            Reload access
+                                        </button>
+                                        <button type="button" className={buttonClassName('secondary')} onClick={clearSessionState}>
+                                            Clear session
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="rounded-xl border border-dashed border-[#27272a] bg-[#111111] px-4 py-6 text-sm text-[#71717a]">
+                                    Sign in here or finish a runtime social callback to resolve the current project roles and permission bundle.
+                                </div>
+                            )}
+                        </SectionCard>
+
                         <SectionCard
                             title="Test vs live keys"
                             description="This is what the code enforces today."

@@ -54,6 +54,7 @@ function emptyRoleValues() {
         name: '',
         description: '',
         is_default_signup: false,
+        is_self_assignable: false,
         permission_ids: [],
     };
 }
@@ -163,6 +164,7 @@ export function ProjectAccessManager({ projects = [] }) {
             name: role.name || '',
             description: role.description || '',
             is_default_signup: Boolean(role.is_default_signup),
+            is_self_assignable: Boolean(role.is_self_assignable),
             permission_ids: (role.permissions || []).map((permission) => permission.id),
         });
         setRoleDialogOpen(true);
@@ -259,6 +261,7 @@ export function ProjectAccessManager({ projects = [] }) {
             description: values.description?.trim() || '',
             permission_ids: values.permission_ids || [],
             is_default_signup: Boolean(values.is_default_signup),
+            is_self_assignable: Boolean(values.is_self_assignable),
         };
 
         if (editingRole) {
@@ -453,6 +456,11 @@ export function ProjectAccessManager({ projects = [] }) {
                                                 {role.is_default_signup ? (
                                                     <Badge variant="default">Default signup</Badge>
                                                 ) : null}
+                                                {role.is_self_assignable ? (
+                                                    <Badge variant="secondary" className="text-white">
+                                                        Self-assignable
+                                                    </Badge>
+                                                ) : null}
                                             </div>
                                             <p className="mt-2 text-sm text-[#a1a1aa]">
                                                 {role.description || 'No description yet.'}
@@ -504,7 +512,7 @@ export function ProjectAccessManager({ projects = [] }) {
                     <DialogHeader>
                         <DialogTitle>{editingPermission ? 'Edit project permission' : 'Create project permission'}</DialogTitle>
                         <DialogDescription className="text-[#71717a]">
-                            Define a stable permission slug that application code can check at runtime.
+                            Define a stable permission slug that application code can check in the app.
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={permissionForm.handleSubmit(submitPermission)} className="space-y-4 pt-4 sm:pt-5">
@@ -631,7 +639,27 @@ export function ProjectAccessManager({ projects = [] }) {
                             <div>
                                 <p className="text-sm font-medium text-white">Assign on public signup</p>
                                 <p className="text-sm text-[#71717a]">
-                                    Enable this when runtime users signing up through this project should receive the role automatically.
+                                    Enable this when app users signing up through this project should receive the role automatically.
+                                </p>
+                            </div>
+                        </label>
+
+                        <label className="flex items-start gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3">
+                            <input
+                                type="checkbox"
+                                checked={Boolean(roleForm.watch('is_self_assignable'))}
+                                onChange={(event) =>
+                                    roleForm.setValue('is_self_assignable', event.target.checked, {
+                                        shouldDirty: true,
+                                        shouldValidate: true,
+                                    })
+                                }
+                                className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-[#7c3aed] focus:ring-[#7c3aed]/40"
+                            />
+                            <div>
+                                <p className="text-sm font-medium text-white">Allow self-assignment at signup</p>
+                                <p className="text-sm text-[#71717a]">
+                                    When enabled, app users can request this role by passing its slug at registration. Only enable this for roles that are safe for any user to claim without admin approval.
                                 </p>
                             </div>
                         </label>

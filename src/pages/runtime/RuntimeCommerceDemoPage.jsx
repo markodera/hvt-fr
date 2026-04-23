@@ -205,6 +205,18 @@ function deriveFallbackAccess(claims) {
 function getRuntimeRegisterGuidance(message) {
     const normalized = (message || '').toLowerCase();
 
+    if (normalized.includes('cannot be self-assigned')) {
+        return `${message} Use a self-assignable project role slug, or leave the role blank and assign access later from the dashboard.`;
+    }
+
+    if (normalized.includes('does not exist in this project')) {
+        return `${message} Use a valid project role slug for the API key project, or leave the role blank and continue without self-assignment.`;
+    }
+
+    if (normalized.includes('control plane role') || normalized.includes('control-plane role')) {
+        return `${message} Only project roles can be requested during runtime signup. Dashboard roles must stay in the control plane.`;
+    }
+
     if (
         (normalized.includes('already') && normalized.includes('e-mail')) ||
         (normalized.includes('already') && normalized.includes('email')) ||
@@ -222,7 +234,9 @@ async function hydrateRuntimeSession(config, accessToken) {
         baseUrl: config.baseUrl,
         accessToken,
     });
-    const me = await client.auth.me();
+    const me = await client.request('/api/v1/auth/runtime/me/', {
+        method: 'GET',
+    });
     const projectId = me?.project || claims.project_id || null;
 
     let access = deriveFallbackAccess(claims);
@@ -270,6 +284,7 @@ export default function RuntimeCommerceDemoPage() {
         first_name: '',
         last_name: '',
         email: '',
+        role_slug: '',
         password: '',
         confirmPassword: '',
     });
@@ -366,6 +381,7 @@ export default function RuntimeCommerceDemoPage() {
                     password2: form.confirmPassword || form.password,
                     first_name: form.first_name,
                     last_name: form.last_name,
+                    ...(form.role_slug.trim() ? { role_slug: form.role_slug.trim() } : {}),
                 },
             });
 
@@ -545,6 +561,19 @@ export default function RuntimeCommerceDemoPage() {
                                     />
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Role slug</Label>
+                                    <Input
+                                        value={form.role_slug}
+                                        onChange={(event) => setForm((current) => ({ ...current, role_slug: event.target.value }))}
+                                        placeholder="seller"
+                                        className="h-11 border-[#27272a] bg-[#0d0d11] text-white"
+                                    />
+                                    <p className="text-xs text-[#71717a]">
+                                        Optional. Only self-assignable project roles can be requested during signup.
+                                    </p>
+                                </div>
+
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Password</Label>
@@ -586,7 +615,7 @@ export default function RuntimeCommerceDemoPage() {
                                 </div>
 
                                 <p className="text-xs text-[#71717a]">
-                                    Runtime registration still follows HVT verification rules. Existing users must sign in or accept an invite; signup does not attach them to another project.
+                                    Runtime registration still follows HVT verification rules. Existing users must sign in or accept an invite; signup does not attach them to another project, and only self-assignable project roles can be requested here.
                                 </p>
                             </form>
                         </SectionCard>

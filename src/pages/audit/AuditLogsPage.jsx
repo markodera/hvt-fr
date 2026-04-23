@@ -4,6 +4,7 @@ import { CalendarRange, Info, ScrollText } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import { listAuditLogs } from '@/api/auditLogs';
+import { PermissionDenied } from '@/components/PermissionDenied';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDate } from '@/lib/utils';
 
@@ -128,6 +129,12 @@ export default function AuditLogsPage() {
             return matchesActor && matchesDate;
         });
     }, [actorSearch, dateFrom, dateTo, query.data?.pages]);
+
+    // Check if user has permission to access audit logs (owner or admin for platform users)
+    // Project-scoped users can view their own project's audit logs
+    if (!user || (!user.is_project_scoped && !['owner', 'admin'].includes(user.role))) {
+        return <PermissionDenied featureName="Audit Logs" />;
+    }
 
     function updateParams(next) {
         const params = new URLSearchParams(searchParams);

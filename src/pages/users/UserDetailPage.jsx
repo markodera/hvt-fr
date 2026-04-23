@@ -44,7 +44,7 @@ export function UserDetailPage() {
     const queryClient = useQueryClient();
     const { user: currentUser } = useAuth();
     const [selectedProjectId, setSelectedProjectId] = useState('');
-    const [selectedRoleIds, setSelectedRoleIds] = useState([]);
+    const [selectedRoleSlugs, setSelectedRoleSlugs] = useState([]);
 
     const { data: user, isLoading, isError } = useQuery({
         queryKey: ['user', id],
@@ -100,7 +100,7 @@ export function UserDetailPage() {
             return;
         }
 
-        setSelectedRoleIds(projectAccess.roles.map((role) => role.id));
+        setSelectedRoleSlugs(projectAccess.roles.map((role) => role.slug));
     }, [projectAccess]);
 
     const roleMutation = useMutation({
@@ -114,18 +114,18 @@ export function UserDetailPage() {
     });
 
     const appAccessMutation = useMutation({
-        mutationFn: (roleIds) => replaceUserProjectRoles(selectedProjectId, id, { role_ids: roleIds }),
+        mutationFn: (roleSlugs) => replaceUserProjectRoles(selectedProjectId, id, { role_slugs: roleSlugs }),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['userProjectAccess', id, selectedProjectId] });
-            setSelectedRoleIds((data.roles || []).map((role) => role.id));
+            setSelectedRoleSlugs((data.roles || []).map((role) => role.slug));
             toast.success('App roles updated');
         },
         onError: (err) => toast.error(getErrorMessage(err)),
     });
 
-    function toggleProjectRole(roleId) {
-        setSelectedRoleIds((current) =>
-            current.includes(roleId) ? current.filter((value) => value !== roleId) : [...current, roleId]
+    function toggleProjectRole(roleSlug) {
+        setSelectedRoleSlugs((current) =>
+            current.includes(roleSlug) ? current.filter((value) => value !== roleSlug) : [...current, roleSlug]
         );
     }
 
@@ -150,8 +150,8 @@ export function UserDetailPage() {
     }
 
     const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
-    const assignedRoleIds = projectAccess?.roles?.map((role) => role.id) || [];
-    const hasUnsavedProjectAccess = !arraysMatch(selectedRoleIds, assignedRoleIds);
+    const assignedRoleSlugs = projectAccess?.roles?.map((role) => role.slug) || [];
+    const hasUnsavedProjectAccess = !arraysMatch(selectedRoleSlugs, assignedRoleSlugs);
 
     return (
         <div className="space-y-6">
@@ -170,8 +170,8 @@ export function UserDetailPage() {
                             <h2 className="break-words text-xl font-bold text-text-primary">{getUserDisplayName(user)}</h2>
                             <p className="break-all text-sm text-text-secondary">{user.email}</p>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
-                                <Badge variant={user.role === 'owner' ? 'default' : 'secondary'}>
-                                    {ROLE_LABELS[user.role]}
+                                <Badge variant={user.project ? 'secondary' : user.role === 'owner' ? 'default' : 'secondary'}>
+                                    {user.project ? 'Project user' : ROLE_LABELS[user.role]}
                                 </Badge>
                                 <StatusBadge status={user.is_active ? 'active' : 'inactive'} />
                                 {user.project_slug ? (
@@ -189,8 +189,8 @@ export function UserDetailPage() {
                         <p className="text-sm text-text-primary">{formatDate(user.created_at, { hour: undefined, minute: undefined })}</p>
                     </div>
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">Role</p>
-                        <p className="text-sm text-text-primary">{user.role_display || ROLE_LABELS[user.role]}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">Access type</p>
+                        <p className="text-sm text-text-primary">{user.project ? 'Project user' : user.role_display || ROLE_LABELS[user.role]}</p>
                     </div>
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">Status</p>
@@ -204,7 +204,7 @@ export function UserDetailPage() {
             </div>
 
             <RoleGate allowedRoles={['owner']}>
-                {user.id !== currentUser?.id ? (
+                {user.id !== currentUser?.id && !user.project && !user.project_id ? (
                     <div className="bg-bg-secondary border border-border rounded-xl p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <Shield className="h-5 w-5 text-primary" />
@@ -234,8 +234,13 @@ export function UserDetailPage() {
                         <h3 className="text-base font-semibold text-text-primary">Manage app access</h3>
                     </div>
                     <p className="text-sm text-text-secondary">
-                        This is separate from the organization role above. Project app roles are how an owner or admin grants runtime permissions like seller, buyer, teacher, or delivery.
+                        This is separate from dashboard access. Project roles are how an owner or admin grants app permissions like seller, buyer, teacher, or delivery.
                     </p>
+                    {user.project ? (
+                        <p className="mt-2 text-xs text-text-secondary">
+                            This is a project user for {user.project_slug || 'their assigned project'}. They do not sign in to the HVT dashboard.
+                        </p>
+                    ) : null}
 
                     <div className="mt-5 space-y-4">
                         <div className="space-y-2">
@@ -303,7 +308,7 @@ export function UserDetailPage() {
                                     ) : (
                                         <div className="mt-4 space-y-3">
                                             {projectRoles.map((role) => {
-                                                const checked = selectedRoleIds.includes(role.id);
+                                                const checked = selectedRoleSlugs.includes(role.slug);
                                                 return (
                                                     <label
                                                         key={role.id}
@@ -316,7 +321,7 @@ export function UserDetailPage() {
                                                         <input
                                                             type="checkbox"
                                                             checked={checked}
-                                                            onChange={() => toggleProjectRole(role.id)}
+                                                            onChange={() => toggleProjectRole(role.slug)}
                                                             className="mt-1 h-4 w-4 rounded border-border bg-bg-primary text-[#7c3aed] focus:ring-[#7c3aed]/40"
                                                         />
                                                         <div className="min-w-0 flex-1">
@@ -326,6 +331,11 @@ export function UserDetailPage() {
                                                                     {role.slug}
                                                                 </Badge>
                                                                 {role.is_default_signup ? <Badge variant="default">Default signup</Badge> : null}
+                                                                {role.is_self_assignable ? (
+                                                                    <Badge variant="secondary" className="text-white">
+                                                                        Self-assignable
+                                                                    </Badge>
+                                                                ) : null}
                                                             </div>
                                                             <div className="mt-2 flex flex-wrap gap-2">
                                                                 {role.permissions?.length ? (
@@ -351,7 +361,7 @@ export function UserDetailPage() {
                                         <p className="text-xs text-text-secondary">You have unsaved app role changes for this project.</p>
                                     ) : null}
                                     <Button
-                                        onClick={() => appAccessMutation.mutate(selectedRoleIds)}
+                                        onClick={() => appAccessMutation.mutate(selectedRoleSlugs)}
                                         disabled={!selectedProjectId || !hasUnsavedProjectAccess || appAccessMutation.isPending}
                                     >
                                         {appAccessMutation.isPending ? 'Saving...' : 'Save app access'}

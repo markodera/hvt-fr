@@ -352,7 +352,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                             <div>
                                 <p className="text-sm font-medium text-white">Provider active</p>
                                 <p className="text-xs text-[#a1a1aa]">
-                                    Inactive providers remain saved but are hidden from runtime auth.
+                                    Inactive providers remain saved but are hidden from app sign-in.
                                 </p>
                             </div>
                             <button
@@ -431,7 +431,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                             <div>
                                 <p className="text-sm font-medium text-white">Provider active</p>
                                 <p className="text-xs text-[#a1a1aa]">
-                                    Inactive providers remain saved but are hidden from runtime auth.
+                                    Inactive providers remain saved but are hidden from app sign-in.
                                 </p>
                             </div>
                             <button
@@ -470,7 +470,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                 open={!!deleteProviderTarget}
                 onOpenChange={() => setDeleteProviderTarget(null)}
                 title="Delete social provider"
-                description={`Delete ${formatProviderLabel(deleteProviderTarget?.provider)} from "${selectedProject?.name || 'this project'}"? Runtime social login for this provider will stop working immediately.`}
+                description={`Delete ${formatProviderLabel(deleteProviderTarget?.provider)} from "${selectedProject?.name || 'this project'}"? App social login for this provider will stop working immediately.`}
                 confirmLabel="Delete provider"
                 onConfirm={() => deleteProviderMutation.mutate({ projectId: deleteProviderTarget.projectId, id: deleteProviderTarget.id })}
                 isLoading={deleteProviderMutation.isPending}

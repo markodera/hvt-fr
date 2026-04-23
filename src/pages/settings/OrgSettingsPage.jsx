@@ -9,6 +9,7 @@ import { getCurrentOrg, updateOrg, listProjects, createProject, updateProject, d
 import { updateProfile, changePassword } from '@/api/auth';
 import { orgSettingsSchema, createProjectSchema, profileSchema, changePasswordSchema } from '@/lib/schemas';
 import { useAuth } from '@/hooks/useAuth';
+import { PermissionDenied } from '@/components/PermissionDenied';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -189,6 +190,12 @@ export function OrgSettingsPage() {
         onError: (err) => toast.error(getErrorMessage(err)),
     });
 
+    // Check if user has permission to access org settings (owner only)
+    // Project-scoped users can access their project settings separately
+    if (!user || (!user.is_project_scoped && user.role !== 'owner')) {
+        return <PermissionDenied featureName="Organization Settings" />;
+    }
+
     if (orgLoading || !user) {
         return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
     }
@@ -315,7 +322,7 @@ export function OrgSettingsPage() {
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <h2 className="text-lg font-bold text-text-primary">Projects</h2>
-                        <p className="text-sm text-text-secondary">Projects define the app boundary for API keys and runtime auth.</p>
+                        <p className="text-sm text-text-secondary">Projects define the app boundary for API keys and app auth.</p>
                     </div>
                     <Badge variant="secondary">{projects.length} total</Badge>
                 </div>
@@ -378,7 +385,7 @@ export function OrgSettingsPage() {
                         <div className="md:col-span-2 flex items-center justify-between rounded-lg border border-border px-4 py-3">
                             <div>
                                 <p className="text-sm font-medium text-text-primary">Allow public sign-up</p>
-                                <p className="text-xs text-text-secondary">Applies to runtime sign-up when this project key is used.</p>
+                                <p className="text-xs text-text-secondary">Applies to app sign-up when this project key is used.</p>
                             </div>
                             <button
                                 type="button"
@@ -422,7 +429,7 @@ export function OrgSettingsPage() {
                         <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
                             <div>
                                 <p className="text-sm font-medium text-text-primary">Allow public sign-up</p>
-                                <p className="text-xs text-text-secondary">Applies when this project key is used for runtime signup.</p>
+                                <p className="text-xs text-text-secondary">Applies when this project key is used for app signup.</p>
                             </div>
                             <button
                                 type="button"
