@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
 
-const ORGANIZATION_ONBOARDING_PATH = '/dashboard/create-organization';
-
 export function ProtectedRoute({ children }) {
-    const location = useLocation();
-    const { user, isAuthenticated, isLoading, refreshSession } = useAuth();
+    const { isAuthenticated, isLoading, refreshSession } = useAuth();
     const hasTriedRecoveryRef = useRef(false);
     const [isRecovering, setIsRecovering] = useState(false);
 
@@ -44,16 +41,6 @@ export function ProtectedRoute({ children }) {
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
-    }
-
-    const onOrganizationOnboarding = location.pathname === ORGANIZATION_ONBOARDING_PATH;
-
-    if (!user?.organization && !onOrganizationOnboarding) {
-        return <Navigate to={ORGANIZATION_ONBOARDING_PATH} replace state={{ from: location }} />;
-    }
-
-    if (user?.organization && onOrganizationOnboarding) {
-        return <Navigate to="/dashboard" replace />;
     }
 
     return children;

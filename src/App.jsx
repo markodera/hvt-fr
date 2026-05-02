@@ -26,6 +26,7 @@ import { WebhookDetailPage } from '@/pages/webhooks/WebhookDetailPage';
 import AuditLogsPage from '@/pages/audit/AuditLogsPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import { CreateOrganizationPage } from '@/pages/settings/CreateOrganizationPage';
+import { CreateProjectPage } from '@/pages/settings/CreateProjectPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import RuntimeCommerceDemoPage from '@/pages/runtime/RuntimeCommerceDemoPage';
 import RuntimePlaygroundPage from '@/pages/runtime/RuntimePlaygroundPage';
@@ -69,6 +70,7 @@ const router = createBrowserRouter([
         children: [
             { path: '/dashboard', element: <DashboardHome /> },
             { path: '/dashboard/create-organization', element: <CreateOrganizationPage /> },
+            { path: '/dashboard/create-project', element: <CreateProjectPage /> },
             { path: '/dashboard/users', element: <UsersPage /> },
             { path: '/dashboard/users/:id', element: <UserDetailPage /> },
             { path: '/dashboard/api-keys', element: <ApiKeysPage /> },

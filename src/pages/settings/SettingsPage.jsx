@@ -399,7 +399,7 @@ export default function SettingsPage() {
                     <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-sm font-medium text-white">Allow public sign-up</p>
-                            <p className="text-xs text-[#71717a]">New default-project keys inherit this setting.</p>
+                            <p className="text-xs text-[#71717a]">Project-level sign-up can be adjusted below at any time.</p>
                         </div>
                         <Toggle
                             checked={orgForm.watch('allow_signup')}
@@ -447,7 +447,7 @@ export default function SettingsPage() {
                                                 <p className="text-sm font-medium text-white">{project.name}</p>
                                                 {project.is_default ? (
                                                     <span className="rounded-full border border-[#27272a] px-2 py-0.5 text-[11px] text-[#a1a1aa]">
-                                                        default
+                                                        primary
                                                     </span>
                                                 ) : null}
                                                 <span
@@ -488,16 +488,14 @@ export default function SettingsPage() {
                                                 <Pencil className="h-4 w-4" />
                                                 Edit
                                             </button>
-                                            {!project.is_default ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDeleteTarget(project)}
-                                                    className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete
-                                                </button>
-                                            ) : null}
+                                            <button
+                                                type="button"
+                                                onClick={() => setDeleteTarget(project)}
+                                                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

@@ -552,7 +552,7 @@ export default function Landing() {
                 className="inline-flex items-center rounded-full border border-[#27272a] bg-[#111111]/88 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]"
                 style={{ animation: 'heroFadeUp 0.6s ease-out 0.05s both' }}
               >
-                Open-source auth infrastructure for products and teams
+                OPEN-SOURCE AUTH INFRASTRUCTURE FOR STARTUPS AND TEAMS
               </div>
               <h1
                 className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl"
@@ -564,8 +564,7 @@ export default function Landing() {
                 className="mt-5 max-w-3xl text-sm leading-7 text-[#71717a] sm:text-base"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.18s both' }}
               >
-                Building auth from scratch takes weeks. Paying for Auth0 costs more than your MVP budget. HVT gives
-                you a better option.
+                Building auth from scratch takes weeks. Auth0 eats your MVP budget. HVT gives you a better way.
               </p>
               <p
                 className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg"
@@ -795,7 +794,7 @@ export default function Landing() {
                       to="/signup"
                       className="inline-flex w-full items-center justify-center rounded-md bg-[#7c3aed] px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]"
                     >
-                      Create free account
+                      Try for Free
                     </Link>
                   </div>
                 </div>

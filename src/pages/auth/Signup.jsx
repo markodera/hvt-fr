@@ -30,7 +30,7 @@ const signupSchema = z
         path: ['confirm_password'],
     });
 
-const chainNodes = ['Org', 'Project', 'API Key', 'Runtime', 'Token'];
+const chainNodes = ['Account', 'Verify', 'Login', 'Org', 'Project', 'API Key'];
 
 function GoogleIcon() {
     return (
@@ -156,11 +156,12 @@ export default function Signup() {
                             </div>
                             <div className="space-y-4">
                                 <h1 className="max-w-md text-[2.5rem] font-bold tracking-[-0.04em] text-white">
-                                    Build your auth model once and carry it all the way to runtime.
+                                    Start with a guided setup instead of stitching the first-run flow together yourself.
                                 </h1>
                                 <p className="max-w-lg text-sm leading-7 text-[#a1a1aa]">
-                                    Create the control-plane account first, then attach projects, keys, social providers,
-                                    and runtime flows without splitting the tenant model across vendors.
+                                    Create the account first. After email verification you sign in, create an
+                                    organization, create a project, and issue the first API key without guessing the
+                                    next step.
                                 </p>
                             </div>
                         </div>
@@ -170,15 +171,15 @@ export default function Signup() {
                         <ChainDiagram />
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div className="rounded-2xl border border-[#27272a] bg-[#18181b]/80 p-4">
-                                <div className="text-sm font-semibold text-white">Org and project context</div>
+                                <div className="text-sm font-semibold text-white">Guided onboarding</div>
                                 <p className="mt-2 text-sm leading-6 text-[#a1a1aa]">
-                                    Keep the control plane explicit from the first login instead of retrofitting it into auth later.
+                                    Move through account, verification, login, organization, project, and API key setup in one straight path.
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-[#27272a] bg-[#18181b]/80 p-4">
-                                <div className="text-sm font-semibold text-white">Runtime keys and claims</div>
+                                <div className="text-sm font-semibold text-white">Project-first runtime setup</div>
                                 <p className="mt-2 text-sm leading-6 text-[#a1a1aa]">
-                                    Issue runtime credentials and flow them straight into project-aware token claims.
+                                    The first key is created only after the project exists, so runtime auth starts in the right boundary.
                                 </p>
                             </div>
                         </div>
@@ -191,7 +192,8 @@ export default function Signup() {
                         <div className="space-y-2">
                             <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Create account</h1>
                             <p className="text-sm leading-6 text-[#a1a1aa]">
-                                Start with the HVT control plane, then connect projects, keys, and runtime auth from one place.
+                                Create the account now. After verification you will sign in, create the organization,
+                                create the project, and issue the first API key.
                             </p>
                         </div>
                     </div>

@@ -274,7 +274,7 @@ export default function DashboardHome() {
                                             </span>
                                             {project.is_default ? (
                                                 <span className="rounded-full border border-[#27272a] px-2 py-0.5 text-[11px] text-[#a1a1aa]">
-                                                    default
+                                                    primary
                                                 </span>
                                             ) : null}
                                         </div>
@@ -352,7 +352,7 @@ export default function DashboardHome() {
                                     </span>
                                 </div>
                                 <p className="mt-3 text-sm font-medium text-white">{key.name}</p>
-                                <p className="mt-2 font-mono text-xs text-[#71717a]">{key.project_slug || 'default'}</p>
+                                <p className="mt-2 font-mono text-xs text-[#71717a]">{key.project_slug || 'unassigned'}</p>
                                 <p className="mt-6 text-xs text-[#71717a]">
                                     {key.last_used_at ? formatDate(key.last_used_at) : 'Not used yet'}
                                 </p>

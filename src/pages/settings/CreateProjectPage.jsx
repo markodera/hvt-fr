@@ -1,17 +1,16 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { Navigate } from 'react-router-dom';
-import { Building2, ArrowRight } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowRight, Boxes } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { createOrg } from '@/api/organizations';
-import { createOrgSchema } from '@/lib/schemas';
+import { createProject } from '@/api/organizations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { createProjectSchema } from '@/lib/schemas';
 import { getErrorMessage } from '@/lib/utils';
 
 function Toggle({ checked, onChange }) {
@@ -34,9 +33,10 @@ function Toggle({ checked, onChange }) {
     );
 }
 
-export function CreateOrganizationPage() {
-    const { user, waitForSession } = useAuth();
-    const [didCreateOrganization, setDidCreateOrganization] = useState(false);
+export function CreateProjectPage() {
+    usePageTitle('Create Project');
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const {
         register,
@@ -45,36 +45,39 @@ export function CreateOrganizationPage() {
         watch,
         formState: { errors },
     } = useForm({
-        resolver: zodResolver(createOrgSchema),
+        resolver: zodResolver(createProjectSchema),
         defaultValues: {
             name: '',
             slug: '',
-            allow_signup: false,
+            allow_signup: true,
+            frontend_url: '',
+            allowed_origins_text: '',
         },
     });
 
     const mutation = useMutation({
-        mutationFn: createOrg,
-        onSuccess: async () => {
-            toast.success('Organization created');
-            setDidCreateOrganization(true);
-
-            try {
-                await waitForSession({ attempts: 5, delayMs: 400 });
-            } catch (_) {
-                // Navigation below still lands on the correct onboarding step.
-            }
-
-            window.location.replace('/dashboard/create-project');
+        mutationFn: createProject,
+        onSuccess: (project) => {
+            queryClient.setQueryData(
+                ['projects', { page_size: 1, source: 'dashboard-layout' }],
+                {
+                    count: 1,
+                    next: null,
+                    previous: null,
+                    results: [project],
+                },
+            );
+            queryClient.invalidateQueries({ queryKey: ['projects'] });
+            queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+            toast.success('Project created');
+            navigate(`/dashboard/api-keys?project=${project.id}&create=1`, {
+                replace: true,
+            });
         },
         onError: (error) => {
             toast.error(getErrorMessage(error));
         },
     });
-
-    if (user?.organization && !didCreateOrganization) {
-        return <Navigate to="/dashboard" replace />;
-    }
 
     const allowSignup = watch('allow_signup');
 
@@ -84,14 +87,14 @@ export function CreateOrganizationPage() {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div className="max-w-2xl space-y-4">
                         <div className="inline-flex items-center gap-2 rounded-full border border-[#7c3aed]/25 bg-[#7c3aed]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]">
-                            <Building2 className="h-3.5 w-3.5" />
-                            First-time setup
+                            <Boxes className="h-3.5 w-3.5" />
+                            Next step
                         </div>
                         <div className="space-y-3">
-                            <h2 className="text-3xl font-bold tracking-[-0.04em] text-white">Create your organization</h2>
+                            <h2 className="text-3xl font-bold tracking-[-0.04em] text-white">Create your first project</h2>
                             <p className="max-w-xl text-sm leading-7 text-[#a1a1aa]">
-                                Your HVT account is ready. The next step is creating the organization that will own your
-                                projects, API keys, invitations, and dashboard settings.
+                                Projects are the app boundary in HVT. Your first project is where runtime sign-up,
+                                runtime login, social providers, and API keys will live.
                             </p>
                         </div>
                     </div>
@@ -99,24 +102,36 @@ export function CreateOrganizationPage() {
                     <div className="rounded-2xl border border-[#27272a] bg-[#111111] px-4 py-4 text-sm text-[#a1a1aa] lg:w-[280px]">
                         <p className="font-semibold text-white">What happens next</p>
                         <ol className="mt-3 space-y-2 leading-6">
-                            <li>1. You become the organization owner.</li>
-                            <li>2. You create your first project.</li>
-                            <li>3. You issue the first API key for that project.</li>
+                            <li>1. This becomes your primary project.</li>
+                            <li>2. You issue the first API key for it.</li>
+                            <li>3. You can add providers, roles, and app URLs later in Settings.</li>
                         </ol>
                     </div>
                 </div>
             </section>
 
             <section className="rounded-3xl border border-[#27272a] bg-[#18181b] p-6 md:p-8">
-                <form onSubmit={handleSubmit((values) => mutation.mutate(values))} className="space-y-6">
+                <form
+                    onSubmit={handleSubmit((values) =>
+                        mutation.mutate({
+                            name: values.name,
+                            slug: values.slug,
+                            allow_signup: values.allow_signup,
+                        })
+                    )}
+                    className="space-y-6"
+                >
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]" htmlFor="org-name">
-                                Organization name
+                            <Label
+                                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]"
+                                htmlFor="project-name"
+                            >
+                                Project name
                             </Label>
                             <Input
-                                id="org-name"
-                                placeholder="Acme Inc"
+                                id="project-name"
+                                placeholder="Storefront"
                                 {...register('name')}
                                 className="h-11 border-[#27272a] bg-[#111111] text-white"
                             />
@@ -124,12 +139,15 @@ export function CreateOrganizationPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]" htmlFor="org-slug">
+                            <Label
+                                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]"
+                                htmlFor="project-slug"
+                            >
                                 Slug
                             </Label>
                             <Input
-                                id="org-slug"
-                                placeholder="acme"
+                                id="project-slug"
+                                placeholder="storefront"
                                 {...register('slug')}
                                 className="h-11 border-[#27272a] bg-[#111111] text-white"
                             />
@@ -141,12 +159,14 @@ export function CreateOrganizationPage() {
                         <div>
                             <p className="text-sm font-medium text-white">Allow public sign-up</p>
                             <p className="text-xs leading-6 text-[#71717a]">
-                                Turn this on if your primary runtime setup should allow public app sign-up.
+                                Leave this on if app users should be able to register immediately through this project.
                             </p>
                         </div>
                         <Toggle
                             checked={allowSignup}
-                            onChange={() => setValue('allow_signup', !allowSignup, { shouldDirty: true })}
+                            onChange={() =>
+                                setValue('allow_signup', !allowSignup, { shouldDirty: true })
+                            }
                         />
                     </div>
 
@@ -156,7 +176,7 @@ export function CreateOrganizationPage() {
                             disabled={mutation.isPending}
                             className="h-11 min-w-[190px] bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
                         >
-                            {mutation.isPending ? 'Creating organization...' : 'Create organization'}
+                            {mutation.isPending ? 'Creating project...' : 'Create project'}
                             {!mutation.isPending ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
                         </Button>
                     </div>

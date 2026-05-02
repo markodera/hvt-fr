@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, KeyRound, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { createApiKey, listApiKeys, revokeApiKey } from '@/api/apiKeys';
+import { createApiKey, deleteApiKey, listApiKeys, revokeApiKey } from '@/api/apiKeys';
 import { listProjects } from '@/api/organizations';
 import { CopyButton } from '@/components/CopyButton';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -78,6 +78,27 @@ function getApiKeyStatusMeta(apiKey) {
         status,
         dotClassName: 'bg-emerald-400',
         label: 'Active',
+    };
+}
+
+function getApiKeyActionMeta(apiKey) {
+    const status = getApiKeyStatus(apiKey);
+    if (status === 'revoked') {
+        return {
+            mode: 'delete',
+            label: 'Delete',
+            description: 'Permanently remove this revoked key.',
+            className:
+                'inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15',
+        };
+    }
+
+    return {
+        mode: 'revoke',
+        label: 'Revoke',
+        description: 'Stop this key from authenticating requests.',
+        className:
+            'inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15',
     };
 }
 
@@ -157,6 +178,7 @@ export default function ApiKeysPage() {
     const [projectFilter, setProjectFilter] = useState(searchParams.get('project') || '');
     const [createOpen, setCreateOpen] = useState(false);
     const [revokeTarget, setRevokeTarget] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const [createdKey, setCreatedKey] = useState(null);
 
     const projectsQuery = useQuery({
@@ -186,6 +208,7 @@ export default function ApiKeysPage() {
         mutationFn: createApiKey,
         onSuccess: (response) => {
             queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-api-keys'] });
             setCreatedKey(response);
             toast.success('API key issued');
         },
@@ -198,6 +221,7 @@ export default function ApiKeysPage() {
         mutationFn: revokeApiKey,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-api-keys'] });
             setRevokeTarget(null);
             toast.success('API key revoked');
         },
@@ -205,6 +229,44 @@ export default function ApiKeysPage() {
             toast.error(getErrorMessage(error));
         },
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteApiKey,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-api-keys'] });
+            setDeleteTarget(null);
+            toast.success('API key deleted');
+        },
+        onError: (error) => {
+            toast.error(getErrorMessage(error));
+        },
+    });
+
+    useEffect(() => {
+        if (searchParams.get('create') !== '1' || createOpen || createdKey) {
+            return;
+        }
+
+        if (!projects.length) {
+            return;
+        }
+
+        const requestedProjectId = searchParams.get('project') || '';
+        const matchingProject = projects.find((project) => project.id === requestedProjectId);
+        const nextProjectId = matchingProject?.id || defaultProjectId;
+        if (!nextProjectId) {
+            return;
+        }
+
+        setDraft(buildInitialDraft(nextProjectId));
+        setCreatedKey(null);
+        setCreateOpen(true);
+
+        const params = new URLSearchParams(searchParams);
+        params.delete('create');
+        setSearchParams(params, { replace: true });
+    }, [createdKey, createOpen, defaultProjectId, projects, searchParams, setSearchParams]);
 
     // Check if user has permission to access API keys (owner only)
     if (!user || user.role !== 'owner') {
@@ -251,6 +313,15 @@ export default function ApiKeysPage() {
             setCreatedKey(null);
             setDraft(buildInitialDraft(defaultProjectId));
         }, 120);
+    }
+
+    function openKeyActionDialog(apiKey) {
+        const action = getApiKeyActionMeta(apiKey);
+        if (action.mode === 'delete') {
+            setDeleteTarget(apiKey);
+            return;
+        }
+        setRevokeTarget(apiKey);
     }
 
     function toggleScope(scope) {
@@ -347,6 +418,7 @@ export default function ApiKeysPage() {
                                 <div key={apiKey.id} className="space-y-4 px-4 py-4">
                                     {(() => {
                                         const statusMeta = getApiKeyStatusMeta(apiKey);
+                                        const actionMeta = getApiKeyActionMeta(apiKey);
                                         return (
                                             <>
                                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -360,9 +432,9 @@ export default function ApiKeysPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="text-sm text-white">{apiKey.project_name || 'Default project'}</div>
+                                        <div className="text-sm text-white">{apiKey.project_name || 'No project'}</div>
                                         <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
-                                            {apiKey.project_slug || 'default'}
+                                            {apiKey.project_slug || 'unassigned'}
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 text-xs text-[#71717a] sm:grid-cols-2">
@@ -372,12 +444,11 @@ export default function ApiKeysPage() {
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => setRevokeTarget(apiKey)}
-                                        disabled={statusMeta.status === 'revoked'}
-                                        className="inline-flex h-9 w-full items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                                        onClick={() => openKeyActionDialog(apiKey)}
+                                        className={`${actionMeta.className} w-full`}
                                     >
                                         <Trash2 className="mr-2 h-4 w-4" />
-                                        Revoke
+                                        {actionMeta.label}
                                     </button>
                                             </>
                                         );
@@ -403,6 +474,7 @@ export default function ApiKeysPage() {
                                         <tr key={apiKey.id} className="border-b border-[#27272a] last:border-b-0">
                                             {(() => {
                                                 const statusMeta = getApiKeyStatusMeta(apiKey);
+                                                const actionMeta = getApiKeyActionMeta(apiKey);
                                                 return (
                                                     <>
                                             <td className="px-4 py-4">
@@ -410,9 +482,9 @@ export default function ApiKeysPage() {
                                                 <div className="mt-1 text-xs text-[#71717a]">{apiKey.name}</div>
                                             </td>
                                             <td className="px-4 py-4">
-                                                <div className="text-sm text-white">{apiKey.project_name || 'Default project'}</div>
+                                                <div className="text-sm text-white">{apiKey.project_name || 'No project'}</div>
                                                 <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
-                                                    {apiKey.project_slug || 'default'}
+                                                    {apiKey.project_slug || 'unassigned'}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 font-mono text-xs text-[#71717a]">{formatDate(apiKey.created_at)}</td>
@@ -431,12 +503,11 @@ export default function ApiKeysPage() {
                                             <td className="px-4 py-4 text-right">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setRevokeTarget(apiKey)}
-                                                    disabled={statusMeta.status === 'revoked'}
-                                                    className="inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    onClick={() => openKeyActionDialog(apiKey)}
+                                                    className={actionMeta.className}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
-                                                    Revoke
+                                                    {actionMeta.label}
                                                 </button>
                                             </td>
                                                     </>
@@ -592,7 +663,7 @@ export default function ApiKeysPage() {
                                         <div>
                                             <p className="text-sm font-medium text-white">{createdKey.name}</p>
                                             <p className="mt-1 text-xs text-[#71717a]">
-                                                Project: {createdKey.project_name || 'Default project'} ({createdKey.project_slug || 'default'})
+                                                Project: {createdKey.project_name || 'No project'} ({createdKey.project_slug || 'unassigned'})
                                             </p>
                                         </div>
                                         <CopyButton value={createdKey.key} className="border border-[#27272a] bg-[#111111] text-white hover:bg-[#18181b]" />
@@ -630,6 +701,16 @@ export default function ApiKeysPage() {
                 confirmLabel="Revoke"
                 onConfirm={() => revokeMutation.mutate(revokeTarget.id)}
                 isLoading={revokeMutation.isPending}
+            />
+
+            <ConfirmDialog
+                open={!!deleteTarget}
+                onOpenChange={() => setDeleteTarget(null)}
+                title="Delete revoked API key"
+                description={`Delete ${deleteTarget?.name || 'this API key'}? This permanently removes the revoked key from the organization.`}
+                confirmLabel="Delete"
+                onConfirm={() => deleteMutation.mutate(deleteTarget.id)}
+                isLoading={deleteMutation.isPending}
             />
         </div>
     );

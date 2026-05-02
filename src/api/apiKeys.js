@@ -33,3 +33,10 @@ export function updateApiKey(id, data, options = {}) {
 export function revokeApiKey(id, options = {}) {
     return hvt.organizations.revokeApiKey(id, options);
 }
+
+export function deleteApiKey(id, options = {}) {
+    return hvt.request(`/api/v1/organizations/current/keys/${id}/`, {
+        method: 'DELETE',
+        ...options,
+    });
+}

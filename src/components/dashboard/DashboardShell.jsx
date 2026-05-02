@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
     BookOpen,
+    Boxes,
     Building2,
     Grid2x2,
     KeyRound,
@@ -31,12 +32,17 @@ const navigation = [
     { label: 'Playground', to: '/runtime-playground', icon: PlaySquare, external: true },
 ];
 
-const onboardingNavigation = [
+const organizationOnboardingNavigation = [
     { label: 'Create Organization', to: '/dashboard/create-organization', icon: Building2 },
+];
+
+const projectOnboardingNavigation = [
+    { label: 'Create Project', to: '/dashboard/create-project', icon: Boxes },
 ];
 
 const titleMap = [
     { match: '/dashboard/create-organization', title: 'Create Organization' },
+    { match: '/dashboard/create-project', title: 'Create Project' },
     { match: '/dashboard/users', title: 'Users' },
     { match: '/dashboard/api-keys', title: 'API Keys' },
     { match: '/dashboard/webhooks', title: 'Webhooks' },
@@ -85,7 +91,14 @@ export function DashboardShell({ children }) {
     const { user, logout } = useAuth();
     const { toggleTheme, isDark } = useTheme();
     const hasOrganization = Boolean(user?.organization);
-    const shellNavigation = hasOrganization ? navigation : onboardingNavigation;
+    const isCreateOrganizationRoute = location.pathname === '/dashboard/create-organization';
+    const isCreateProjectRoute = location.pathname === '/dashboard/create-project';
+    let shellNavigation = navigation;
+    if (isCreateOrganizationRoute || !hasOrganization) {
+        shellNavigation = organizationOnboardingNavigation;
+    } else if (isCreateProjectRoute) {
+        shellNavigation = projectOnboardingNavigation;
+    }
     const pageTitle = useMemo(() => resolveTitle(location.pathname), [location.pathname]);
     const displayName = getUserDisplayName(user);
     const initials = getUserInitials(user);

@@ -9,7 +9,7 @@ import { isRuntimeAuthSearch } from '@/lib/runtimeAuth';
 export function VerifyEmailSuccessPage() {
     const [searchParams] = useSearchParams();
     const runtimeMode = isRuntimeAuthSearch(searchParams);
-    const destination = runtimeMode ? '/runtime-playground' : '/dashboard';
+    const destination = runtimeMode ? '/runtime-playground' : '/login';
 
     return (
         <AuthLayout>
@@ -24,11 +24,11 @@ export function VerifyEmailSuccessPage() {
                         <p className="text-sm leading-6 text-[#a1a1aa]">
                             {runtimeMode
                                 ? 'Your app account is active. You can return to sign-in.'
-                                : 'Your account is active. You&apos;re ready to go.'}
+                                : 'Your account is active. Sign in next to create your organization and first project.'}
                         </p>
                     </div>
                     <Link to={destination} className={AUTH_PRIMARY_BUTTON_CLASS}>
-                        {runtimeMode ? 'Open runtime playground' : 'Go to dashboard'}
+                        {runtimeMode ? 'Open runtime playground' : 'Continue to sign in'}
                     </Link>
                 </div>
             </AuthCard>
