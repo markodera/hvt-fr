@@ -4,7 +4,12 @@ import { getMe, login as apiLogin, logout as apiLogout } from '@/api/auth';
 import { hvt, isAuthFailure, refreshDashboardSession } from '@/lib/hvt';
 
 const INITIAL_SESSION_TIMEOUT_MS = 10000;
-const DASHBOARD_AUTH_EXEMPT_PATH_PREFIXES = ['/runtime-playground', '/runtime-demo'];
+const DASHBOARD_AUTH_EXEMPT_PATH_PREFIXES = [
+    '/runtime-playground',
+    '/runtime-demo',
+    '/auth/google/callback',
+    '/auth/github/callback',
+];
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
@@ -40,6 +45,7 @@ export function AuthProvider({ children }) {
         let cancelled = false;
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), INITIAL_SESSION_TIMEOUT_MS);
+        const bootstrapAccessToken = hvt.accessToken;
 
         async function bootstrapSession() {
             try {
@@ -74,7 +80,11 @@ export function AuthProvider({ children }) {
                     }
                 } catch (refreshError) {
                     if (!cancelled) {
-                        if (isAuthFailure(error) || isAuthFailure(refreshError)) {
+                        const bootstrapTokenStillCurrent = hvt.accessToken === bootstrapAccessToken;
+                        if (
+                            (isAuthFailure(error) || isAuthFailure(refreshError)) &&
+                            bootstrapTokenStillCurrent
+                        ) {
                             hvt.setAccessToken(null);
                             setUser(null);
                         } else {
