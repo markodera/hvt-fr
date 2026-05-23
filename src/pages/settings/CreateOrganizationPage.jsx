@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { useSlugSync } from '@/hooks/useSlugSync';
 import { getErrorMessage } from '@/lib/utils';
 
 function Toggle({ checked, onChange }) {
@@ -41,6 +42,7 @@ export function CreateOrganizationPage() {
     const {
         register,
         handleSubmit,
+        control,
         setValue,
         watch,
         formState: { errors },
@@ -72,11 +74,13 @@ export function CreateOrganizationPage() {
         },
     });
 
+    const allowSignup = watch('allow_signup');
+    const { userEditedSlug, notifySlugEdited } = useSlugSync(control, 'name', 'slug', setValue);
+    const slugField = register('slug');
+
     if (user?.organization && !didCreateOrganization) {
         return <Navigate to="/dashboard" replace />;
     }
-
-    const allowSignup = watch('allow_signup');
 
     return (
         <div className="mx-auto max-w-3xl space-y-6">
@@ -130,10 +134,18 @@ export function CreateOrganizationPage() {
                             <Input
                                 id="org-slug"
                                 placeholder="acme"
-                                {...register('slug')}
+                                {...slugField}
+                                onChange={(event) => {
+                                    userEditedSlug.current = true;
+                                    notifySlugEdited();
+                                    slugField.onChange(event);
+                                }}
                                 className="h-11 border-[#27272a] bg-[#111111] text-white"
                             />
                             {errors.slug ? <p className="text-xs text-rose-300">{errors.slug.message}</p> : null}
+                            {!userEditedSlug.current ? (
+                                <p className="text-xs text-[#71717a]">Auto-generated from name</p>
+                            ) : null}
                         </div>
                     </div>
 
