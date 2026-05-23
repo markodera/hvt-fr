@@ -74,13 +74,13 @@ export function CreateOrganizationPage() {
         },
     });
 
-    if (user?.organization && !didCreateOrganization) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
     const allowSignup = watch('allow_signup');
     const { userEditedSlug, notifySlugEdited } = useSlugSync(control, 'name', 'slug', setValue);
     const slugField = register('slug');
+
+    if (user?.organization && !didCreateOrganization) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     return (
         <div className="mx-auto max-w-3xl space-y-6">
