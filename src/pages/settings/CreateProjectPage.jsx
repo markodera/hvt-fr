@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSlugSync } from '@/hooks/useSlugSync';
 import { createProjectSchema } from '@/lib/schemas';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -41,6 +42,7 @@ export function CreateProjectPage() {
     const {
         register,
         handleSubmit,
+        control,
         setValue,
         watch,
         formState: { errors },
@@ -80,6 +82,8 @@ export function CreateProjectPage() {
     });
 
     const allowSignup = watch('allow_signup');
+    const { userEditedSlug, notifySlugEdited } = useSlugSync(control, 'name', 'slug', setValue);
+    const slugField = register('slug');
 
     return (
         <div className="mx-auto max-w-3xl space-y-6">
@@ -148,7 +152,12 @@ export function CreateProjectPage() {
                             <Input
                                 id="project-slug"
                                 placeholder="storefront"
-                                {...register('slug')}
+                                {...slugField}
+                                onChange={(event) => {
+                                    userEditedSlug.current = true;
+                                    notifySlugEdited();
+                                    slugField.onChange(event);
+                                }}
                                 className="h-11 border-[#27272a] bg-[#111111] text-white"
                             />
                             {errors.slug ? <p className="text-xs text-rose-300">{errors.slug.message}</p> : null}

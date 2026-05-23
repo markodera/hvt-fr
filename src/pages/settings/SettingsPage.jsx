@@ -22,6 +22,7 @@ import {
     profileSchema,
 } from '@/lib/schemas';
 import { useAuth } from '@/hooks/useAuth';
+import { useSlugSync } from '@/hooks/useSlugSync';
 import { getErrorMessage } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -150,6 +151,22 @@ export default function SettingsPage() {
         defaultValues: buildProjectFormDefaults(),
     });
 
+    const {
+        userEditedSlug: orgUserEditedSlug,
+        notifySlugEdited: notifyOrgSlugEdited,
+        resetSlugSync: resetOrgSlugSync,
+    } = useSlugSync(orgForm.control, 'name', 'slug', orgForm.setValue);
+    const {
+        userEditedSlug: createProjectUserEditedSlug,
+        notifySlugEdited: notifyCreateProjectSlugEdited,
+        resetSlugSync: resetCreateProjectSlugSync,
+    } = useSlugSync(projectForm.control, 'name', 'slug', projectForm.setValue);
+    const {
+        userEditedSlug: editProjectUserEditedSlug,
+        notifySlugEdited: notifyEditProjectSlugEdited,
+        resetSlugSync: resetEditProjectSlugSync,
+    } = useSlugSync(editProjectForm.control, 'name', 'slug', editProjectForm.setValue);
+
     useEffect(() => {
         if (!org) {
             return;
@@ -160,9 +177,11 @@ export default function SettingsPage() {
             slug: org.slug,
             allow_signup: org.allow_signup,
         });
+        resetOrgSlugSync();
 
         projectForm.reset(buildProjectFormDefaults(null, org.allow_signup));
-    }, [org, orgForm, projectForm]);
+        resetCreateProjectSlugSync();
+    }, [org, orgForm, projectForm, resetCreateProjectSlugSync, resetOrgSlugSync]);
 
     useEffect(() => {
         if (!user) {
@@ -181,7 +200,8 @@ export default function SettingsPage() {
         }
 
         editProjectForm.reset(buildProjectFormDefaults(editingProject));
-    }, [editProjectForm, editingProject]);
+        resetEditProjectSlugSync();
+    }, [editProjectForm, editingProject, resetEditProjectSlugSync]);
 
     function invalidateProjectQueries() {
         queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -231,6 +251,7 @@ export default function SettingsPage() {
         onSuccess: () => {
             invalidateProjectQueries();
             projectForm.reset(buildProjectFormDefaults(null, org?.allow_signup ?? false));
+            resetCreateProjectSlugSync();
             toast.success('Project created');
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -259,6 +280,10 @@ export default function SettingsPage() {
     if (orgLoading || !user) {
         return <LoadingGrid />;
     }
+
+    const orgSlugField = orgForm.register('slug');
+    const createProjectSlugField = projectForm.register('slug');
+    const editProjectSlugField = editProjectForm.register('slug');
 
     return (
         <div className="space-y-6">
@@ -390,7 +415,12 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Slug</Label>
                             <Input
-                                {...orgForm.register('slug')}
+                                {...orgSlugField}
+                                onChange={(event) => {
+                                    orgUserEditedSlug.current = true;
+                                    notifyOrgSlugEdited();
+                                    orgSlugField.onChange(event);
+                                }}
                                 className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                             />
                         </div>
@@ -518,7 +548,12 @@ export default function SettingsPage() {
                             <div className="space-y-2">
                                 <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project slug</Label>
                                 <Input
-                                    {...projectForm.register('slug')}
+                                    {...createProjectSlugField}
+                                    onChange={(event) => {
+                                        createProjectUserEditedSlug.current = true;
+                                        notifyCreateProjectSlugEdited();
+                                        createProjectSlugField.onChange(event);
+                                    }}
                                     className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                                 />
                             </div>
@@ -620,7 +655,12 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project slug</Label>
                             <Input
-                                {...editProjectForm.register('slug')}
+                                {...editProjectSlugField}
+                                onChange={(event) => {
+                                    editProjectUserEditedSlug.current = true;
+                                    notifyEditProjectSlugEdited();
+                                    editProjectSlugField.onChange(event);
+                                }}
                                 className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                             />
                         </div>

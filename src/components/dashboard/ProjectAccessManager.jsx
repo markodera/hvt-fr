@@ -17,6 +17,7 @@ import {
     updateProjectRole,
 } from '@/api/organizations';
 import { projectPermissionSchema, projectRoleSchema } from '@/lib/schemas';
+import { useSlugSync } from '@/hooks/useSlugSync';
 import { getErrorMessage } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,6 +80,17 @@ export function ProjectAccessManager({ projects = [] }) {
         defaultValues: emptyRoleValues(),
     });
 
+    const {
+        userEditedSlug: permissionUserEditedSlug,
+        notifySlugEdited: notifyPermissionSlugEdited,
+        resetSlugSync: resetPermissionSlugSync,
+    } = useSlugSync(permissionForm.control, 'name', 'slug', permissionForm.setValue);
+    const {
+        userEditedSlug: roleUserEditedSlug,
+        notifySlugEdited: notifyRoleSlugEdited,
+        resetSlugSync: resetRoleSlugSync,
+    } = useSlugSync(roleForm.control, 'name', 'slug', roleForm.setValue);
+
     useEffect(() => {
         if (!projects.length) {
             setSelectedProjectId('');
@@ -116,6 +128,8 @@ export function ProjectAccessManager({ projects = [] }) {
     const permissions = normalizeCollection(permissionsData);
     const roles = normalizeCollection(rolesData);
     const selectedPermissionIds = roleForm.watch('permission_ids') || [];
+    const permissionSlugField = permissionForm.register('slug');
+    const roleSlugField = roleForm.register('slug');
 
     function invalidateProjectAccess() {
         queryClient.invalidateQueries({ queryKey: ['projectPermissions', selectedProjectId] });
@@ -127,17 +141,20 @@ export function ProjectAccessManager({ projects = [] }) {
         setPermissionDialogOpen(false);
         setEditingPermission(null);
         permissionForm.reset(emptyPermissionValues());
+        resetPermissionSlugSync();
     }
 
     function closeRoleDialog() {
         setRoleDialogOpen(false);
         setEditingRole(null);
         roleForm.reset(emptyRoleValues());
+        resetRoleSlugSync();
     }
 
     function openCreatePermissionDialog() {
         setEditingPermission(null);
         permissionForm.reset(emptyPermissionValues());
+        resetPermissionSlugSync();
         setPermissionDialogOpen(true);
     }
 
@@ -148,12 +165,14 @@ export function ProjectAccessManager({ projects = [] }) {
             name: permission.name || '',
             description: permission.description || '',
         });
+        resetPermissionSlugSync();
         setPermissionDialogOpen(true);
     }
 
     function openCreateRoleDialog() {
         setEditingRole(null);
         roleForm.reset(emptyRoleValues());
+        resetRoleSlugSync();
         setRoleDialogOpen(true);
     }
 
@@ -167,6 +186,7 @@ export function ProjectAccessManager({ projects = [] }) {
             is_self_assignable: Boolean(role.is_self_assignable),
             permission_ids: (role.permissions || []).map((permission) => permission.id),
         });
+        resetRoleSlugSync();
         setRoleDialogOpen(true);
     }
 
@@ -519,7 +539,12 @@ export function ProjectAccessManager({ projects = [] }) {
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Permission slug</Label>
                             <Input
-                                {...permissionForm.register('slug')}
+                                {...permissionSlugField}
+                                onChange={(event) => {
+                                    permissionUserEditedSlug.current = true;
+                                    notifyPermissionSlugEdited();
+                                    permissionSlugField.onChange(event);
+                                }}
                                 placeholder="orders.read.own"
                                 className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                             />
@@ -590,7 +615,12 @@ export function ProjectAccessManager({ projects = [] }) {
                             <div className="space-y-2">
                                 <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Role slug</Label>
                                 <Input
-                                    {...roleForm.register('slug')}
+                                    {...roleSlugField}
+                                    onChange={(event) => {
+                                        roleUserEditedSlug.current = true;
+                                        notifyRoleSlugEdited();
+                                        roleSlugField.onChange(event);
+                                    }}
                                     placeholder="seller"
                                     className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
                                 />
