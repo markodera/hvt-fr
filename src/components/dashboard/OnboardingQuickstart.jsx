@@ -35,7 +35,7 @@ export function OnboardingQuickstart({ project }) {
     const [isCliModalOpen, setIsCliModalOpen] = useState(false);
 
     // Live checklist polling every 3 seconds while tab is active
-    const { data: onboarding, isLoading, refetch } = useQuery({
+    const { data: onboarding, refetch } = useQuery({
         queryKey: ['project-onboarding', project?.id],
         queryFn: () => getProjectOnboarding(project.id),
         enabled: Boolean(project?.id),

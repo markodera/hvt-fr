@@ -133,7 +133,7 @@ export function listPasskeys(options = {}) {
     return hvt.auth.listPasskeys(normalizeOptions(options));
 }
 
-export function registerPasskey(data = {}, options = {}) {
+export function registerPasskey(data = {}, _options = {}) {
     return hvt.auth.registerPasskey(data);
 }
 
@@ -141,7 +141,7 @@ export function deletePasskey(id, options = {}) {
     return hvt.auth.deletePasskey(id, options);
 }
 
-export function loginWithPasskey(data = {}, options = {}) {
+export function loginWithPasskey(data = {}, _options = {}) {
     return hvt.auth.loginWithPasskey(data);
 }
 
@@ -212,4 +212,3 @@ export function resendRuntimeScopedVerificationEmail(data, options = {}) {
 export function listSocialProviders(options = {}) {
     return hvt.auth.listSocialProviders(normalizeOptions(options));
 }
-
