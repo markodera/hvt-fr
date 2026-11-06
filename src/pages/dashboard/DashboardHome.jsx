@@ -16,6 +16,7 @@ import { listProjects } from '@/api/organizations';
 import { listUsers } from '@/api/users';
 import { getWebhookSummary } from '@/api/webhooks';
 import { formatDate, formatRelativeTime } from '@/lib/utils';
+import { OnboardingQuickstart } from '@/components/dashboard/OnboardingQuickstart';
 
 function Card({ children, className = '' }) {
     return (
@@ -105,6 +106,7 @@ export default function DashboardHome() {
     });
 
     const projects = useMemo(() => projectsData?.results ?? projectsData ?? [], [projectsData]);
+    const activeProject = useMemo(() => projects.find((p) => p.is_default) || projects[0], [projects]);
     const apiKeys = useMemo(() => apiKeysData?.results ?? [], [apiKeysData]);
     const auditEvents = useMemo(() => auditData?.results ?? [], [auditData]);
     const activeProjects = projects.filter((project) => project.is_active).length;
@@ -117,6 +119,7 @@ export default function DashboardHome() {
 
     return (
         <div className="space-y-6">
+            {activeProject ? <OnboardingQuickstart project={activeProject} /> : null}
             <section className="grid gap-4 lg:grid-cols-4">
                 {usersLoading ? (
                     <SkeletonBlock className="h-[132px]" />

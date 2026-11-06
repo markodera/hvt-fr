@@ -46,6 +46,10 @@ function serializeRedirectUris(value) {
 function formatProviderLabel(provider) {
     if (provider === 'google') return 'Google';
     if (provider === 'github') return 'GitHub';
+    if (provider === 'discord') return 'Discord';
+    if (provider === 'apple') return 'Apple';
+    if (provider === 'microsoft') return 'Microsoft';
+    if (provider === 'gitlab') return 'GitLab';
     return provider;
 }
 
@@ -65,7 +69,8 @@ export function ProjectSocialProvidersSection({ projects }) {
     });
 
     const socialProviders = socialProviderData?.results ?? socialProviderData ?? [];
-    const availableProviderOptions = ['google', 'github'].filter(
+    const ALL_PROVIDERS = ['google', 'github', 'discord', 'apple', 'microsoft', 'gitlab'];
+    const availableProviderOptions = ALL_PROVIDERS.filter(
         (provider) => !socialProviders.some((item) => item.provider === provider)
     );
 
@@ -292,7 +297,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                             <div className="space-y-2">
                                 <Label htmlFor="provider" className="text-white">Provider</Label>
                                 <select id="provider" className={selectClassName} {...createForm.register('provider')}>
-                                    {['google', 'github'].map((provider) => (
+                                    {['google', 'github', 'discord', 'apple', 'microsoft', 'gitlab'].map((provider) => (
                                         <option
                                             key={provider}
                                             value={provider}

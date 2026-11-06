@@ -29,9 +29,9 @@ const DOT_GRID_STYLE = {
   backgroundRepeat: 'repeat',
 };
 
-const SEO_TITLE = 'HVT | Open-Source Auth for Projects, Roles, and Permissions';
+const SEO_TITLE = 'HVT | Multi-Tenant Identity & RBAC Engine for Platforms and Marketplaces';
 const SEO_DESCRIPTION =
-  'Open-source, self-hostable Auth0 alternative with project-scoped auth, roles, permissions, API keys, social login, audit logs, and webhooks.';
+  'Open-source multi-tenant identity engine with project-scoped composite auth, dynamic RBAC, API keys, social login, audit trails, and webhooks.';
 
 const featureStripItems = [
   'Open-source auth',
@@ -552,7 +552,7 @@ export default function Landing() {
                 className="inline-flex items-center rounded-full border border-[#27272a] bg-[#111111]/88 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]"
                 style={{ animation: 'heroFadeUp 0.6s ease-out 0.05s both' }}
               >
-                OPEN-SOURCE AUTH INFRASTRUCTURE FOR STARTUPS AND TEAMS
+                MULTI-TENANT IDENTITY & RBAC FOR PLATFORMS, MARKETPLACES & MULTI-APP TEAMS
               </div>
               <h1
                 className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl"
@@ -564,14 +564,13 @@ export default function Landing() {
                 className="mt-5 max-w-3xl text-sm leading-7 text-[#71717a] sm:text-base"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.18s both' }}
               >
-                Building auth from scratch takes weeks. Auth0 eats your MVP budget. HVT gives you a better way.
+                Building multi-app auth from scratch takes months. Auth0 punishes your growth with MAU pricing. HVT gives you true composite tenant isolation and granular RBAC out of the box.
               </p>
               <p
                 className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg"
                 style={{ animation: 'heroFadeUp 0.7s ease-out 0.2s both' }}
               >
-                Open source, self-hostable, with roles and permissions ready on day one. Keep organisation,
-                project, API key, and runtime auth in one explicit model from setup to sign-in.
+                Open source, self-hostable with zero MAU penalties. Manage organizations, projects, buyers, sellers, API keys, and runtime auth in one explicit model.
               </p>
 
               <div className="mt-8 max-w-3xl" style={{ animation: 'heroFadeUp 0.8s ease-out 0.28s both' }}>
@@ -846,7 +845,7 @@ export default function Landing() {
 
           <div className="flex items-start md:col-span-2 xl:col-span-1 xl:justify-end">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#27272a] bg-[#111111] px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-[#a1a1aa]">
-              <LockKeyhole className="h-3.5 w-3.5 text-[#a78bfa]" /> AGPL v3 Licensed
+              <LockKeyhole className="h-3.5 w-3.5 text-[#a78bfa]" /> Apache 2.0 Licensed
             </div>
           </div>
         </div>

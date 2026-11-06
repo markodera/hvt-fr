@@ -113,6 +113,85 @@ export function socialAuthGithub(data, options = {}) {
     return hvt.auth.socialGithub(data, options);
 }
 
+export function socialAuthDiscord(data, options = {}) {
+    return hvt.auth.socialDiscord(data, options);
+}
+
+export function socialAuthApple(data, options = {}) {
+    return hvt.auth.socialApple(data, options);
+}
+
+export function socialAuthMicrosoft(data, options = {}) {
+    return hvt.auth.socialMicrosoft(data, options);
+}
+
+export function socialAuthGitlab(data, options = {}) {
+    return hvt.auth.socialGitlab(data, options);
+}
+
+export function listPasskeys(options = {}) {
+    return hvt.auth.listPasskeys(normalizeOptions(options));
+}
+
+export function registerPasskey(data = {}, options = {}) {
+    return hvt.auth.registerPasskey(data);
+}
+
+export function deletePasskey(id, options = {}) {
+    return hvt.auth.deletePasskey(id, options);
+}
+
+export function loginWithPasskey(data = {}, options = {}) {
+    return hvt.auth.loginWithPasskey(data);
+}
+
+export function loginWithMfa(data, options = {}) {
+    return hvt.request('/api/v1/auth/mfa/totp/login/', {
+        method: 'POST',
+        body: data,
+        auth: 'none',
+        ...options,
+    });
+}
+
+export function getMfaStatus(options = {}) {
+    return hvt.request('/api/v1/auth/mfa/totp/status/', {
+        method: 'GET',
+        ...normalizeOptions(options),
+    });
+}
+
+export function setupMfa(options = {}) {
+    return hvt.request('/api/v1/auth/mfa/totp/setup/', {
+        method: 'POST',
+        ...normalizeOptions(options),
+    });
+}
+
+export function verifyMfa(data, options = {}) {
+    return hvt.request('/api/v1/auth/mfa/totp/verify/', {
+        method: 'POST',
+        body: data,
+        ...normalizeOptions(options),
+    });
+}
+
+export function disableMfa(data, options = {}) {
+    return hvt.request('/api/v1/auth/mfa/totp/disable/', {
+        method: 'POST',
+        body: data,
+        ...normalizeOptions(options),
+    });
+}
+
+export function requestMagicLink(data, options = {}) {
+    return hvt.auth.requestMagicLink(data, options);
+}
+
+export function verifyMagicLink(data, options = {}) {
+    return hvt.auth.verifyMagicLink(data, options);
+}
+
 export function verifyEmail(key, options = {}) {
     return hvt.request('/api/v1/auth/register/verify-email/', {
         method: 'POST',
@@ -133,3 +212,4 @@ export function resendRuntimeScopedVerificationEmail(data, options = {}) {
 export function listSocialProviders(options = {}) {
     return hvt.auth.listSocialProviders(normalizeOptions(options));
 }
+

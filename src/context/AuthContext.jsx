@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useCallback, useRef } from 'react';
 
-import { getMe, login as apiLogin, logout as apiLogout } from '@/api/auth';
+import { getMe, login as apiLogin, logout as apiLogout, loginWithMfa as apiLoginWithMfa } from '@/api/auth';
 import { hvt, isAuthFailure, refreshDashboardSession } from '@/lib/hvt';
 
 const INITIAL_SESSION_TIMEOUT_MS = 10000;
@@ -161,6 +161,17 @@ export function AuthProvider({ children }) {
 
     const login = useCallback(async (credentials) => {
         const session = await apiLogin(credentials);
+        if (session?.mfa_required) {
+            return session;
+        }
+        if (session?.access) {
+            hvt.setAccessToken(session.access);
+        }
+        return waitForSession();
+    }, [waitForSession]);
+
+    const completeMfaLogin = useCallback(async ({ mfa_token, code }) => {
+        const session = await apiLoginWithMfa({ mfa_token, code });
         if (session?.access) {
             hvt.setAccessToken(session.access);
         }
@@ -181,6 +192,7 @@ export function AuthProvider({ children }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        completeMfaLogin,
         logout,
         refreshSession,
         waitForSession,

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { hvt, refreshDashboardSession } from '@/lib/hvt';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,8 +14,15 @@ const client = axios.create({
     },
 });
 
-// ── Refresh queue to handle concurrent 401s ──
+// ── Attach Authorization Header ──
+client.interceptors.request.use((config) => {
+    if (hvt.accessToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${hvt.accessToken}`;
+    }
+    return config;
+});
 
+// ── Refresh queue to handle concurrent 401s ──
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -25,9 +33,7 @@ function processQueue(error) {
     failedQueue = [];
 }
 
-// (Removed request interceptor because auth tokens are HttpOnly and handled automatically by browser cookies)
-
-// ── Response Interceptor (Handle 401s & Refresh) ──
+// ── Response Interceptor (Handle 401s & Refresh via hvt SDK) ──
 client.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -37,10 +43,10 @@ client.interceptors.response.use(
         if (
             error.response?.status !== 401 ||
             originalRequest._retry ||
-            originalRequest.url?.includes('/auth/token/refresh/') ||
-            originalRequest.url?.includes('/auth/login/') ||
-            originalRequest.url?.includes('/auth/social/') ||
-            originalRequest.url?.includes('/auth/register/')
+            originalRequest.url?.includes('/auth/token/refresh') ||
+            originalRequest.url?.includes('/auth/login') ||
+            originalRequest.url?.includes('/auth/social') ||
+            originalRequest.url?.includes('/auth/register')
         ) {
             return Promise.reject(error);
         }
@@ -49,25 +55,26 @@ client.interceptors.response.use(
             // Another refresh is in progress — queue this request
             return new Promise((resolve, reject) => {
                 failedQueue.push({ resolve, reject });
-            }).then(() => client(originalRequest));
+            }).then(() => {
+                if (hvt.accessToken) {
+                    originalRequest.headers.Authorization = `Bearer ${hvt.accessToken}`;
+                }
+                return client(originalRequest);
+            });
         }
 
         originalRequest._retry = true;
         isRefreshing = true;
 
         try {
-            await axios.post(`${API_URL}/auth/token/refresh/`, null, {
-                withCredentials: true,
-            });
+            await refreshDashboardSession();
             processQueue(null);
+            if (hvt.accessToken) {
+                originalRequest.headers.Authorization = `Bearer ${hvt.accessToken}`;
+            }
             return client(originalRequest);
         } catch (refreshError) {
             processQueue(refreshError);
-            
-            // Only trigger a global logout if we aren't currently trying to log in/register
-            if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-                window.dispatchEvent(new Event('auth:logout'));
-            }
             return Promise.reject(refreshError);
         } finally {
             isRefreshing = false;
@@ -75,4 +82,5 @@ client.interceptors.response.use(
     }
 );
 
+export { client, client as apiClient };
 export default client;

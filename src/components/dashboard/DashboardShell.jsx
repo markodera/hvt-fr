@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
     BookOpen,
     Boxes,
     Building2,
+    ChevronDown,
     Grid2x2,
     KeyRound,
     LogOut,
@@ -21,6 +22,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { DOCS_URL } from '@/lib/appLinks';
 import { useTheme } from '@/hooks/useTheme';
 import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navigation = [
     { label: 'Dashboard', to: '/dashboard', icon: Grid2x2 },
@@ -168,15 +178,86 @@ export function DashboardShell({ children }) {
                             >
                                 {isDark ? <SunMedium className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                             </button>
-                            <div className="hidden items-center gap-3 rounded-full border border-[#27272a] bg-[#18181b] px-3 py-1.5 md:flex">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
-                                    {initials}
-                                </div>
-                                <div className="text-left">
-                                    <p className="max-w-[180px] truncate text-sm font-medium text-white">{displayName}</p>
-                                    <p className="max-w-[180px] truncate text-xs text-[#71717a]">{user?.email}</p>
-                                </div>
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="hidden cursor-pointer items-center gap-2.5 rounded-full border border-[#27272a] bg-[#18181b] px-3 py-1.5 text-left transition hover:border-[#3f3f46] hover:bg-[#27272a]/50 focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/30 md:flex"
+                                    >
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                            {initials}
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="max-w-[150px] truncate text-sm font-medium text-white">{displayName}</p>
+                                            <p className="max-w-[150px] truncate text-xs text-[#71717a]">{user?.email}</p>
+                                        </div>
+                                        <ChevronDown className="h-3.5 w-3.5 text-[#71717a]" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56 border-[#27272a] bg-[#111111] text-white">
+                                    <DropdownMenuLabel className="font-normal">
+                                        <div className="flex flex-col space-y-1">
+                                            <p className="text-sm font-semibold leading-none text-white">{displayName}</p>
+                                            <p className="text-xs leading-none text-[#71717a]">{user?.email}</p>
+                                            {user?.organization ? (
+                                                <p className="mt-1 text-[11px] text-[#a78bfa]">
+                                                    {typeof user.organization === 'object' ? user.organization.name : user.organization}
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator className="bg-[#27272a]" />
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/dashboard/settings?tab=account" className="flex w-full cursor-pointer items-center gap-2 text-sm text-[#d4d4d8] hover:text-white">
+                                                <User className="h-4 w-4 text-[#a1a1aa]" />
+                                                <span>Account & Security</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/dashboard/settings?tab=projects" className="flex w-full cursor-pointer items-center gap-2 text-sm text-[#d4d4d8] hover:text-white">
+                                                <Boxes className="h-4 w-4 text-[#a1a1aa]" />
+                                                <span>Projects & Runtime</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/dashboard/settings?tab=organization" className="flex w-full cursor-pointer items-center gap-2 text-sm text-[#d4d4d8] hover:text-white">
+                                                <Building2 className="h-4 w-4 text-[#a1a1aa]" />
+                                                <span>Organization</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator className="bg-[#27272a]" />
+                                    <DropdownMenuItem asChild>
+                                        <a
+                                            href={DOCS_URL}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex w-full cursor-pointer items-center gap-2 text-sm text-[#d4d4d8] hover:text-white"
+                                        >
+                                            <BookOpen className="h-4 w-4 text-[#a1a1aa]" />
+                                            <span>Documentation</span>
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-[#27272a]" />
+                                    <DropdownMenuItem
+                                        onClick={logout}
+                                        className="cursor-pointer text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 focus:bg-rose-500/10 focus:text-rose-300"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Sign out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <button
+                                type="button"
+                                onClick={logout}
+                                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#27272a] bg-[#18181b] px-3 text-xs font-medium text-[#a1a1aa] transition-colors hover:border-[#ef4444]/40 hover:bg-[#ef4444]/10 hover:text-[#f87171]"
+                                title="Sign out"
+                            >
+                                <LogOut className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Sign out</span>
+                            </button>
                         </div>
                     </div>
                 </header>

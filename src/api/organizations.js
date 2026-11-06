@@ -225,3 +225,17 @@ export function getOrgMembers(params = {}, options = {}) {
 export function getPermissions(options = {}) {
     return hvt.organizations.permissions(normalizeOptions(options));
 }
+
+export function getProjectOnboarding(projectId, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/onboarding/`, {
+        method: 'GET',
+        ...normalizeOptions(options),
+    });
+}
+
+export function generateSetupPrompt(projectId, options = {}) {
+    return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/setup-prompt/`, {
+        method: 'POST',
+        ...normalizeOptions(options),
+    });
+}

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, LockKeyhole, LogOut, Pencil, Trash2, UserRound } from 'lucide-react';
+import { Boxes, Building2, LockKeyhole, LogOut, Pencil, Trash2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
+import { Helmet } from 'react-helmet-async';
 
 import {
     createProject,
@@ -31,6 +32,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ProjectSocialProvidersSection } from '@/pages/settings/ProjectSocialProvidersSection';
 import { ProjectAccessManager } from '@/components/dashboard/ProjectAccessManager';
+import { MFASettingsSection } from '@/pages/settings/MFASettingsSection';
+import { PasskeySettingsSection } from '@/pages/settings/PasskeySettingsSection';
+import { ProjectRuntimeAuthSection } from '@/pages/settings/ProjectRuntimeAuthSection';
+
+const SETTINGS_TABS = [
+    {
+        id: 'account',
+        label: 'Account & Security',
+        icon: UserRound,
+        description: 'Personal profile, control plane password, MFA, passkeys, and active sessions',
+    },
+    {
+        id: 'projects',
+        label: 'Projects & Runtime',
+        icon: Boxes,
+        description: 'Multi-tenant project boundaries, runtime auth methods, roles, permissions, and OAuth providers',
+    },
+    {
+        id: 'organization',
+        label: 'Organization',
+        icon: Building2,
+        description: 'Organization-wide settings, metadata, and public sign-up defaults',
+    },
+];
 
 function SectionCard({ label, title, description, children }) {
     return (
@@ -110,9 +135,16 @@ export default function SettingsPage() {
     usePageTitle('Settings');
     const queryClient = useQueryClient();
     const { user, refreshSession, logout } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'account';
+
     const [editingProject, setEditingProject] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    function handleTabChange(tabId) {
+        setSearchParams({ tab: tabId });
+    }
 
     const { data: org, isLoading: orgLoading } = useQuery({
         queryKey: ['organization'],
@@ -287,175 +319,249 @@ export default function SettingsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-6 xl:grid-cols-2">
-                <SectionCard
-                    label="Profile"
-                    title="Profile details"
-                    description="Update the control-plane identity shown across the dashboard."
-                >
-                    <form onSubmit={profileForm.handleSubmit((values) => profileMutation.mutate(values))} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Email</Label>
-                            <Input
-                                value={user.email || ''}
-                                disabled
-                                className="h-10 border-[#27272a] bg-[#111111] text-white disabled:opacity-70"
-                            />
-                        </div>
+            <Helmet>
+                <title>Settings - HVT Control Plane</title>
+                <meta
+                    name="description"
+                    content="Manage your organization settings, multi-tenant projects, Passkeys, TOTP Two-Factor Authentication, and app role permissions in HVT."
+                />
+            </Helmet>
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">First name</Label>
-                                <Input
-                                    {...profileForm.register('first_name')}
-                                    className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Last name</Label>
-                                <Input
-                                    {...profileForm.register('last_name')}
-                                    className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                                />
-                            </div>
-                        </div>
-
-                        <Button
-                            type="submit"
-                            disabled={profileMutation.isPending || !profileForm.formState.isDirty}
-                            className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
-                        >
-                            {profileMutation.isPending ? 'Saving...' : 'Save changes'}
-                        </Button>
-                    </form>
-                </SectionCard>
-
-                <SectionCard
-                    label="Security"
-                    title="Password"
-                    description="Change the password for this HVT account or open the reset flow."
-                >
-                    <form onSubmit={passwordForm.handleSubmit((values) => passwordMutation.mutate(values))} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Current password</Label>
-                            <Input
-                                type="password"
-                                {...passwordForm.register('old_password')}
-                                className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                            />
-                        </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">New password</Label>
-                                <Input
-                                    type="password"
-                                    {...passwordForm.register('new_password1')}
-                                    className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Confirm password</Label>
-                                <Input
-                                    type="password"
-                                    {...passwordForm.register('new_password2')}
-                                    className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <Link to="/forgot-password" className="text-sm text-[#a78bfa] transition-colors hover:text-white">
-                                Open password reset
-                            </Link>
-                            <Button
-                                type="submit"
-                                disabled={passwordMutation.isPending}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
-                            >
-                                {passwordMutation.isPending ? 'Updating...' : 'Change password'}
-                            </Button>
-                        </div>
-                    </form>
-                </SectionCard>
-
-                <div className="md:hidden">
-                    <SectionCard
-                        label="Session"
-                        title="Sign out"
-                        description="Quick access to sign out when you are using the dashboard on mobile."
-                    >
-                        <Button
+            {/* Top Sub-Navigation Tabs */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-[#27272a] pb-4">
+                {SETTINGS_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                        <button
+                            key={tab.id}
                             type="button"
-                            onClick={handleLogout}
-                            disabled={isLoggingOut}
-                            className="w-full border border-[#27272a] bg-transparent text-white hover:bg-[#18181b]"
+                            onClick={() => handleTabChange(tab.id)}
+                            className={`inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+                                isActive
+                                    ? 'bg-[#7c3aed] text-white shadow-lg shadow-[#7c3aed]/25'
+                                    : 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa] hover:border-[#3f3f46] hover:text-white'
+                            }`}
                         >
-                            <LogOut className="mr-2 h-4 w-4" />
-                            {isLoggingOut ? 'Signing out...' : 'Log out'}
-                        </Button>
-                    </SectionCard>
-                </div>
+                            <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-[#71717a]'}`} />
+                            <span>{tab.label}</span>
+                        </button>
+                    );
+                })}
             </div>
 
-            <SectionCard
-                label="Organisation"
-                title="Organisation settings"
-                description="These defaults affect sign-up behaviour and organisation-wide metadata."
-            >
-                <form onSubmit={orgForm.handleSubmit((values) => orgMutation.mutate(values))} className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Organisation name</Label>
-                            <Input
-                                {...orgForm.register('name')}
-                                className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Slug</Label>
-                            <Input
-                                {...orgSlugField}
-                                onChange={(event) => {
-                                    orgUserEditedSlug.current = true;
-                                    notifyOrgSlugEdited();
-                                    orgSlugField.onChange(event);
-                                }}
-                                className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                            />
-                        </div>
+            {/* TAB 1: ACCOUNT & SECURITY */}
+            {activeTab === 'account' && (
+                <div className="space-y-6">
+                    <div className="grid gap-6 xl:grid-cols-2">
+                        <SectionCard
+                            label="Profile"
+                            title="Profile details"
+                            description="Update the control-plane identity shown across the dashboard."
+                        >
+                            <form onSubmit={profileForm.handleSubmit((values) => profileMutation.mutate(values))} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Email</Label>
+                                    <Input
+                                        value={user.email || ''}
+                                        disabled
+                                        className="h-10 border-[#27272a] bg-[#111111] text-white disabled:opacity-70"
+                                    />
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">First name</Label>
+                                        <Input
+                                            {...profileForm.register('first_name')}
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Last name</Label>
+                                        <Input
+                                            {...profileForm.register('last_name')}
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    disabled={profileMutation.isPending || !profileForm.formState.isDirty}
+                                    className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                >
+                                    {profileMutation.isPending ? 'Saving...' : 'Save changes'}
+                                </Button>
+                            </form>
+                        </SectionCard>
+
+                        <SectionCard
+                            label="Security"
+                            title="Password"
+                            description="Change the password for this HVT account or open the reset flow."
+                        >
+                            <form onSubmit={passwordForm.handleSubmit((values) => passwordMutation.mutate(values))} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Current password</Label>
+                                    <Input
+                                        type="password"
+                                        {...passwordForm.register('old_password')}
+                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                    />
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">New password</Label>
+                                        <Input
+                                            type="password"
+                                            {...passwordForm.register('new_password1')}
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Confirm password</Label>
+                                        <Input
+                                            type="password"
+                                            {...passwordForm.register('new_password2')}
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <Link to="/forgot-password" className="text-sm text-[#a78bfa] transition-colors hover:text-white">
+                                        Open password reset
+                                    </Link>
+                                    <Button
+                                        type="submit"
+                                        disabled={passwordMutation.isPending}
+                                        className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                    >
+                                        {passwordMutation.isPending ? 'Updating...' : 'Change password'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </SectionCard>
+
+                        <MFASettingsSection />
+                        <PasskeySettingsSection />
                     </div>
 
-                    <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-white">Allow public sign-up</p>
-                            <p className="text-xs text-[#71717a]">Project-level sign-up can be adjusted below at any time.</p>
-                        </div>
-                        <Toggle
-                            checked={orgForm.watch('allow_signup')}
-                            onChange={() =>
-                                orgForm.setValue('allow_signup', !orgForm.watch('allow_signup'), {
-                                    shouldDirty: true,
-                                })
-                            }
-                        />
-                    </div>
-
-                    <Button
-                        type="submit"
-                        disabled={orgMutation.isPending || !orgForm.formState.isDirty}
-                        className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                    {/* Dedicated, Prominent Active Session & Log Out Section */}
+                    <SectionCard
+                        label="Session Management"
+                        title="Active session & sign out"
+                        description="Your currently active control-plane session on this browser. Sign out securely at any time."
                     >
-                        {orgMutation.isPending ? 'Saving...' : 'Save organisation'}
-                    </Button>
-                </form>
-            </SectionCard>
+                        <div className="rounded-xl border border-[#27272a] bg-[#111111] p-5">
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                                        </span>
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                                            Active session on this device
+                                        </span>
+                                    </div>
+                                    <p className="text-base font-semibold text-white">{user?.email}</p>
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#a1a1aa]">
+                                        <span>Role: <strong className="text-white">{user?.role || 'Member'}</strong></span>
+                                        <span>•</span>
+                                        <span>User ID: <code className="rounded bg-[#18181b] px-1.5 py-0.5 font-mono text-[#d4d4d8]">{user?.id}</code></span>
+                                        {org?.name ? (
+                                            <>
+                                                <span>•</span>
+                                                <span>Org: <strong className="text-white">{org.name}</strong></span>
+                                            </>
+                                        ) : null}
+                                    </div>
+                                </div>
 
-            <SectionCard
-                label="Projects"
-                title="Project boundaries"
-                description="Projects scope API keys, app tokens, social providers, sign-up controls, and app email destinations."
-            >
+                                <Button
+                                    type="button"
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 px-5 text-sm font-semibold text-rose-300 transition-all hover:border-rose-500 hover:bg-rose-600 hover:text-white sm:w-auto"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    {isLoggingOut ? 'Signing out...' : 'Sign out of HVT'}
+                                </Button>
+                            </div>
+                        </div>
+                    </SectionCard>
+                </div>
+            )}
+
+            {/* TAB 3: ORGANIZATION */}
+            {activeTab === 'organization' && (
+                <div className="space-y-6">
+                    <SectionCard
+                        label="Organisation"
+                        title="Organisation settings"
+                        description="These defaults affect sign-up behaviour and organisation-wide metadata."
+                    >
+                        <form onSubmit={orgForm.handleSubmit((values) => orgMutation.mutate(values))} className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Organisation name</Label>
+                                    <Input
+                                        {...orgForm.register('name')}
+                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Slug</Label>
+                                    <Input
+                                        {...orgSlugField}
+                                        onChange={(event) => {
+                                            orgUserEditedSlug.current = true;
+                                            notifyOrgSlugEdited();
+                                            orgSlugField.onChange(event);
+                                        }}
+                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-white">Allow public sign-up</p>
+                                    <p className="text-xs text-[#71717a]">Project-level sign-up can be adjusted below at any time.</p>
+                                </div>
+                                <Toggle
+                                    checked={orgForm.watch('allow_signup')}
+                                    onChange={() =>
+                                        orgForm.setValue('allow_signup', !orgForm.watch('allow_signup'), {
+                                            shouldDirty: true,
+                                        })
+                                    }
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                disabled={orgMutation.isPending || !orgForm.formState.isDirty}
+                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                            >
+                                {orgMutation.isPending ? 'Saving...' : 'Save organisation'}
+                            </Button>
+                        </form>
+                    </SectionCard>
+                </div>
+            )}
+
+            {/* TAB 2: PROJECTS & RUNTIME */}
+            {activeTab === 'projects' && (
+                <div className="space-y-6">
+                    <SectionCard
+                        label="Projects"
+                        title="Project boundaries"
+                        description="Projects scope API keys, app tokens, social providers, sign-up controls, and app email destinations."
+                    >
                 <div className="space-y-4">
                     {projectsLoading ? (
                         <div className="space-y-3">
@@ -623,12 +729,22 @@ export default function SettingsPage() {
             </SectionCard>
 
             <SectionCard
+                label="Runtime Auth & Security"
+                title="Project authentication methods & security"
+                description="WebAuthn & Passkeys biometrics, Passwordless Magic Links, and Two-Factor Authentication (2FA) for your client applications."
+            >
+                <ProjectRuntimeAuthSection projects={projects} />
+            </SectionCard>
+
+            <SectionCard
                 label="Social Providers"
                 title="Per-project provider credentials"
                 description="Google and GitHub OAuth settings are isolated per project."
             >
                 <ProjectSocialProvidersSection projects={projects} />
             </SectionCard>
+        </div>
+    )}
 
             <Dialog open={!!editingProject} onOpenChange={(open) => !open && setEditingProject(null)}>
                 <DialogContent className="max-w-xl border-[#27272a] bg-[#111111] text-white">

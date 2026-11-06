@@ -14,6 +14,7 @@ import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { VerifyEmailSuccessPage } from '@/pages/auth/VerifyEmailSuccessPage';
 import { GoogleCallbackPage } from '@/pages/auth/GoogleCallbackPage';
 import { GitHubCallbackPage } from '@/pages/auth/GitHubCallbackPage';
+import MagicLinkVerify from '@/pages/auth/MagicLinkVerify';
 import { InvitePage } from '@/pages/auth/InvitePage';
 import DashboardHome from '@/pages/dashboard/DashboardHome';
 import UsersPage from '@/pages/users/UsersPage';
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
     { path: '/auth/verify-email/:key', element: <VerifyEmailPage /> },
     { path: '/auth/google/callback', element: <GoogleCallbackPage /> },
     { path: '/auth/github/callback', element: <GitHubCallbackPage /> },
+    { path: '/auth/magic-link/verify', element: <MagicLinkVerify /> },
     { path: '/runtime-playground', element: <RuntimePlaygroundPage /> },
     { path: '/runtime-playground/callback/:provider', element: <RuntimePlaygroundPage /> },
     { path: '/runtime-demo', element: <RuntimeCommerceDemoPage /> },

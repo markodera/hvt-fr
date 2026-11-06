@@ -17,6 +17,13 @@ const PUBLIC_AUTH_PATH_PREFIXES = [
     '/api/v1/auth/runtime/login',
     '/api/v1/auth/runtime/social',
     '/api/v1/auth/runtime/password/reset',
+    '/api/v1/auth/passkey/auth',
+    '/api/v1/auth/magic-link/request',
+    '/api/v1/auth/magic-link/verify',
+    '/api/v1/auth/mfa/totp/login',
+    '/api/v1/auth/runtime/passkey/auth',
+    '/api/v1/auth/runtime/magic-link/request',
+    '/api/v1/auth/runtime/magic-link/verify',
 ];
 
 const ACCESS_TOKEN_REFRESH_BUFFER_MS = 60_000;

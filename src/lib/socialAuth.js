@@ -5,11 +5,19 @@ const SOCIAL_AUTH_SESSION_KEY = 'hvt.social_auth.pending';
 export const SOCIAL_AUTH_PROVIDERS = {
     GOOGLE: 'google',
     GITHUB: 'github',
+    DISCORD: 'discord',
+    APPLE: 'apple',
+    MICROSOFT: 'microsoft',
+    GITLAB: 'gitlab',
 };
 
 export const SOCIAL_AUTH_ENDPOINTS = {
     [SOCIAL_AUTH_PROVIDERS.GOOGLE]: '/api/v1/auth/social/google/',
     [SOCIAL_AUTH_PROVIDERS.GITHUB]: '/api/v1/auth/social/github/',
+    [SOCIAL_AUTH_PROVIDERS.DISCORD]: '/api/v1/auth/social/discord/',
+    [SOCIAL_AUTH_PROVIDERS.APPLE]: '/api/v1/auth/social/apple/',
+    [SOCIAL_AUTH_PROVIDERS.MICROSOFT]: '/api/v1/auth/social/microsoft/',
+    [SOCIAL_AUTH_PROVIDERS.GITLAB]: '/api/v1/auth/social/gitlab/',
 };
 
 function createSocialState(provider) {

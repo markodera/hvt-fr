@@ -188,7 +188,7 @@ export const projectUserInvitationCreateSchema = z.object({
 });
 
 export const socialProviderCreateSchema = z.object({
-    provider: z.enum(['google', 'github']),
+    provider: z.enum(['google', 'github', 'discord', 'apple', 'microsoft', 'gitlab']),
     client_id: z.string().min(1, 'Client ID is required').max(255),
     client_secret: z.string().min(1, 'Client secret is required').max(255),
     redirect_uris_text: redirectUrisTextSchema,

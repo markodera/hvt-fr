@@ -13,12 +13,29 @@ const actionOptions = [
     { value: 'user.login', label: 'User login' },
     { value: 'user.logout', label: 'User logout' },
     { value: 'user.register', label: 'User register' },
+    { value: 'login.failed', label: 'Login failed' },
+    { value: 'passkey.register.initiated', label: 'Passkey register initiated' },
+    { value: 'passkey.registered', label: 'Passkey registered' },
+    { value: 'passkey.login', label: 'Passkey login' },
+    { value: 'passkey.login.failed', label: 'Passkey login failed' },
+    { value: 'passkey.deleted', label: 'Passkey deleted' },
+    { value: 'magic_link.requested', label: 'Magic link requested' },
+    { value: 'magic_link.verified', label: 'Magic link verified' },
+    { value: 'magic_link.failed', label: 'Magic link failed' },
+    { value: 'mfa.setup', label: 'MFA setup initiated' },
+    { value: 'mfa.enabled', label: 'MFA enabled' },
+    { value: 'mfa.disabled', label: 'MFA disabled' },
+    { value: 'mfa.verified', label: 'MFA verified' },
     { value: 'api_key.created', label: 'API key created' },
     { value: 'api_key.revoked', label: 'API key revoked' },
+    { value: 'api_key.deleted', label: 'API key deleted' },
     { value: 'org.updated', label: 'Organisation updated' },
     { value: 'project.created', label: 'Project created' },
     { value: 'project.updated', label: 'Project updated' },
     { value: 'project.deleted', label: 'Project deleted' },
+    { value: 'project.social_provider.created', label: 'Social provider added' },
+    { value: 'project.social_provider.updated', label: 'Social provider updated' },
+    { value: 'project.social_provider.deleted', label: 'Social provider deleted' },
     { value: 'org.invitation.created', label: 'Invitation created' },
 ];
 
@@ -46,6 +63,18 @@ function EmptyState({ message }) {
 }
 
 function actionBadgeClass(eventType) {
+    if (eventType.includes('failed')) {
+        return 'border border-rose-500/30 bg-rose-500/10 text-rose-300';
+    }
+    if (eventType.includes('passkey')) {
+        return 'border border-purple-500/30 bg-purple-500/10 text-purple-300';
+    }
+    if (eventType.includes('magic_link')) {
+        return 'border border-amber-500/30 bg-amber-500/10 text-amber-300';
+    }
+    if (eventType.includes('mfa')) {
+        return 'border border-teal-500/30 bg-teal-500/10 text-teal-300';
+    }
     if (eventType.includes('created')) {
         return 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300';
     }

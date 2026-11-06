@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Fingerprint, KeyRound, Loader2, Mail, Send, ShieldCheck, Sparkles } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 import { Logo } from '@/components/Logo';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,10 @@ function getDefaultConfig() {
         apiKey: '',
         googleCallbackUrl: `${origin}/runtime-playground/callback/google`,
         githubCallbackUrl: `${origin}/runtime-playground/callback/github`,
+        discordCallbackUrl: `${origin}/runtime-playground/callback/discord`,
+        appleCallbackUrl: `${origin}/runtime-playground/callback/apple`,
+        microsoftCallbackUrl: `${origin}/runtime-playground/callback/microsoft`,
+        gitlabCallbackUrl: `${origin}/runtime-playground/callback/gitlab`,
     };
 }
 
@@ -155,6 +160,10 @@ function runtimeResendVerification(client, payload) {
 function getProviderLabel(provider) {
     if (provider === 'google') return 'Google';
     if (provider === 'github') return 'GitHub';
+    if (provider === 'discord') return 'Discord';
+    if (provider === 'apple') return 'Apple';
+    if (provider === 'microsoft') return 'Microsoft';
+    if (provider === 'gitlab') return 'GitLab';
     return 'Social provider';
 }
 
@@ -671,13 +680,25 @@ export default function RuntimePlaygroundPage() {
     const [outputLabel, setOutputLabel] = useState('Result');
     const [output, setOutput] = useState('Run a runtime auth action to see the response here.');
     const [busyAction, setBusyAction] = useState('');
+    const [magicLinkToken, setMagicLinkToken] = useState('');
 
     const callbackUrls = useMemo(
         () => ({
             google: config.googleCallbackUrl,
             github: config.githubCallbackUrl,
+            discord: config.discordCallbackUrl,
+            apple: config.appleCallbackUrl,
+            microsoft: config.microsoftCallbackUrl,
+            gitlab: config.gitlabCallbackUrl,
         }),
-        [config.githubCallbackUrl, config.googleCallbackUrl],
+        [
+            config.githubCallbackUrl,
+            config.googleCallbackUrl,
+            config.discordCallbackUrl,
+            config.appleCallbackUrl,
+            config.microsoftCallbackUrl,
+            config.gitlabCallbackUrl,
+        ],
     );
 
     useEffect(() => {
@@ -830,6 +851,18 @@ export default function RuntimePlaygroundPage() {
                         'radial-gradient(circle at top center, rgba(124,58,237,0.15), transparent 56%)',
                 }}
             />
+            <Helmet>
+                <title>Runtime Auth Playground - HVT</title>
+                <meta
+                    name="description"
+                    content="Interactive developer playground for testing HVT runtime plane authentication: passkeys, magic links, social login, scoped tokens, and RBAC claims."
+                />
+                <meta property="og:title" content="Runtime Auth Playground - HVT" />
+                <meta
+                    property="og:description"
+                    content="Test and debug runtime authentication flows with project API keys, WebAuthn biometrics, and dynamic permission roles."
+                />
+            </Helmet>
 
             <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -894,9 +927,41 @@ export default function RuntimePlaygroundPage() {
                                         onChange={(event) => handleConfigChange('githubCallbackUrl', event.target.value)}
                                     />
                                 </label>
+                                <label className="space-y-2 text-sm text-[#a1a1aa]">
+                                    <span className="block font-medium text-white">Discord callback URL</span>
+                                    <input
+                                        className={inputClassName()}
+                                        value={config.discordCallbackUrl}
+                                        onChange={(event) => handleConfigChange('discordCallbackUrl', event.target.value)}
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-[#a1a1aa]">
+                                    <span className="block font-medium text-white">Apple callback URL</span>
+                                    <input
+                                        className={inputClassName()}
+                                        value={config.appleCallbackUrl}
+                                        onChange={(event) => handleConfigChange('appleCallbackUrl', event.target.value)}
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-[#a1a1aa]">
+                                    <span className="block font-medium text-white">Microsoft callback URL</span>
+                                    <input
+                                        className={inputClassName()}
+                                        value={config.microsoftCallbackUrl}
+                                        onChange={(event) => handleConfigChange('microsoftCallbackUrl', event.target.value)}
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-[#a1a1aa]">
+                                    <span className="block font-medium text-white">GitLab callback URL</span>
+                                    <input
+                                        className={inputClassName()}
+                                        value={config.gitlabCallbackUrl}
+                                        onChange={(event) => handleConfigChange('gitlabCallbackUrl', event.target.value)}
+                                    />
+                                </label>
                             </div>
                             <div className="mt-4 rounded-xl border border-[#312e81] bg-[#1e1b4b] px-4 py-3 text-sm text-[#c4b5fd]">
-                                Add those exact callback URLs to the project social provider redirect URI allowlist before testing runtime Google or GitHub.
+                                Add those exact callback URLs to the project social provider redirect URI allowlist before testing runtime social login.
                             </div>
                             <div className="mt-4 rounded-xl border border-[#14532d] bg-[#052e16] px-4 py-3 text-sm text-[#bbf7d0]">
                                 Runtime test requests on this page are token-only on purpose. They do not reuse or overwrite the dashboard cookie session.
@@ -1054,8 +1119,115 @@ export default function RuntimePlaygroundPage() {
                         </SectionCard>
 
                         <SectionCard
+                            title="WebAuthn & Passkeys (Biometrics)"
+                            description="Authenticate using hardware biometrics (Touch ID, Face ID, Windows Hello, YubiKey) or enroll a new credential for this project user."
+                        >
+                            <div className="flex flex-wrap gap-3">
+                                <button
+                                    type="button"
+                                    className={buttonClassName()}
+                                    disabled={busyAction === 'Runtime passkey sign-in'}
+                                    onClick={() =>
+                                        runAction(
+                                            'Runtime passkey sign-in',
+                                            () =>
+                                                createClient(config).auth.runtimeLoginWithPasskey({
+                                                    email: form.email || undefined,
+                                                }),
+                                            {
+                                                onSuccess: resolveRuntimeAuthResult,
+                                            },
+                                        )
+                                    }
+                                >
+                                    {busyAction === 'Runtime passkey sign-in' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4" />}
+                                    Sign in with Passkey
+                                </button>
+                                <button
+                                    type="button"
+                                    className={buttonClassName('secondary')}
+                                    disabled={busyAction === 'Register passkey' || !session?.accessToken}
+                                    onClick={() =>
+                                        runAction(
+                                            'Register passkey',
+                                            () =>
+                                                createAuthenticatedClient(config, session?.accessToken).auth.runtimeRegisterPasskey({
+                                                    name: 'Playground Device Key',
+                                                }),
+                                        )
+                                    }
+                                >
+                                    {busyAction === 'Register passkey' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4 text-[#a78bfa]" />}
+                                    Register Passkey on active session
+                                </button>
+                            </div>
+                            <p className="mt-3 text-xs leading-6 text-[#71717a]">
+                                Passkey authentication requires a secure context (HTTPS or localhost). "Sign in with Passkey" triggers the native browser WebAuthn prompt.
+                            </p>
+                        </SectionCard>
+
+                        <SectionCard
+                            title="Passwordless Magic Links"
+                            description="Request a single-use SHA-256 hashed 15-minute sign-in token sent via email, or paste a received token to verify and sign in."
+                        >
+                            <div className="space-y-4">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <button
+                                        type="button"
+                                        className={buttonClassName()}
+                                        disabled={busyAction === 'Send magic link' || !form.email}
+                                        onClick={() =>
+                                            runAction('Send magic link', () =>
+                                                createClient(config).auth.runtimeRequestMagicLink({
+                                                    email: form.email,
+                                                    ...(form.roleSlug.trim() ? { role_slug: form.roleSlug.trim() } : {}),
+                                                }),
+                                            )
+                                        }
+                                    >
+                                        {busyAction === 'Send magic link' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                                        Send Magic Link to {form.email || 'user email'}
+                                    </button>
+                                </div>
+                                <div className="border-t border-[#27272a] pt-4">
+                                    <label className="space-y-2 text-sm text-[#a1a1aa]">
+                                        <span className="block font-medium text-white">Paste verification token</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            <input
+                                                className={`flex-1 ${inputClassName()}`}
+                                                value={magicLinkToken}
+                                                onChange={(e) => setMagicLinkToken(e.target.value)}
+                                                placeholder="Paste token from email link..."
+                                            />
+                                            <button
+                                                type="button"
+                                                className={buttonClassName('secondary')}
+                                                disabled={busyAction === 'Verify magic link' || !magicLinkToken.trim()}
+                                                onClick={() =>
+                                                    runAction(
+                                                        'Verify magic link',
+                                                        () =>
+                                                            createClient(config).auth.runtimeVerifyMagicLink({
+                                                                token: magicLinkToken.trim(),
+                                                            }),
+                                                        {
+                                                            onSuccess: resolveRuntimeAuthResult,
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                {busyAction === 'Verify magic link' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4 text-[#4ade80]" />}
+                                                Verify & Sign in
+                                            </button>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </SectionCard>
+
+                        <SectionCard
                             title="Runtime social auth"
-                            description="Load the project-scoped provider config through the SDK, then launch Google or GitHub with the callback URLs above."
+                            description="Load the project-scoped provider config through the SDK, then launch OAuth for any of the 6 supported providers."
                         >
                             <div className="mb-4 flex flex-wrap gap-3">
                                 <button
@@ -1072,6 +1244,18 @@ export default function RuntimePlaygroundPage() {
                                 </button>
                                 <button type="button" className={buttonClassName('secondary')} onClick={() => startProvider('github')}>
                                     Continue with GitHub
+                                </button>
+                                <button type="button" className={buttonClassName('secondary')} onClick={() => startProvider('discord')}>
+                                    Continue with Discord
+                                </button>
+                                <button type="button" className={buttonClassName('secondary')} onClick={() => startProvider('apple')}>
+                                    Continue with Apple
+                                </button>
+                                <button type="button" className={buttonClassName('secondary')} onClick={() => startProvider('microsoft')}>
+                                    Continue with Microsoft
+                                </button>
+                                <button type="button" className={buttonClassName('secondary')} onClick={() => startProvider('gitlab')}>
+                                    Continue with GitLab
                                 </button>
                             </div>
 

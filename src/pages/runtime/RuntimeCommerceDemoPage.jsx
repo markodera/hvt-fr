@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import {
     ArrowLeft,
     Boxes,
+    Fingerprint,
     KeyRound,
     Loader2,
     Lock,
@@ -11,6 +12,7 @@ import {
     PackageCheck,
     ShieldCheck,
     ShoppingBag,
+    Sparkles,
     Store,
     Truck,
     UserRound,
@@ -443,6 +445,83 @@ export default function RuntimeCommerceDemoPage() {
         }
     }
 
+    async function handlePasskeyLogin() {
+        setBusyAction('passkey-login');
+        setError('');
+        setNotice('');
+        try {
+            const client = createRuntimeClient({
+                baseUrl: config.baseUrl,
+                apiKey: config.apiKey,
+            });
+            const response = await client.auth.runtimeLoginWithPasskey({
+                email: form.email.trim() || undefined,
+            });
+            if (!response?.access) {
+                throw new Error('Passkey login did not return an access token.');
+            }
+            const hydrated = await hydrateRuntimeSession(config, response.access);
+            setSession(hydrated);
+            setNotice('Authenticated via hardware WebAuthn passkey!');
+        } catch (nextError) {
+            setError(getErrorMessage(nextError));
+        } finally {
+            setBusyAction('');
+        }
+    }
+
+    async function handleMagicLinkRequest() {
+        if (!form.email.trim()) {
+            setError('Please enter your email above to receive a magic link.');
+            return;
+        }
+        setBusyAction('magic-link');
+        setError('');
+        setNotice('');
+        try {
+            const client = createRuntimeClient({
+                baseUrl: config.baseUrl,
+                apiKey: config.apiKey,
+            });
+            const response = await client.auth.runtimeRequestMagicLink({
+                email: form.email.trim(),
+                role_slug: form.role_slug.trim() || undefined,
+            });
+            setNotice(response?.detail || 'Magic link requested! Check your email inbox to sign in.');
+        } catch (nextError) {
+            setError(getErrorMessage(nextError));
+        } finally {
+            setBusyAction('');
+        }
+    }
+
+    async function handlePasskeyRegister() {
+        setBusyAction('passkey-register');
+        setError('');
+        setNotice('');
+        try {
+            const client = createRuntimeClient({
+                baseUrl: config.baseUrl,
+                apiKey: config.apiKey,
+                accessToken: session?.token,
+            });
+            const deviceName = `${session?.me?.first_name || 'Hardware'} Passkey (${new Date().toLocaleDateString()})`;
+            const res = await client.auth.runtimeRegisterPasskey({ name: deviceName });
+            setNotice(res?.detail || 'Hardware passkey registered successfully for this runtime session!');
+        } catch (nextError) {
+            const msg = nextError?.message || '';
+            if (nextError?.name === 'InvalidStateError' || msg.includes('already registered')) {
+                setNotice('This device or security key is already registered for this runtime account.');
+            } else if (nextError?.name === 'NotAllowedError' || msg.includes('not allowed') || msg.includes('timed out')) {
+                setError('Passkey registration was canceled or timed out.');
+            } else {
+                setError(getErrorMessage(nextError));
+            }
+        } finally {
+            setBusyAction('');
+        }
+    }
+
     function handleLogout() {
         setSession(null);
         setNotice('Runtime session cleared from the demo.');
@@ -614,6 +693,47 @@ export default function RuntimeCommerceDemoPage() {
                                     </Button>
                                 </div>
 
+                                <div className="relative my-3 flex items-center justify-center">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-[#27272a]" />
+                                    </div>
+                                    <div className="relative bg-[#111114] px-2 text-[10px] uppercase tracking-widest text-[#71717a]">
+                                        Passwordless & Biometric Sign-in
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={busyAction === 'passkey-login'}
+                                        className="h-10 border-[#7c3aed]/40 bg-[#7c3aed]/10 text-[#a78bfa] hover:bg-[#7c3aed]/20"
+                                        onClick={handlePasskeyLogin}
+                                    >
+                                        {busyAction === 'passkey-login' ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Fingerprint className="mr-2 h-4 w-4 text-[#a78bfa]" />
+                                        )}
+                                        Sign in with Passkey
+                                    </Button>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={busyAction === 'magic-link'}
+                                        className="h-10 border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                                        onClick={handleMagicLinkRequest}
+                                    >
+                                        {busyAction === 'magic-link' ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Mail className="mr-2 h-4 w-4 text-emerald-400" />
+                                        )}
+                                        Send Magic Link
+                                    </Button>
+                                </div>
+
                                 <p className="text-xs text-[#71717a]">
                                     Runtime registration still follows HVT verification rules. Existing users must sign in or accept an invite; signup does not attach them to another project, and only self-assignable project roles can be requested here.
                                 </p>
@@ -663,6 +783,33 @@ export default function RuntimeCommerceDemoPage() {
                                             ) : (
                                                 <Badge variant="secondary">No permissions resolved</Badge>
                                             )}
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-xl border border-[#27272a] bg-[#0d0d11] p-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Fingerprint className="h-4 w-4 text-[#a78bfa]" />
+                                                <div>
+                                                    <p className="text-xs font-semibold text-white">Biometric Passkey</p>
+                                                    <p className="text-[11px] text-[#71717a]">Register hardware key for this account</p>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={busyAction === 'passkey-register'}
+                                                onClick={handlePasskeyRegister}
+                                                className="h-8 border-[#7c3aed]/40 bg-[#7c3aed]/10 text-xs text-[#a78bfa] hover:bg-[#7c3aed]/20"
+                                            >
+                                                {busyAction === 'passkey-register' ? (
+                                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <Fingerprint className="mr-1.5 h-3.5 w-3.5" />
+                                                )}
+                                                Enroll Passkey
+                                            </Button>
                                         </div>
                                     </div>
 
