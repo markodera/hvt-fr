@@ -5,361 +5,171 @@ import {
   BookOpen,
   Boxes,
   Building2,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Copy,
+  Database,
   ExternalLink,
-  GitBranchPlus,
+  Fingerprint,
   Github,
-  KeyRound,
   LockKeyhole,
   Menu,
+  Lock,
   ScrollText,
   ShieldCheck,
-  Users,
+  Terminal,
   Webhook,
   X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { HvtLogoMark, Logo } from '@/components/Logo';
-import { API_URL, CHANGELOG_URL, DOCS_URL, GITHUB_URL, SITE_URL, STATUS_URL } from '@/lib/appLinks';
-
-
+import { CHANGELOG_URL, DOCS_URL, GITHUB_URL, SITE_URL, STATUS_URL } from '@/lib/appLinks';
 
 const DOT_GRID_STYLE = {
   backgroundImage:
-    'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 18 18%27%3E%3Ccircle cx=%279%27 cy=%279%27 r=%271.5%27 fill=%27%2327272a%27 /%3E%3C/svg%3E")',
+    'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2720%27 height=%2720%27 viewBox=%270 0 20 20%27%3E%3Ccircle cx=%2710%27 cy=%2710%27 r=%271.2%27 fill=%27%2327272a%27 /%3E%3C/svg%3E")',
   backgroundRepeat: 'repeat',
 };
 
-const SEO_TITLE = 'HVT | Multi-Tenant Identity & RBAC Engine for Platforms and Marketplaces';
+const SEO_TITLE = 'HVT | Multi-Tenant Identity & RBAC Engine';
 const SEO_DESCRIPTION =
-  'Open-source multi-tenant identity engine with project-scoped composite auth, dynamic RBAC, API keys, social login, audit trails, and webhooks.';
+  'Open-source multi-tenant identity and access management. Database-level project isolation, dual-plane API keys, WebAuthn passkeys, and declarative RBAC with zero MAU tax.';
 
 const featureStripItems = [
-  'Open-source auth',
-  'Roles and permissions',
-  'Project-scoped runtime',
-  'Google and GitHub login',
-  'API keys',
-  'Audit history',
-  'Webhooks',
+  'Dual-Plane Keys (hvt_mgmt / hvt_live)',
+  'PostgreSQL Compound Tenant Isolation',
+  'FIDO2 WebAuthn Passkeys',
+  'RFC 6238 TOTP + 8 Recovery Codes',
+  'Declarative CLI Schema Sync',
+  'HMAC-SHA256 Webhooks',
+  'Zero MAU Tax — Apache 2.0',
 ];
 
-const chainNodes = ['Organisation', 'Project', 'Roles', 'Permissions', 'Runtime user'];
+const sandboxTabs = [
+  {
+    id: 'sdk',
+    label: 'TypeScript SDK',
+    content: `import { HVTClient } from '@hvt/sdk';
 
-const controlPlaneNodes = [
-  {
-    title: 'Organisation',
-    description: 'Create the ownership boundary for one company, team, or product.',
-  },
-  {
-    title: 'Projects',
-    description: 'Give each app or environment its own signup rules, runtime context, and keys.',
-  },
-  {
-    title: 'API keys',
-    description: 'Connect each backend without reusing one shared secret across every app.',
-  },
-  {
-    title: 'Invitations and roles',
-    description: 'Invite owners, admins, and members with the right level of access.',
-  },
-  {
-    title: 'Social config',
-    description: 'Enable Google or GitHub only on the projects that should expose it.',
-  },
-];
+// Initialize with runtime live key (project-scoped)
+const hvt = new HVTClient({
+  baseUrl: 'https://auth.company.internal',
+  projectKey: process.env.HVT_LIVE_KEY!, // hvt_live_9d81f...
+});
 
-const runtimeNodes = [
-  {
-    title: 'Register',
-    description: 'Let end users create accounts with email and password.',
+// Authenticate with password or hardware passkey
+export async function handleLogin(email: string, passkey?: any) {
+  const session = await hvt.login({ email, passkey });
+  return {
+    userId: session.user.id,
+    roles:  session.roles,  // ['buyer', 'verified_merchant']
+    token:  session.accessToken,
+  };
+}`,
   },
   {
-    title: 'Login',
-    description: 'Sign returning users into the right project with the right rules.',
-  },
-  {
-    title: 'Verification and reset',
-    description: 'Handle verification and password reset flows without bolting on another service.',
-  },
-  {
-    title: 'Social login',
-    description: 'Offer Google or GitHub when it is enabled for that specific project.',
-  },
-  {
-    title: 'Webhooks',
-    description: 'Send account and security events to the rest of your stack.',
-  },
-  {
-    title: 'Audit events',
-    description: 'Keep a clear history of sign-ins, invites, key changes, and account activity.',
-  },
-];
+    id: 'curl',
+    label: 'Runtime API',
+    content: `# Runtime login scoped to a specific project
+curl -X POST https://api.hvts.app/api/v1/runtime/auth/login/ \\
+  -H "Content-Type: application/json" \\
+  -H "X-HVT-Project-Key: hvt_live_7a3f81e9b20c..." \\
+  -d '{
+    "email": "developer@tenant.com",
+    "password": "CorrectHorseBatteryStaple#2026"
+  }'
 
-const features = [
-  {
-    icon: ShieldCheck,
-    title: 'Open-source and self-hostable',
-    description:
-      'Run HVT yourself under AGPL v3 or use the hosted product first. The model stays the same either way.',
+# 200 OK
+# {
+#   "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+#   "token_type": "Bearer",
+#   "expires_in": 3600
+# }`,
   },
   {
-    icon: Boxes,
-    title: 'Zero Cross-Tenant Data Leakage',
-    description:
-      'HVT uses strict, database-level partitioning. Build multiple apps and keep your user pools 100% isolated.',
+    id: 'jwt',
+    label: 'Token Claims',
+    content: `{
+  "sub":        "usr_01j7m8x9p3q4r5t6",
+  "email":      "developer@tenant.com",
+  "org_id":     "org_northstar_holdings",
+  "project_id": "prj_storefront_production",
+  "roles": [
+    "marketplace_vendor",
+    "payout_verified"
+  ],
+  "permissions": [
+    "products:create",
+    "products:update",
+    "inventory:adjust",
+    "orders:view"
+  ],
+  "iss": "https://api.hvts.app",
+  "aud": "prj_storefront_production",
+  "exp": 1794291600
+}`,
   },
   {
-    icon: KeyRound,
-    title: 'Project-scoped runtime',
-    description:
-      'Keep apps and environments perfectly separated. True data isolation ensures a user signing up for Project A has absolutely zero crossover with Project B, even if they use the exact same email address.',
-  },
-  {
-    icon: GitBranchPlus,
-    title: 'API keys for each app',
-    description:
-      'Connect your backend with the right key for the right project instead of sharing one credential everywhere.',
-  },
-  {
-    icon: Users,
-    title: 'Google and GitHub per project',
-    description:
-      'Turn social login on where you need it and keep provider config tied to the right app.',
-  },
-  {
-    icon: Webhook,
-    title: 'Team roles and invites',
-    description:
-      'Invite teammates, control who owns what, and keep staff access separate from customer auth.',
-  },
-  {
-    icon: LockKeyhole,
-    title: 'Roles and permissions per project',
-    description:
-      'Define roles, assign permissions, and control what each user type can do - all scoped to the project. Works for simple apps and multi-role platforms alike.',
-  },
-  {
-    icon: ScrollText,
-    title: 'Audit logs and webhooks',
-    description:
-      'See what changed and push important events into the rest of your stack when something happens.',
+    id: 'cli',
+    label: 'CLI GitOps',
+    content: `$ hvt push --config ./hvt.config.json --apply
+
+✔ Reading manifest: ./hvt.config.json
+✔ Authenticated (hvt_mgmt_...)
+✔ Diff detected:
+  + Role: "marketplace_vendor" (permissions: 6)
+  + Permission: "inventory:adjust"
+  ~ Policy: require_mfa = true, allow_passkeys = true
+✔ Applying schema to database...
+✔ Synchronized in 280ms. Project live.`,
   },
 ];
 
 function upsertMeta(selector, factory, updater) {
-  let element = document.head.querySelector(selector);
-  if (!element) {
-    element = factory();
-    document.head.appendChild(element);
-  }
-  updater(element);
+  let el = document.head.querySelector(selector);
+  if (!el) { el = factory(); document.head.appendChild(el); }
+  updater(el);
 }
 
-function Kw({ children }) {
-  return <span className="text-[#c4b5fd]">{children}</span>;
-}
-
-function PathToken({ children }) {
-  return <span className="text-white">{children}</span>;
-}
-
-function Str({ children }) {
-  return <span className="text-[#a78bfa]">{children}</span>;
-}
-
-function Prop({ children }) {
-  return <span className="text-[#e4e4e7]">{children}</span>;
-}
-
-function Num({ children }) {
-  return <span className="text-[#ddd6fe]">{children}</span>;
-}
-
-function Comment({ children }) {
-  return <span className="text-[#71717a]">{children}</span>;
-}
-
-function CodeLine({ children }) {
-  return <div className="whitespace-pre">{children}</div>;
-}
-
-const codeTabs = {
-  runtime: {
-    label: 'Runtime flow',
-    caption:
-      'The runtime side stays tied to the organisation, project, and API key you configured.',
-    code: (
-      <>
-        <CodeLine>1. Your app sends users to the right project.</CodeLine>
-        <CodeLine>2. A visitor creates an account or signs in.</CodeLine>
-        <CodeLine>3. HVT checks that project's auth rules.</CodeLine>
-        <CodeLine>4. HVT signs them in and issues the right claims.</CodeLine>
-        <CodeLine>5. Verification, reset, and social auth stay in the same flow.</CodeLine>
-        <CodeLine></CodeLine>
-        <CodeLine>Runtime features</CodeLine>
-        <CodeLine></CodeLine>
-        <CodeLine>- Sign up</CodeLine>
-        <CodeLine>- Sign in</CodeLine>
-        <CodeLine>- Email verification</CodeLine>
-        <CodeLine>- Password reset</CodeLine>
-        <CodeLine>- Google and GitHub login</CodeLine>
-      </>
-    ),
-  },
-  key: {
-    label: 'Control plane',
-    caption:
-      'Your team configures the structure once, then every app and user flow inherits it.',
-    code: (
-      <>
-        <CodeLine>1. Create an organisation.</CodeLine>
-        <CodeLine>2. Add a project for each app or environment.</CodeLine>
-        <CodeLine>3. Invite teammates with the right role.</CodeLine>
-        <CodeLine>4. Configure email login, Google, or GitHub.</CodeLine>
-        <CodeLine>5. Issue the API key your backend will use.</CodeLine>
-        <CodeLine></CodeLine>
-        <CodeLine>What your team manages</CodeLine>
-        <CodeLine></CodeLine>
-        <CodeLine>- Organisations and projects</CodeLine>
-        <CodeLine>- Staff access</CodeLine>
-        <CodeLine>- API keys</CodeLine>
-        <CodeLine>- Social login settings</CodeLine>
-        <CodeLine>- Signup rules</CodeLine>
-      </>
-    ),
-  },
-  webhook: {
-    label: 'Events and history',
-    caption:
-      'HVT keeps a history for your team and can notify the rest of your stack when something changes.',
-    code: (
-      <>
-        <CodeLine>When something changes, HVT records it and can send it out.</CodeLine>
-        <CodeLine></CodeLine>
-        <CodeLine>Examples</CodeLine>
-        <CodeLine></CodeLine>
-        <CodeLine>- New user created</CodeLine>
-        <CodeLine>- Password changed</CodeLine>
-        <CodeLine>- API key issued or revoked</CodeLine>
-        <CodeLine>- Teammate invited</CodeLine>
-        <CodeLine>- Login activity recorded</CodeLine>
-        <CodeLine></CodeLine>
-        <CodeLine>You also get built-in audit history for your team.</CodeLine>
-      </>
-    ),
-  },
-};
-
-function Wordmark() {
+function CopyableCodePill({ text, label }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success('Copied to clipboard');
+    setTimeout(() => setCopied(false), 2000);
+  };
   return (
-    <Link to="/" className="inline-flex items-center gap-3">
-      <HvtLogoMark className="h-9 w-9 shrink-0" />
-      <div className="leading-none">
-        <div className="font-mono text-[1.08rem] font-bold tracking-[-0.03em] text-white">HVT</div>
-        <div className="mt-1 text-[11px] text-[#71717a]">hvts.app</div>
-      </div>
-    </Link>
-  );
-}
-
-function NavLink({ href, children, mobile = false, onClick }) {
-  return (
-    <a
-      href={href}
-      onClick={onClick}
-      className={`transition-colors hover:text-white ${mobile ? 'block py-2 text-base text-[#d4d4d8]' : 'text-sm text-[#a1a1aa]'}`}
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="group flex items-center gap-2 rounded-lg border border-[#27272a] bg-[#111114] px-3.5 py-2 font-mono text-xs text-[#a1a1aa] transition hover:border-[#7c3aed]/60 hover:bg-[#181820] hover:text-white"
+      title="Click to copy"
     >
-      {children}
-    </a>
-  );
-}
-
-function ChainDiagram({ compact = false }) {
-  return (
-    <div
-      className={`rounded-[18px] border border-[#27272a] bg-[#111111]/88 ${compact ? 'p-4' : 'p-5'} transition-[border-color,transform,box-shadow] duration-200 hover:border-[rgba(124,58,237,0.6)]`}
-      style={{
-        animation: compact ? undefined : 'heroFloat 7.5s ease-in-out infinite',
-        boxShadow: compact ? undefined : '0 18px 48px rgba(0,0,0,0.28)',
-      }}
-    >
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        {chainNodes.map((node, index) => (
-          <div key={node} className="contents">
-            <div
-              className={`rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 ${compact ? 'text-xs' : 'text-sm'} font-medium text-[#e4e4e7]`}
-              style={{
-                animation: compact ? undefined : `heroFadeUp 0.7s ease-out ${0.18 + index * 0.08}s both`,
-              }}
-            >
-              {node}
-            </div>
-            {index < chainNodes.length - 1 ? (
-              <div className={`flex items-center ${compact ? 'w-8' : 'w-10 sm:w-14'}`}>
-                <div className="relative h-px w-full overflow-hidden rounded-full bg-[#7c3aed]/15">
-                  <div
-                    className="absolute inset-0 bg-[#7c3aed]/50"
-                    style={{ animation: `connectorPulse 2.8s ease-in-out ${index * 0.2}s infinite` }}
-                  />
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function FeatureStrip() {
-  const loopItems = [...featureStripItems, ...featureStripItems];
-
-  return (
-    <div
-      className="relative overflow-hidden rounded-full border border-[#27272a] bg-[#111111]/88 px-4 py-3"
-      style={{
-        WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
-        maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
-      }}
-    >
-      <div className="hidden items-center justify-center gap-3 md:flex">
-        {featureStripItems.map((item, index) => (
-          <div key={item} className="flex items-center gap-3 text-sm text-[#71717a]">
-            {index > 0 ? <span className="text-[#3f3f46]">·</span> : null}
-            <span>{item}</span>
-          </div>
-        ))}
-      </div>
-      <div className="md:hidden">
-        <div className="flex min-w-max gap-8" style={{ animation: 'featureMarquee 18s linear infinite' }}>
-          {loopItems.map((item, index) => (
-            <div key={`${item}-${index}`} className="flex items-center gap-2 text-sm whitespace-nowrap text-[#71717a]">
-              <span>{item}</span>
-              <span className="text-[#3f3f46]">·</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PlaneNode({ title, description, accent = false }) {
-  return (
-    <div className={`rounded-lg border px-4 py-4 transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] ${accent ? 'border-[#3f3f46] bg-[#18181b]' : 'border-[#27272a] bg-[#111111]'}`}>
-      <div className="text-sm font-semibold text-white">{title}</div>
-      <p className="mt-2 text-sm leading-6 text-[#a1a1aa]">{description}</p>
-    </div>
+      <span className="text-[#7c3aed]">$</span>
+      <span className="text-[#e4e4e7]">{text}</span>
+      {copied
+        ? <Check className="h-3.5 w-3.5 text-emerald-400" />
+        : <Copy className="h-3.5 w-3.5 text-[#71717a] transition group-hover:text-[#a1a1aa]" />
+      }
+      {label && (
+        <span className="ml-1 rounded bg-[#27272a] px-1.5 py-0.5 text-[10px] text-[#71717a]">{label}</span>
+      )}
+    </button>
   );
 }
 
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('runtime');
   const [scrolled, setScrolled] = useState(false);
+  const [activeSandboxTab, setActiveSandboxTab] = useState('sdk');
+  const [activeProjectDemo, setActiveProjectDemo] = useState('storefront');
+  const [copiedCode, setCopiedCode] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -367,433 +177,585 @@ export default function Landing() {
 
   useEffect(() => {
     document.title = SEO_TITLE;
-
-    upsertMeta('meta[name="description"]', () => {
-      const meta = document.createElement('meta');
-      meta.name = 'description';
-      return meta;
-    }, (meta) => {
-      meta.content = SEO_DESCRIPTION;
-    });
-
-    upsertMeta('meta[property="og:title"]', () => {
-      const meta = document.createElement('meta');
-      meta.setAttribute('property', 'og:title');
-      return meta;
-    }, (meta) => {
-      meta.setAttribute('content', SEO_TITLE);
-    });
-
-    upsertMeta('meta[property="og:description"]', () => {
-      const meta = document.createElement('meta');
-      meta.setAttribute('property', 'og:description');
-      return meta;
-    }, (meta) => {
-      meta.setAttribute('content', SEO_DESCRIPTION);
-    });
-
-    upsertMeta('meta[name="twitter:title"]', () => {
-      const meta = document.createElement('meta');
-      meta.name = 'twitter:title';
-      return meta;
-    }, (meta) => {
-      meta.content = SEO_TITLE;
-    });
-
-    upsertMeta('meta[name="twitter:description"]', () => {
-      const meta = document.createElement('meta');
-      meta.name = 'twitter:description';
-      return meta;
-    }, (meta) => {
-      meta.content = SEO_DESCRIPTION;
-    });
-
-    upsertMeta('meta[property="og:url"]', () => {
-      const meta = document.createElement('meta');
-      meta.setAttribute('property', 'og:url');
-      return meta;
-    }, (meta) => {
-      meta.setAttribute('content', `${SITE_URL}/`);
-    });
-
-    upsertMeta('meta[name="theme-color"]', () => {
-      const meta = document.createElement('meta');
-      meta.name = 'theme-color';
-      return meta;
-    }, (meta) => {
-      meta.content = '#0a0a0a';
-    });
-
+    upsertMeta('meta[name="description"]',
+      () => { const m = document.createElement('meta'); m.name = 'description'; return m; },
+      (m) => { m.content = SEO_DESCRIPTION; });
+    upsertMeta('meta[property="og:title"]',
+      () => { const m = document.createElement('meta'); m.setAttribute('property', 'og:title'); return m; },
+      (m) => { m.setAttribute('content', SEO_TITLE); });
+    upsertMeta('meta[property="og:description"]',
+      () => { const m = document.createElement('meta'); m.setAttribute('property', 'og:description'); return m; },
+      (m) => { m.setAttribute('content', SEO_DESCRIPTION); });
+    upsertMeta('meta[name="twitter:title"]',
+      () => { const m = document.createElement('meta'); m.name = 'twitter:title'; return m; },
+      (m) => { m.content = SEO_TITLE; });
+    upsertMeta('meta[name="twitter:description"]',
+      () => { const m = document.createElement('meta'); m.name = 'twitter:description'; return m; },
+      (m) => { m.content = SEO_DESCRIPTION; });
+    upsertMeta('meta[property="og:url"]',
+      () => { const m = document.createElement('meta'); m.setAttribute('property', 'og:url'); return m; },
+      (m) => { m.setAttribute('content', `${SITE_URL}/`); });
+    upsertMeta('meta[name="theme-color"]',
+      () => { const m = document.createElement('meta'); m.name = 'theme-color'; return m; },
+      (m) => { m.content = '#0a0a0a'; });
     let canonical = document.head.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
-    }
+    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
     canonical.href = `${SITE_URL}/`;
   }, []);
 
+  const currentTab = sandboxTabs.find((t) => t.id === activeSandboxTab) || sandboxTabs[0];
+
+  const handleCopySnippet = () => {
+    navigator.clipboard.writeText(currentTab.content);
+    setCopiedCode(true);
+    toast.success('Copied to clipboard');
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#0a0a0c] text-[#f4f4f5]">
       <style>{`
-        @keyframes heroFadeUp {
-          0% { opacity: 0; transform: translateY(18px); }
-          100% { opacity: 1; transform: translateY(0); }
+        @keyframes subtleFadeUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-
-        @keyframes heroFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
+        @keyframes ambientGlowPulse {
+          0%, 100% { opacity: 0.45; transform: scale(1); }
+          50%       { opacity: 0.75; transform: scale(1.06); }
         }
-
-        @keyframes heroGlowPulse {
-          0%, 100% { opacity: 0.72; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.04); }
-        }
-
-        @keyframes featureMarquee {
-          0% { transform: translateX(0); }
+        @keyframes marqueeScroll {
+          0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
-
-        @keyframes connectorPulse {
-          0%, 100% { opacity: 0.16; }
-          50% { opacity: 0.4; }
-        }
+        .anim-fade-up           { animation: subtleFadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+        .anim-delay-1           { animation-delay: 0.08s; }
+        .anim-delay-2           { animation-delay: 0.16s; }
+        .anim-delay-3           { animation-delay: 0.24s; }
+        .anim-delay-4           { animation-delay: 0.32s; }
       `}</style>
 
+      {/* ─── HEADER ─── */}
       <header
-        className={`sticky top-0 z-50 border-b transition-all ${
-          scrolled ? 'border-[#27272a] bg-[#0a0a0a]/88 backdrop-blur-xl' : 'border-transparent bg-[#0a0a0a]/72 backdrop-blur-md'
+        className={`sticky top-0 z-50 border-b transition-all duration-200 ${
+          scrolled
+            ? 'border-[#27272a]/90 bg-[#0a0a0c]/85 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)]'
+            : 'border-transparent bg-transparent'
         }`}
       >
-        <div className="mx-auto grid h-[60px] max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 sm:px-6 lg:px-8">
-          <div className="justify-self-start">
-            <Wordmark />
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Logo + status */}
+          <div className="flex items-center gap-5">
+            <Link to="/" className="flex items-center gap-3 group">
+              <HvtLogoMark className="h-8 w-8 transition-transform duration-200 group-hover:scale-105" />
+              <div className="leading-none">
+                <span className="font-mono text-base font-bold tracking-tight text-white">HVT</span>
+                <span className="block text-[11px] text-[#71717a]">hvts.app</span>
+              </div>
+            </Link>
+            <div className="hidden items-center gap-2 rounded-full border border-[#27272a] bg-[#111114] px-2.5 py-1 text-xs text-[#a1a1aa] lg:flex">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+              <span className="font-mono text-[11px]">Engine v0.2.0</span>
+            </div>
           </div>
 
-          <nav className="hidden items-center justify-center gap-8 justify-self-center md:flex">
-            <a href="#features" className="text-sm text-[#a1a1aa] transition-colors duration-150 hover:text-white">
-              Features
-            </a>
-            <a href={DOCS_URL} target="_blank" rel="noreferrer" className="text-sm text-[#a1a1aa] transition-colors duration-150 hover:text-white">
-              Docs
-            </a>
-            <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-sm text-[#a1a1aa] transition-colors duration-150 hover:text-white">
-              GitHub
-            </a>
+          {/* Desktop Nav */}
+          <nav className="hidden items-center gap-8 text-sm text-[#a1a1aa] md:flex">
+            <a href="#architecture" className="transition hover:text-white">Architecture</a>
+            <a href="#features"     className="transition hover:text-white">Features</a>
+            <a href="#dual-plane"   className="transition hover:text-white">Key Separation</a>
+            <a href={DOCS_URL}   target="_blank" rel="noreferrer" className="transition hover:text-white">Docs</a>
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="transition hover:text-white">GitHub</a>
           </nav>
 
-          <div className="hidden items-center gap-3 justify-self-end md:flex">
-            <Link to="/login" className="px-2 py-2 text-sm font-medium text-[#d4d4d8] transition-colors duration-150 hover:text-white">
+          {/* CTA */}
+          <div className="hidden items-center gap-3 md:flex">
+            <Link to="/login" className="rounded-lg px-3.5 py-2 text-sm font-medium text-[#d4d4d8] transition hover:text-white">
               Sign in
             </Link>
             <Link
               to="/signup"
-              className="rounded-full border border-[#3f3f46] bg-[#18181b] px-4 py-2 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_10px_24px_rgba(0,0,0,0.26)] transition-[border-color,background-color] duration-150 hover:border-[rgba(124,58,237,0.45)] hover:bg-[#1d1d22]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#7c3aed]/50 bg-[#7c3aed] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_20px_rgba(124,58,237,0.3)] transition hover:bg-[#6d28d9]"
             >
-              Get started free
+              Get started <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
+          {/* Mobile toggle */}
           <button
             type="button"
-            onClick={() => setMenuOpen((value) => !value)}
-            className="inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-md border border-[#27272a] bg-[#111111] text-[#d4d4d8] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white md:hidden"
-            aria-label="Toggle navigation"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#27272a] bg-[#111114] text-[#d4d4d8] md:hidden"
+            aria-label="Toggle menu"
           >
-            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
+        {/* Mobile drawer */}
         {menuOpen && (
-          <div className="border-t border-[#27272a] bg-[#0a0a0a]/96 md:hidden">
-            <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6">
-              <NavLink href="#features" mobile onClick={() => setMenuOpen(false)}>Features</NavLink>
-              <NavLink href={DOCS_URL} mobile onClick={() => setMenuOpen(false)}>Docs</NavLink>
-              <NavLink href={GITHUB_URL} mobile onClick={() => setMenuOpen(false)}>GitHub</NavLink>
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="mt-2 rounded-md border border-[#27272a] px-4 py-3 text-center text-sm font-medium text-[#d4d4d8]">
-                Sign in
-              </Link>
-              <Link to="/signup" onClick={() => setMenuOpen(false)} className="rounded-md bg-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white">
-                Get started free
-              </Link>
+          <div className="border-b border-[#27272a] bg-[#0d0d10] px-4 py-6 md:hidden">
+            <div className="flex flex-col gap-4 text-sm">
+              <a href="#architecture" onClick={() => setMenuOpen(false)} className="text-[#a1a1aa] hover:text-white">Architecture</a>
+              <a href="#features"     onClick={() => setMenuOpen(false)} className="text-[#a1a1aa] hover:text-white">Features</a>
+              <a href="#dual-plane"   onClick={() => setMenuOpen(false)} className="text-[#a1a1aa] hover:text-white">Key Separation</a>
+              <a href={DOCS_URL}   target="_blank" rel="noreferrer" className="text-[#a1a1aa] hover:text-white">Documentation</a>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-[#a1a1aa] hover:text-white">GitHub</a>
+              <div className="mt-2 flex flex-col gap-2 border-t border-[#27272a] pt-4">
+                <Link to="/login"  onClick={() => setMenuOpen(false)} className="w-full rounded-lg border border-[#27272a] py-2.5 text-center font-medium text-white">Sign in</Link>
+                <Link to="/signup" onClick={() => setMenuOpen(false)} className="w-full rounded-lg bg-[#7c3aed] py-2.5 text-center font-semibold text-white">Get started</Link>
+              </div>
             </div>
           </div>
         )}
       </header>
 
-      <main id="top">
-        <section className="relative overflow-hidden border-b border-[#27272a]">
+      <main>
+        {/* ─── HERO ─── */}
+        <section className="relative overflow-hidden border-b border-[#27272a]/80 pb-20 pt-16 lg:pb-32 lg:pt-24">
+          {/* Ambient glow */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                'radial-gradient(circle at top center, rgba(124,58,237,0.15), transparent 58%)',
-              animation: 'heroGlowPulse 8s ease-in-out infinite',
-            }}
+            className="pointer-events-none absolute -top-40 left-1/2 h-[550px] w-[900px] -translate-x-1/2 rounded-full bg-[#7c3aed]/12 blur-[120px]"
+            style={{ animation: 'ambientGlowPulse 10s ease-in-out infinite' }}
           />
+          {/* Dot grid */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
+            className="pointer-events-none absolute inset-0 opacity-[0.38]"
             style={{
               ...DOT_GRID_STYLE,
-              WebkitMaskImage:
-                'linear-gradient(to bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.94) 58%, transparent 100%)',
-              maskImage:
-                'linear-gradient(to bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.94) 58%, transparent 100%)',
+              WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)',
+              maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)',
             }}
           />
 
-          <div className="relative mx-auto max-w-7xl px-4 py-28 sm:px-6 lg:px-8 lg:py-32">
-            <div className="max-w-5xl">
-              <div
-                className="inline-flex items-center rounded-full border border-[#27272a] bg-[#111111]/88 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]"
-                style={{ animation: 'heroFadeUp 0.6s ease-out 0.05s both' }}
-              >
-                MULTI-TENANT IDENTITY & RBAC FOR PLATFORMS, MARKETPLACES & MULTI-APP TEAMS
-              </div>
-              <h1
-                className="mt-8 max-w-5xl text-4xl font-extrabold leading-tight tracking-[-0.05em] text-white sm:text-5xl lg:text-7xl"
-                style={{ animation: 'heroFadeUp 0.7s ease-out 0.12s both' }}
-              >
-                Authentication infrastructure that gives every project its own world.
-              </h1>
-              <p
-                className="mt-5 max-w-3xl text-sm leading-7 text-[#71717a] sm:text-base"
-                style={{ animation: 'heroFadeUp 0.7s ease-out 0.18s both' }}
-              >
-                Building multi-app auth from scratch takes months. Auth0 punishes your growth with MAU pricing. HVT gives you true composite tenant isolation and granular RBAC out of the box.
-              </p>
-              <p
-                className="mt-6 max-w-3xl text-base leading-8 text-[#a1a1aa] sm:text-lg"
-                style={{ animation: 'heroFadeUp 0.7s ease-out 0.2s both' }}
-              >
-                Open source, self-hostable with zero MAU penalties. Manage organizations, projects, buyers, sellers, API keys, and runtime auth in one explicit model.
-              </p>
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-8">
 
-              <div className="mt-8 max-w-3xl" style={{ animation: 'heroFadeUp 0.8s ease-out 0.28s both' }}>
-                <div className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-[#71717a]">
-                  Project model
-                </div>
-                <ChainDiagram />
-              </div>
+              {/* Left column */}
+              <div className="lg:col-span-7 xl:col-span-6 anim-fade-up">
+                <h1 className="text-4xl font-extrabold tracking-[-0.04em] text-white sm:text-5xl lg:text-6xl sm:leading-[1.12]">
+                  Identity and RBAC built for multi-tenant applications.
+                </h1>
 
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row" style={{ animation: 'heroFadeUp 0.8s ease-out 0.36s both' }}>
-                <Link to="/signup" className="inline-flex items-center justify-center rounded-md bg-[#7c3aed] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]">
-                  Get started free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-                <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-md border border-[#27272a] px-5 py-3 text-sm font-semibold text-[#d4d4d8] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white">
-                  View on GitHub
-                </a>
-              </div>
+                <p className="mt-6 text-base leading-relaxed text-[#a1a1aa] sm:text-lg anim-fade-up anim-delay-1">
+                  Enforce tenant isolation at the database layer. Separate administrative control keys from runtime application traffic. Version-control permissions and roles declaratively in Git.
+                </p>
 
-              <div className="mt-8 max-w-3xl" style={{ animation: 'heroFadeUp 0.8s ease-out 0.44s both' }}>
-                <FeatureStrip />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-[#27272a]">
-          <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">At a glance</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">
-                One model from setup to sign-in.
-              </h2>
-              <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                HVT is split into a control plane for your team and a runtime plane for your apps and users. That
-                makes the product easier to reason about when you are setting it up and when people are actually
-                signing in.
-              </p>
-            </div>
-
-            <div className="mt-10 rounded-[18px] border border-[#27272a] bg-[#111111] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
-              <div className="flex flex-wrap gap-2 border-b border-[#27272a] px-4 py-4 sm:px-6">
-                {Object.entries(codeTabs).map(([key, tab]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setActiveTab(key)}
-                    className={`rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 ${activeTab === key ? 'bg-[#7c3aed] text-white' : 'bg-[#18181b] text-[#a1a1aa] hover:text-white'}`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="px-4 py-5 sm:px-6">
-                <p className="mb-4 text-sm text-[#a1a1aa]">{codeTabs[activeTab].caption}</p>
-                <div className="overflow-x-auto rounded-[14px] border border-[#27272a] bg-[#0a0a0a] px-4 py-4 font-mono text-[13px] leading-6 text-[#d4d4d8] sm:px-5">
-                  {codeTabs[activeTab].code}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="system" className="scroll-mt-24 border-b border-[#27272a]">
-          <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">How it works</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">One control plane. One runtime plane.</h2>
-              <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                Your team configures organisations, projects, keys, invites, and social login. Your app then uses
-                that structure to register users, sign them in, issue tokens, and track what changed.
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px_minmax(0,1fr)] lg:items-stretch">
-              <div className="rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-5 w-5 text-[#a78bfa]" />
-                    <div>
-                      <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">For your team</div>
-                    <div className="mt-1 text-lg font-semibold text-white">Configure organisations, projects, keys, and staff access</div>
+                {/* Three-stat fact row */}
+                <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 anim-fade-up anim-delay-2">
+                  <div className="rounded-xl border border-[#27272a] bg-[#111114]/90 p-3.5">
+                    <div className="text-xs font-medium uppercase tracking-wider text-[#71717a]">Isolation</div>
+                    <div className="mt-1 font-mono text-sm font-semibold text-white">Database-Level</div>
+                    <div className="mt-0.5 text-[11px] text-[#a1a1aa]">(project_id + email)</div>
+                  </div>
+                  <div className="rounded-xl border border-[#27272a] bg-[#111114]/90 p-3.5">
+                    <div className="text-xs font-medium uppercase tracking-wider text-[#71717a]">Security</div>
+                    <div className="mt-1 font-mono text-sm font-semibold text-white">Dual-Plane Keys</div>
+                    <div className="mt-0.5 text-[11px] text-[#a1a1aa]">hvt_mgmt / hvt_live</div>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1 rounded-xl border border-[#27272a] bg-[#111114]/90 p-3.5">
+                    <div className="text-xs font-medium uppercase tracking-wider text-[#71717a]">License</div>
+                    <div className="mt-1 font-mono text-sm font-semibold text-white">Apache 2.0</div>
+                    <div className="mt-0.5 text-[11px] text-[#a1a1aa]">Zero MAU penalties</div>
                   </div>
                 </div>
-                <div className="mt-6 space-y-3">
-                  {controlPlaneNodes.map((node) => (
-                    <PlaneNode key={node.title} title={node.title} description={node.description} />
-                  ))}
-                </div>
-              </div>
 
-              <div className="flex items-center justify-center lg:block">
-                <div className="flex justify-center lg:hidden">
-                  <div className="rounded-[18px] border border-[#3f3f46] bg-[#18181b] px-4 py-3 text-center">
-                    <div className="text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">
-                      Roles and permissions
-                    </div>
-                    <div className="mt-1 text-xs leading-5 text-[#a1a1aa]">
-                      Define roles and permission sets scoped to each project.
-                    </div>
-                  </div>
-                </div>
-                <div className="hidden h-full flex-col items-center lg:flex">
-                  <div className="min-h-10 w-px flex-1 bg-[#27272a]" />
-                  <div className="my-4 rounded-[18px] border border-[#3f3f46] bg-[#18181b] px-4 py-3 text-center">
-                    <div className="whitespace-nowrap text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">
-                      Roles and permissions
-                    </div>
-                    <div className="mt-1 text-xs leading-5 text-[#a1a1aa]">
-                      Define roles and permission sets scoped to each project.
-                    </div>
-                  </div>
-                  <div className="min-h-10 w-px flex-1 bg-[#27272a]" />
-                </div>
-              </div>
-
-              <div className="rounded-[18px] border border-[#3f3f46] bg-[#18181b] p-6 transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)]">
-                <div className="flex items-center gap-3">
-                  <Boxes className="h-5 w-5 text-[#a78bfa]" />
-                    <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">For your users</div>
-                    <div className="mt-1 text-lg font-semibold text-white">Register users, sign them in, and track what happens</div>
-                  </div>
-                </div>
-                <div className="mt-6 space-y-3">
-                  {runtimeNodes.map((node) => (
-                    <PlaneNode key={node.title} title={node.title} description={node.description} accent />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="scroll-mt-24 border-b border-[#27272a]">
-          <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">Why HVT feels different</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">The model is the product, not an add-on.</h2>
-              <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                HVT is built around one explicit model: organisation, project, roles, permissions, runtime auth,
-                audit logs, and webhooks. That is the default shape of the product, not an enterprise extra.
-              </p>
-            </div>
-            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <div key={feature.title} className="group rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-[border-color,box-shadow,transform] duration-150 hover:border-[rgba(124,58,237,0.6)]">
-                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#18181b] text-[#a78bfa] transition-shadow duration-150 group-hover:shadow-[0_0_18px_rgba(124,58,237,0.24)]">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mt-5 text-lg font-semibold text-white">{feature.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">{feature.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section id="pricing" className="scroll-mt-24 border-b border-[#27272a]">
-          <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
-              <div className="text-sm font-medium text-[#a78bfa]">Start here</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">Start hosted. Self-host when you need to.</h2>
-              <p className="mt-4 text-base leading-8 text-[#a1a1aa]">
-                The hosted and self-hosted paths follow the same product model. You do not need to relearn the stack
-                later if you decide to run it yourself.
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="flex flex-col rounded-[18px] border border-[#27272a] bg-[#111111] p-6 transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.6)]">
-                <div>
-                  <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Self-hosted</div>
-                  <div className="mt-4 space-y-4 text-sm leading-7 text-[#d4d4d8]">
-                    <p>
-                      HVT is open-source, so your team can run the auth stack on your own infrastructure when you want full control.
-                    </p>
-                    <p>
-                      That is the right path if you want to own the code, review the stack, or keep deployment inside
-                      your own environment.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-auto pt-6 flex flex-col gap-3 sm:flex-row">
+                {/* CTA row */}
+                <div className="mt-8 flex flex-wrap items-center gap-3 anim-fade-up anim-delay-3">
                   <Link
                     to="/signup"
-                    className="inline-flex items-center justify-center rounded-md bg-[#7c3aed] px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#7c3aed] px-5 py-3 text-sm font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,0.35)] transition hover:bg-[#6d28d9]"
                   >
-                    Get started free
+                    Start building free <ArrowRight className="h-4 w-4" />
                   </Link>
                   <a
                     href={GITHUB_URL}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center justify-center rounded-md border border-[#27272a] px-4 py-3 text-sm font-semibold text-[#d4d4d8] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#27272a] bg-[#111114] px-5 py-3 text-sm font-semibold text-[#d4d4d8] transition hover:border-[#3f3f46] hover:text-white"
                   >
-                    View on GitHub
+                    <Github className="h-4 w-4" /> GitHub Source
+                  </a>
+                </div>
+
+                {/* Quick install */}
+                <div className="mt-6 flex flex-wrap items-center gap-2 anim-fade-up anim-delay-4">
+                  <span className="text-xs text-[#71717a]">Quickstart:</span>
+                  <CopyableCodePill text="npm i @hvt/sdk" label="SDK" />
+                  <CopyableCodePill text="npm i -g @hvt/cli" label="CLI" />
+                </div>
+              </div>
+
+              {/* Right column: Code sandbox */}
+              <div className="lg:col-span-5 xl:col-span-6 anim-fade-up anim-delay-2">
+                <div className="overflow-hidden rounded-2xl border border-[#27272a] bg-[#101014] shadow-[0_20px_50px_rgba(0,0,0,0.6)] transition hover:border-[#7c3aed]/40">
+                  {/* Tab bar */}
+                  <div className="flex flex-wrap items-center justify-between border-b border-[#27272a] bg-[#0c0c0f] px-4 py-3 gap-2">
+                    <div className="flex items-center gap-1 overflow-x-auto">
+                      {sandboxTabs.map((tab) => (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setActiveSandboxTab(tab.id)}
+                          className={`rounded-md px-3 py-1.5 font-mono text-xs font-medium transition ${
+                            tab.id === activeSandboxTab
+                              ? 'bg-[#7c3aed]/20 text-[#c4b5fd] border border-[#7c3aed]/40'
+                              : 'text-[#71717a] hover:bg-[#18181f] hover:text-[#d4d4d8]'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopySnippet}
+                      className="flex items-center gap-1 rounded border border-[#27272a] bg-[#141418] px-2.5 py-1 text-xs text-[#a1a1aa] transition hover:border-[#3f3f46] hover:text-white"
+                    >
+                      {copiedCode ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                      <span className="font-mono text-[11px]">{copiedCode ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+
+                  {/* Code block */}
+                  <div className="p-4 sm:p-5">
+                    <pre className="overflow-x-auto font-mono text-xs sm:text-[13px] leading-relaxed text-[#d4d4d8]">
+                      <code>{currentTab.content}</code>
+                    </pre>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#27272a]/70 pt-3 text-[11px] text-[#71717a]">
+                      <div className="flex items-center gap-1.5">
+                        <Lock className="h-3 w-3 text-[#7c3aed]" />
+                        <span>RS256 signed · verified claims</span>
+                      </div>
+                      <span className="font-mono">zero_tenant_leakage=true</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* ─── MARQUEE STRIP ─── */}
+        <section className="overflow-hidden border-b border-[#27272a] bg-[#0c0c0f] py-4">
+          <div
+            className="flex min-w-max gap-8 font-mono text-xs uppercase tracking-wider text-[#71717a]"
+            style={{ animation: 'marqueeScroll 30s linear infinite' }}
+          >
+            {[...featureStripItems, ...featureStripItems, ...featureStripItems].map((item, idx) => (
+              <div key={`${item}-${idx}`} className="flex items-center gap-4">
+                <span className="text-[#a1a1aa]">{item}</span>
+                <span className="text-[#3f3f46]">/</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── ARCHITECTURE: TENANT ISOLATION ─── */}
+        <section id="architecture" className="scroll-mt-24 border-b border-[#27272a] py-20 lg:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-[#7c3aed]">
+                Tenant Architecture
+              </div>
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Database-level partition. Zero cross-project leakage.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#a1a1aa]">
+                Most identity platforms store all users in a single global table. When you build multi-tenant SaaS, marketplaces, or multi-app suites, identities collide. HVT partitions user records, roles, and sessions at the PostgreSQL level using composite unique indexes.
+              </p>
+            </div>
+
+            <div className="mt-12 overflow-hidden rounded-2xl border border-[#27272a] bg-[#101014] p-6 lg:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#27272a] pb-6">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-[#7c3aed]" />
+                    <span className="font-mono text-sm font-semibold text-white">Organization: Acme Holding Corp</span>
+                  </div>
+                  <div className="mt-1 text-xs text-[#71717a]">Root boundary for billing, staff access, and project provisioning</div>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-lg border border-[#27272a] bg-[#141418] p-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setActiveProjectDemo('storefront')}
+                    className={`rounded px-3 py-1.5 font-medium transition ${activeProjectDemo === 'storefront' ? 'bg-[#7c3aed] text-white' : 'text-[#a1a1aa] hover:text-white'}`}
+                  >
+                    Project A: Storefront
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveProjectDemo('backoffice')}
+                    className={`rounded px-3 py-1.5 font-medium transition ${activeProjectDemo === 'backoffice' ? 'bg-[#7c3aed] text-white' : 'text-[#a1a1aa] hover:text-white'}`}
+                  >
+                    Project B: Vendor Portal
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                {/* Active project box */}
+                <div className="rounded-xl border border-[#7c3aed]/40 bg-[#14141c] p-5 shadow-[0_0_25px_rgba(124,58,237,0.1)]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Boxes className="h-4 w-4 text-[#c4b5fd]" />
+                      <span className="font-mono text-sm font-bold text-white">
+                        {activeProjectDemo === 'storefront' ? 'Project A (Public Storefront)' : 'Project B (Vendor Portal)'}
+                      </span>
+                    </div>
+                    <span className="rounded border border-[#7c3aed]/40 bg-[#7c3aed]/10 px-2 py-0.5 font-mono text-[11px] text-[#c4b5fd]">
+                      {activeProjectDemo === 'storefront' ? 'hvt_live_store_9f...' : 'hvt_live_vendor_3a...'}
+                    </span>
+                  </div>
+                  <div className="mt-4 space-y-3 font-mono text-xs">
+                    <div className="rounded-lg border border-[#27272a] bg-[#0c0c0f] p-3">
+                      <span className="text-[#71717a]">// Scoped user record</span>
+                      <div className="mt-1 text-white">email: <span className="text-[#c4b5fd]">"alex@company.com"</span></div>
+                      <div className="text-[#71717a]">project_id: <span className="text-[#a1a1aa]">"{activeProjectDemo === 'storefront' ? 'prj_store_prod' : 'prj_vendor_prod'}"</span></div>
+                      <div className="text-[#71717a]">role: <span className="text-emerald-400">{activeProjectDemo === 'storefront' ? '["verified_buyer"]' : '["vendor_operator"]'}</span></div>
+                    </div>
+                    <div className="rounded-lg border border-[#27272a] bg-[#0c0c0f] p-3">
+                      <span className="text-[#71717a]">// PostgreSQL constraint</span>
+                      <div className="mt-1 text-[#a1a1aa]">UNIQUE(project_id, email)</div>
+                      <div className="mt-1 text-[#71717a]">Password hashes and TOTP seeds are non-transferable.</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Explanation */}
+                <div className="flex flex-col justify-between rounded-xl border border-[#27272a] bg-[#0d0d10] p-5">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Database className="h-4 w-4 text-[#71717a]" />
+                      <span className="font-mono text-sm font-semibold text-white">PostgreSQL Storage Guarantee</span>
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-[#a1a1aa]">
+                      <code className="text-white font-mono text-xs">alex@company.com</code> can register in Project A as a shopper and in Project B as a merchant — zero identity collision.
+                    </p>
+                    <ul className="mt-4 space-y-2.5 text-xs text-[#d4d4d8]">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                        <span>Each user row is bound to its project foreign key.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                        <span>Credential compromise in one project never exposes another.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                        <span>Session revocation is project-scoped, not global.</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="mt-6 rounded-lg border border-[#27272a] bg-[#141418] p-3 font-mono text-[11px] text-[#71717a]">
+                    SELECT * FROM runtime_users WHERE project_id = $1 AND email = $2;
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── DUAL-PLANE KEY SEPARATION ─── */}
+        <section id="dual-plane" className="scroll-mt-24 border-b border-[#27272a] bg-[#0b0b0e] py-20 lg:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-[#7c3aed]">Key Separation</div>
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Two planes. Zero shared credentials.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#a1a1aa]">
+                Conventional auth systems share one API key across the entire stack. If your runtime application leaks that credential, the entire identity system is compromised. HVT keeps control and runtime traffic on separate key namespaces by design.
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-6 md:grid-cols-2">
+              {/* Control Plane */}
+              <div className="rounded-2xl border border-[#27272a] bg-[#111115] p-6 lg:p-8 transition hover:border-[#3f3f46]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#27272a] text-white">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-mono text-xs uppercase text-[#71717a]">Administrative Surface</div>
+                      <h3 className="text-lg font-bold text-white">Control Plane</h3>
+                    </div>
+                  </div>
+                  <span className="rounded bg-[#27272a] px-2.5 py-1 font-mono text-xs text-[#a1a1aa]">hvt_mgmt_*</span>
+                </div>
+                <p className="mt-4 text-sm leading-relaxed text-[#a1a1aa]">
+                  Used by your engineering team, CI/CD runners, and automated deployment pipelines. Never distributed to end-user applications.
+                </p>
+                <div className="mt-6 space-y-2.5 border-t border-[#27272a] pt-4 font-mono text-xs text-[#d4d4d8]">
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-[#7c3aed]" /><span>Create and destroy tenant projects</span></div>
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-[#7c3aed]" /><span>Generate and revoke runtime API keys</span></div>
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-[#7c3aed]" /><span>Configure OAuth providers per project</span></div>
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-[#7c3aed]" /><span>Push permission schema via CLI (<code>hvt push</code>)</span></div>
+                </div>
+              </div>
+
+              {/* Runtime Plane */}
+              <div className="rounded-2xl border border-[#7c3aed]/40 bg-[#121118] p-6 lg:p-8 shadow-[0_0_30px_rgba(124,58,237,0.08)] transition hover:border-[#7c3aed]/70">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#7c3aed]/20 text-[#c4b5fd]">
+                      <Boxes className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-mono text-xs uppercase text-[#7c3aed]">Customer Traffic</div>
+                      <h3 className="text-lg font-bold text-white">Runtime Plane</h3>
+                    </div>
+                  </div>
+                  <span className="rounded border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2.5 py-1 font-mono text-xs text-[#c4b5fd]">hvt_live_*</span>
+                </div>
+                <p className="mt-4 text-sm leading-relaxed text-[#a1a1aa]">
+                  Used by web apps, mobile clients, and edge services to authenticate real end users. Scoped to a single project, unable to touch any administrative endpoint.
+                </p>
+                <div className="mt-6 space-y-2.5 border-t border-[#27272a] pt-4 font-mono text-xs text-[#d4d4d8]">
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-emerald-400" /><span>User registration and login</span></div>
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-emerald-400" /><span>WebAuthn passkey ceremony and verification</span></div>
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-emerald-400" /><span>TOTP MFA validation and recovery code check</span></div>
+                  <div className="flex items-center gap-2"><ChevronRight className="h-3.5 w-3.5 text-emerald-400" /><span>Scoped JWT issuance with verified role claims</span></div>
+                </div>
+                <div className="mt-6 rounded-lg border border-[#7c3aed]/30 bg-[#151222] p-3 text-xs text-[#c4b5fd]">
+                  Option C Protection: A leaked live key has zero privilege over management APIs or other projects.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── FEATURES GRID ─── */}
+        <section id="features" className="scroll-mt-24 border-b border-[#27272a] py-20 lg:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-[#7c3aed]">Engine Capabilities</div>
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Built for infrastructure engineers.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#a1a1aa]">
+                Identity belongs in your infrastructure stack alongside your database and cache—not in a proprietary black box with per-user tax brackets.
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  Icon: Fingerprint,
+                  title: 'FIDO2 WebAuthn Passkeys',
+                  desc: 'Hardware-backed biometrics (Touch ID, Face ID, Windows Hello, YubiKey) with per-project origin configuration.',
+                },
+                {
+                  Icon: ShieldCheck,
+                  title: 'TOTP MFA + 8 Recovery Codes',
+                  desc: 'RFC 6238 time-based one-time passwords. AES-256 encrypted secrets paired with 8 single-use hashed backup codes.',
+                },
+                {
+                  Icon: Terminal,
+                  title: 'Declarative GitOps CLI',
+                  desc: 'Version-control project definitions, permissions, and roles in JSON. Test and apply schema changes in CI with hvt push.',
+                },
+                {
+                  Icon: Webhook,
+                  title: 'Signed HMAC Webhooks',
+                  desc: 'Stream identity lifecycle events to your event bus with HMAC-SHA256 signatures and timestamp replay protection.',
+                },
+                {
+                  Icon: LockKeyhole,
+                  title: 'Argon2id & Adaptive Lockouts',
+                  desc: 'Memory-hard password hashing with automated brute-force lockouts protecting against credential stuffing at scale.',
+                },
+                {
+                  Icon: ScrollText,
+                  title: 'Immutable Audit Trail',
+                  desc: 'Every key minted, policy updated, or member invited is persisted in an append-only log with actor ID and IP provenance.',
+                },
+              ].map(({ Icon, title, desc }) => (
+                <div key={title} className="group rounded-2xl border border-[#27272a] bg-[#111114] p-6 transition-all duration-200 hover:border-[#7c3aed]/50 hover:shadow-[0_0_24px_rgba(124,58,237,0.12)]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#27272a] bg-[#18181f] text-[#c4b5fd] transition group-hover:border-[#7c3aed]/40">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-5 text-base font-bold text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#a1a1aa]">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── DEPLOYMENT OPTIONS ─── */}
+        <section id="self-host" className="scroll-mt-24 border-b border-[#27272a] bg-[#0a0a0c] py-20 lg:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-[#7c3aed]">Deployment Model</div>
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Own the infrastructure. Run it anywhere.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#a1a1aa]">
+                HVT is 100% open source under Apache 2.0. One Docker container, Kubernetes, or bare metal—the codebase is completely open.
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-6 lg:grid-cols-2">
+              {/* Self-hosted */}
+              <div className="flex flex-col rounded-2xl border border-[#27272a] bg-[#111115] p-6 sm:p-8">
+                <div className="flex items-center justify-between">
+                  <div className="font-mono text-xs uppercase text-[#71717a]">Self-Hosted</div>
+                  <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] text-emerald-400">Apache 2.0</span>
+                </div>
+                <h3 className="mt-2 text-2xl font-bold text-white">Community Edition</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#a1a1aa]">
+                  Deploy on your own infrastructure with Docker Compose. Zero telemetry, zero MAU limits, zero proprietary lock-in.
+                </p>
+                <div className="mt-6 space-y-3 border-t border-[#27272a] pt-6 text-sm text-[#d4d4d8]">
+                  <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>Unlimited monthly active users</span></div>
+                  <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>Unlimited organizations and projects</span></div>
+                  <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>Standard PostgreSQL backend</span></div>
+                  <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>Full source code access and modification rights</span></div>
+                </div>
+                <div className="mt-auto pt-8">
+                  <a
+                    href={`${GITHUB_URL}#self-hosting`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex w-full items-center justify-center rounded-lg border border-[#27272a] bg-[#181820] py-3 text-sm font-semibold text-white transition hover:bg-[#20202a]"
+                  >
+                    View Docker Setup <ExternalLink className="ml-2 h-4 w-4" />
                   </a>
                 </div>
               </div>
 
-              <div className="relative flex flex-col overflow-hidden rounded-[18px] border border-[rgba(124,58,237,0.4)] bg-[#18181b] p-6 shadow-[0_0_30px_rgba(124,58,237,0.15)] transition-[border-color,box-shadow] duration-150 hover:border-[rgba(124,58,237,0.8)] hover:shadow-[0_0_40px_rgba(124,58,237,0.25)]">
-                <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#7c3aed] opacity-20 blur-[80px]"></div>
+              {/* Managed Cloud */}
+              <div className="relative flex flex-col overflow-hidden rounded-2xl border border-[#7c3aed]/40 bg-[#12111c] p-6 sm:p-8 shadow-[0_0_40px_rgba(124,58,237,0.12)]">
+                <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#7c3aed]/20 blur-[70px]" />
                 <div className="relative z-10 flex h-full flex-col">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-[#a78bfa] font-semibold">Hosted by HVT</div>
-                    <h3 className="mt-4 bg-gradient-to-r from-white to-[#a78bfa] bg-clip-text text-xl font-bold text-transparent">Free to try today</h3>
-                    <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">
-                      You can create an account, test login flows, invite teammates, and understand the product model
-                      before you set up infrastructure.
-                    </p>
-                    <div className="mt-6 rounded-2xl border border-[rgba(124,58,237,0.2)] bg-[#111111] px-4 py-4 text-sm text-[#d4d4d8]">
-                      Hosted pricing is coming soon. Right now, <strong className="text-[#a78bfa]">you can sign up and use HVT for free while you evaluate the product.</strong>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <div className="font-mono text-xs uppercase text-[#7c3aed]">HVT Managed</div>
+                    <span className="rounded border border-[#7c3aed]/40 bg-[#7c3aed]/20 px-2 py-0.5 font-mono text-[11px] text-[#c4b5fd]">Free Developer Preview</span>
                   </div>
-                  <div className="mt-auto pt-6">
+                  <h3 className="mt-2 text-2xl font-bold text-white">Managed Cloud</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[#a1a1aa]">
+                    Instant access with no server provisioning. Automated backups, managed PostgreSQL, and zero maintenance overhead.
+                  </p>
+                  <div className="mt-6 space-y-3 border-t border-[#27272a] pt-6 text-sm text-[#d4d4d8]">
+                    <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>No server provisioning required</span></div>
+                    <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>Interactive web dashboard and API console</span></div>
+                    <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>Automated security patches</span></div>
+                    <div className="flex items-center gap-2.5"><Check className="h-4 w-4 shrink-0 text-emerald-400" /><span>Migrate to self-hosted at any time</span></div>
+                  </div>
+                  <div className="mt-auto pt-8">
                     <Link
                       to="/signup"
-                      className="inline-flex w-full items-center justify-center rounded-md bg-[#7c3aed] px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9]"
+                      className="inline-flex w-full items-center justify-center rounded-lg bg-[#7c3aed] py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(124,58,237,0.3)] transition hover:bg-[#6d28d9]"
                     >
-                      Try for Free
+                      Create Free Account <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </div>
                 </div>
@@ -801,51 +763,82 @@ export default function Landing() {
             </div>
           </div>
         </section>
+
+        {/* ─── BOTTOM CTA ─── */}
+        <section className="relative overflow-hidden border-b border-[#27272a] py-20 lg:py-24">
+          <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Ready to isolate your tenant authentication?
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-[#a1a1aa]">
+              Start with the hosted developer sandbox in 2 minutes, or pull the Docker image and deploy to your own cluster.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                to="/signup"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#7c3aed] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_0_30px_rgba(124,58,237,0.35)] transition hover:bg-[#6d28d9]"
+              >
+                Create free account <ArrowRight className="h-4 w-4" />
+              </Link>
+              <a
+                href={DOCS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#27272a] bg-[#111114] px-6 py-3.5 text-sm font-semibold text-[#d4d4d8] transition hover:border-[#3f3f46] hover:text-white"
+              >
+                <BookOpen className="h-4 w-4" /> Read the Documentation
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <footer className="bg-[#0a0a0a]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_0.7fr] lg:px-8">
-          <div>
-            <Logo href="/" />
-            <p className="mt-4 max-w-sm text-sm leading-7 text-[#a1a1aa]">
-              Project-scoped auth with roles, permissions, audit logs, and webhooks.
-            </p>
-          </div>
-
-          <div className="grid gap-8 sm:grid-cols-2">
-            <div>
-              <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Links</div>
-              <div className="mt-4 space-y-3">
-                <a href={DOCS_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
-                  <BookOpen className="h-4 w-4" /> Docs
-                </a>
-                <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
-                  <Github className="h-4 w-4" /> GitHub
-                </a>
-                <Link to="/privacy-policy" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
-                  <ShieldCheck className="h-4 w-4" /> Privacy Policy
-                </Link>
-                <Link to="/terms-of-service" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
-                  <ScrollText className="h-4 w-4" /> Terms of Service
-                </Link>
+      {/* ─── FOOTER ─── */}
+      <footer className="bg-[#070709] py-12 text-[#71717a]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-4 lg:grid-cols-5">
+            <div className="md:col-span-2">
+              <Logo href="/" />
+              <p className="mt-4 max-w-sm text-sm text-[#a1a1aa]">
+                Multi-tenant identity and RBAC infrastructure. Database-level project isolation with zero MAU tax.
+              </p>
+              <div className="mt-4 flex items-center gap-2 font-mono text-xs">
+                <Lock className="h-3 w-3 text-[#7c3aed]" />
+                <span>Apache 2.0 Open Source License</span>
               </div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-[0.18em] text-[#71717a]">Ops</div>
-              <div className="mt-4 space-y-3">
-                <a href={CHANGELOG_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
-                  <ExternalLink className="h-4 w-4" /> Changelog
-                </a>
-                <a href={STATUS_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-white">
-                  <ExternalLink className="h-4 w-4" /> API health
-                </a>
-              </div>
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-white">Resources</div>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li><a href={DOCS_URL}      target="_blank" rel="noreferrer" className="hover:text-white transition">Documentation</a></li>
+                <li><a href={GITHUB_URL}    target="_blank" rel="noreferrer" className="hover:text-white transition">GitHub Source</a></li>
+                <li><a href={CHANGELOG_URL} target="_blank" rel="noreferrer" className="hover:text-white transition">Changelog</a></li>
+                <li><a href={STATUS_URL}    target="_blank" rel="noreferrer" className="hover:text-white transition">System Status</a></li>
+              </ul>
+            </div>
+            <div>
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-white">Product</div>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li><Link to="/login"         className="hover:text-white transition">Sign in</Link></li>
+                <li><Link to="/signup"        className="hover:text-white transition">Create Account</Link></li>
+                <li><Link to="/runtime-demo"  className="hover:text-white transition">Commerce Demo</Link></li>
+                <li><Link to="/playground"    className="hover:text-white transition">Runtime Playground</Link></li>
+              </ul>
+            </div>
+            <div>
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-white">Legal</div>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li><Link to="/privacy-policy"   className="hover:text-white transition">Privacy Policy</Link></li>
+                <li><Link to="/terms-of-service" className="hover:text-white transition">Terms of Service</Link></li>
+              </ul>
             </div>
           </div>
-
-          <div className="flex items-start md:col-span-2 xl:col-span-1 xl:justify-end">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#27272a] bg-[#111111] px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-[#a1a1aa]">
-              <LockKeyhole className="h-3.5 w-3.5 text-[#a78bfa]" /> Apache 2.0 Licensed
+          <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[#27272a] pt-8 text-xs">
+            <span>&copy; {new Date().getFullYear()} HVT Contributors. Apache 2.0 License.</span>
+            <div className="flex items-center gap-4">
+              <span>hvts.app</span>
+              <span>·</span>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-white transition">github.com/markodera/hvt</a>
             </div>
           </div>
         </div>
@@ -853,5 +846,3 @@ export default function Landing() {
     </div>
   );
 }
-
-

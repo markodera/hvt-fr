@@ -12,7 +12,6 @@ import {
     PackageCheck,
     ShieldCheck,
     ShoppingBag,
-    Sparkles,
     Store,
     Truck,
     UserRound,

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-    Sparkles,
+    Bot,
     Terminal,
     CheckCircle2,
     Circle,
@@ -85,7 +85,7 @@ export function OnboardingQuickstart({ project }) {
                             title={!canUseSetupPrompt ? setupPromptNotice : 'Generate copy-paste prompt for AI agents'}
                             className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500"
                         >
-                            <Sparkles className="h-4 w-4 text-purple-200" />
+                            <Bot className="h-4 w-4 text-purple-200" />
                             Set up with AI
                         </button>
                         <button
@@ -308,7 +308,7 @@ function AISetupModal({ project, isOpen, onClose, onSuccess }) {
             <DialogContent className="sm:max-w-xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Sparkles className="h-5 w-5 text-purple-400" />
+                        <Bot className="h-5 w-5 text-purple-400" />
                         Set Up With AI (Claude Code, Cursor, Copilot)
                     </DialogTitle>
                     <DialogDescription className="text-xs sm:text-sm">

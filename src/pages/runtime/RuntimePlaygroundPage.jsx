@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Fingerprint, KeyRound, Loader2, Mail, Send, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Fingerprint, KeyRound, Loader2, Mail, Send, ShieldCheck } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 import { Logo } from '@/components/Logo';

@@ -8,7 +8,7 @@ import {
     Code2,
     ExternalLink,
     Play,
-    Sparkles,
+    Store,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CopyButton } from '@/components/CopyButton';
@@ -172,7 +172,7 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
                 >
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
-                            <Sparkles className="h-5 w-5" />
+                            <Store className="h-5 w-5" />
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-white">Marketplace Storefront Demo</p>
