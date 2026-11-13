@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Boxes, Building2, LockKeyhole, LogOut, Pencil, Trash2, UserRound } from 'lucide-react';
+import { Boxes, Building2, LockKeyhole, Pencil, Plus, Trash2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { Helmet } from 'react-helmet-async';
 
@@ -33,8 +33,11 @@ import { Label } from '@/components/ui/label';
 import { ProjectSocialProvidersSection } from '@/pages/settings/ProjectSocialProvidersSection';
 import { ProjectAccessManager } from '@/components/dashboard/ProjectAccessManager';
 import { MFASettingsSection } from '@/pages/settings/MFASettingsSection';
+import { DeviceSessionsSection } from '@/pages/settings/DeviceSessionsSection';
 import { PasskeySettingsSection } from '@/pages/settings/PasskeySettingsSection';
 import { ProjectRuntimeAuthSection } from '@/pages/settings/ProjectRuntimeAuthSection';
+import { PersonalAccessTokensSection } from '@/pages/settings/PersonalAccessTokensSection';
+import { ProjectEmailConfigSection } from '@/pages/settings/ProjectEmailConfigSection';
 
 const SETTINGS_TABS = [
     {
@@ -77,7 +80,7 @@ function Toggle({ checked, onChange }) {
             role="switch"
             aria-checked={checked}
             onClick={onChange}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-[#7c3aed]' : 'border border-[#27272a] bg-[#111111]'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-zinc-100 text-zinc-950' : 'border border-[#27272a] bg-[#111111]'
                 }`}
         >
             <span
@@ -98,7 +101,7 @@ function LoadingGrid() {
     );
 }
 
-const textareaClassName = 'min-h-[120px] w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white placeholder:text-[#52525b] focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/25';
+const textareaClassName = 'min-h-[120px] w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white placeholder:text-[#52525b] focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20';
 
 function splitMultilineValues(value = '') {
     return String(value)
@@ -134,13 +137,13 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 export default function SettingsPage() {
     usePageTitle('Settings');
     const queryClient = useQueryClient();
-    const { user, refreshSession, logout } = useAuth();
+    const { user, refreshSession } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'account';
 
     const [editingProject, setEditingProject] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
 
     function handleTabChange(tabId) {
         setSearchParams({ tab: tabId });
@@ -240,15 +243,7 @@ export default function SettingsPage() {
         queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
     }
 
-    async function handleLogout() {
-        setIsLoggingOut(true);
-        try {
-            await logout();
-        } catch (error) {
-            setIsLoggingOut(false);
-            toast.error(getErrorMessage(error));
-        }
-    }
+
 
     const orgMutation = useMutation({
         mutationFn: updateOrg,
@@ -282,6 +277,7 @@ export default function SettingsPage() {
         mutationFn: createProject,
         onSuccess: () => {
             invalidateProjectQueries();
+            setIsCreateProjectOpen(false);
             projectForm.reset(buildProjectFormDefaults(null, org?.allow_signup ?? false));
             resetCreateProjectSlugSync();
             toast.success('Project created');
@@ -339,7 +335,7 @@ export default function SettingsPage() {
                             onClick={() => handleTabChange(tab.id)}
                             className={`inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
                                 isActive
-                                    ? 'bg-[#7c3aed] text-white shadow-lg shadow-[#7c3aed]/25'
+                                    ? 'bg-[#7c3aed] text-white shadow-sm shadow-[#7c3aed]/25'
                                     : 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa] hover:border-[#3f3f46] hover:text-white'
                             }`}
                         >
@@ -374,14 +370,14 @@ export default function SettingsPage() {
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">First name</Label>
                                         <Input
                                             {...profileForm.register('first_name')}
-                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Last name</Label>
                                         <Input
                                             {...profileForm.register('last_name')}
-                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                                         />
                                     </div>
                                 </div>
@@ -389,7 +385,7 @@ export default function SettingsPage() {
                                 <Button
                                     type="submit"
                                     disabled={profileMutation.isPending || !profileForm.formState.isDirty}
-                                    className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                    className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                                 >
                                     {profileMutation.isPending ? 'Saving...' : 'Save changes'}
                                 </Button>
@@ -407,7 +403,7 @@ export default function SettingsPage() {
                                     <Input
                                         type="password"
                                         {...passwordForm.register('old_password')}
-                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                                     />
                                 </div>
 
@@ -417,7 +413,7 @@ export default function SettingsPage() {
                                         <Input
                                             type="password"
                                             {...passwordForm.register('new_password1')}
-                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -425,19 +421,19 @@ export default function SettingsPage() {
                                         <Input
                                             type="password"
                                             {...passwordForm.register('new_password2')}
-                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <Link to="/forgot-password" className="text-sm text-[#a78bfa] transition-colors hover:text-white">
+                                    <Link to="/forgot-password" className="text-sm text-zinc-300 transition-colors hover:text-white">
                                         Open password reset
                                     </Link>
                                     <Button
                                         type="submit"
                                         disabled={passwordMutation.isPending}
-                                        className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                        className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                                     >
                                         {passwordMutation.isPending ? 'Updating...' : 'Change password'}
                                     </Button>
@@ -452,47 +448,13 @@ export default function SettingsPage() {
                     {/* Dedicated, Prominent Active Session & Log Out Section */}
                     <SectionCard
                         label="Session Management"
-                        title="Active session & sign out"
-                        description="Your currently active control-plane session on this browser. Sign out securely at any time."
+                        title="Active sessions & devices"
+                        description="View active sessions across devices, revoke specific devices, or sign out remotely."
                     >
-                        <div className="rounded-xl border border-[#27272a] bg-[#111111] p-5">
-                            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="relative flex h-2.5 w-2.5">
-                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-                                        </span>
-                                        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                                            Active session on this device
-                                        </span>
-                                    </div>
-                                    <p className="text-base font-semibold text-white">{user?.email}</p>
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#a1a1aa]">
-                                        <span>Role: <strong className="text-white">{user?.role || 'Member'}</strong></span>
-                                        <span>•</span>
-                                        <span>User ID: <code className="rounded bg-[#18181b] px-1.5 py-0.5 font-mono text-[#d4d4d8]">{user?.id}</code></span>
-                                        {org?.name ? (
-                                            <>
-                                                <span>•</span>
-                                                <span>Org: <strong className="text-white">{org.name}</strong></span>
-                                            </>
-                                        ) : null}
-                                    </div>
-                                </div>
-
-                                <Button
-                                    type="button"
-                                    onClick={handleLogout}
-                                    disabled={isLoggingOut}
-                                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 px-5 text-sm font-semibold text-rose-300 transition-all hover:border-rose-500 hover:bg-rose-600 hover:text-white sm:w-auto"
-                                >
-                                    <LogOut className="h-4 w-4" />
-                                    {isLoggingOut ? 'Signing out...' : 'Sign out of HVT'}
-                                </Button>
-                            </div>
-                        </div>
+                        <DeviceSessionsSection />
                     </SectionCard>
+
+                    <PersonalAccessTokensSection />
                 </div>
             )}
 
@@ -510,7 +472,7 @@ export default function SettingsPage() {
                                     <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Organisation name</Label>
                                     <Input
                                         {...orgForm.register('name')}
-                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -522,7 +484,7 @@ export default function SettingsPage() {
                                             notifyOrgSlugEdited();
                                             orgSlugField.onChange(event);
                                         }}
-                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        className="h-10 border-[#27272a] bg-[#111111] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                                     />
                                 </div>
                             </div>
@@ -545,7 +507,7 @@ export default function SettingsPage() {
                             <Button
                                 type="submit"
                                 disabled={orgMutation.isPending || !orgForm.formState.isDirty}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                             >
                                 {orgMutation.isPending ? 'Saving...' : 'Save organisation'}
                             </Button>
@@ -596,14 +558,14 @@ export default function SettingsPage() {
                                                 </span>
                                                 <span
                                                     className={`rounded-full px-2 py-0.5 text-[11px] ${project.allow_signup
-                                                            ? 'border border-[#7c3aed]/40 bg-[#7c3aed]/10 text-[#c4b5fd]'
+                                                            ? 'border border-zinc-500/40 bg-zinc-100 text-zinc-950/10 text-zinc-200'
                                                             : 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa]'
                                                         }`}
                                                 >
                                                     {project.allow_signup ? 'Signup open' : 'Signup closed'}
                                                 </span>
                                             </div>
-                                            <p className="mt-2 font-mono text-xs text-[#a78bfa]">{project.slug}</p>
+                                            <p className="mt-2 font-mono text-xs text-zinc-300">{project.slug}</p>
                                             {project.frontend_url ? (
                                                 <p className="mt-2 break-all text-xs text-[#a1a1aa]">
                                                     App frontend: <span className="font-mono text-[#d4d4d8]">{project.frontend_url}</span>
@@ -639,84 +601,123 @@ export default function SettingsPage() {
                         </div>
                     )}
 
-                    <div className="rounded-2xl border border-[#27272a] bg-[#111111] p-4">
-                        <p className="text-sm font-medium text-white">Create project</p>
-                        <p className="mt-1 text-sm text-[#71717a]">Use a separate project for each app or environment.</p>
-
-                        <form onSubmit={projectForm.handleSubmit((values) => projectMutation.mutate(toProjectPayload(values)))} className="mt-4 grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project name</Label>
-                                <Input
-                                    {...projectForm.register('name')}
-                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project slug</Label>
-                                <Input
-                                    {...createProjectSlugField}
-                                    onChange={(event) => {
-                                        createProjectUserEditedSlug.current = true;
-                                        notifyCreateProjectSlugEdited();
-                                        createProjectSlugField.onChange(event);
-                                    }}
-                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                                />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">App frontend URL</Label>
-                                <Input
-                                    {...projectForm.register('frontend_url')}
-                                    placeholder="https://app.example.com"
-                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
-                                />
-                                {projectForm.formState.errors.frontend_url ? (
-                                    <p className="text-xs text-rose-300">{projectForm.formState.errors.frontend_url.message}</p>
-                                ) : null}
-                                <p className="text-xs text-[#71717a]">
-                                    Optional. Verification and password-reset emails will link to this frontend when this project API key is used.
-                                </p>
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Allowed origins</Label>
-                                <textarea
-                                    {...projectForm.register('allowed_origins_text')}
-                                    rows={4}
-                                    placeholder={`https://preview.example.com\nhttp://localhost:3000`}
-                                    className={textareaClassName}
-                                />
-                                {projectForm.formState.errors.allowed_origins_text ? (
-                                    <p className="text-xs text-rose-300">{projectForm.formState.errors.allowed_origins_text.message}</p>
-                                ) : null}
-                                <p className="text-xs text-[#71717a]">
-                                    Optional. One origin per line. Live app keys accept browser requests only from these origins plus the app frontend URL above. Test keys also allow localhost automatically.
-                                </p>
-                            </div>
-                            <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 md:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+                    {!isCreateProjectOpen ? (
+                        <div className="rounded-xl border border-[#27272a] bg-[#111111] p-4 transition-colors hover:border-[#3f3f46]">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-sm font-medium text-white">Allow public sign-up</p>
-                                    <p className="text-xs text-[#71717a]">Applies when this project key is used for app sign-up.</p>
+                                    <p className="text-sm font-semibold text-white">Create project</p>
+                                    <p className="mt-0.5 text-xs text-[#71717a]">
+                                        Use a separate project for each app or environment boundary.
+                                    </p>
                                 </div>
-                                <Toggle
-                                    checked={projectForm.watch('allow_signup')}
-                                    onChange={() =>
-                                        projectForm.setValue('allow_signup', !projectForm.watch('allow_signup'), {
-                                            shouldDirty: true,
-                                        })
-                                    }
-                                />
-                            </div>
-                            <div className="flex justify-end md:col-span-2">
                                 <Button
-                                    type="submit"
-                                    disabled={projectMutation.isPending}
-                                    className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
+                                    type="button"
+                                    onClick={() => setIsCreateProjectOpen(true)}
+                                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9]"
                                 >
-                                    {projectMutation.isPending ? 'Creating...' : 'Create project'}
+                                    <Plus className="h-4 w-4" />
+                                    <span>New project</span>
                                 </Button>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border border-[#3f3f46] bg-[#111111] p-5 transition-all">
+                            <div className="flex items-center justify-between border-b border-[#27272a] pb-3">
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Create new project</p>
+                                    <p className="mt-0.5 text-xs text-[#71717a]">Configure a dedicated project boundary for runtime keys and permissions.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCreateProjectOpen(false)}
+                                    className="text-xs text-[#71717a] hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+
+                            <form onSubmit={projectForm.handleSubmit((values) => projectMutation.mutate(toProjectPayload(values)))} className="mt-4 grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project name</Label>
+                                    <Input
+                                        {...projectForm.register('name')}
+                                        className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project slug</Label>
+                                    <Input
+                                        {...createProjectSlugField}
+                                        onChange={(event) => {
+                                            createProjectUserEditedSlug.current = true;
+                                            notifyCreateProjectSlugEdited();
+                                            createProjectSlugField.onChange(event);
+                                        }}
+                                        className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">App frontend URL</Label>
+                                    <Input
+                                        {...projectForm.register('frontend_url')}
+                                        placeholder="https://app.example.com"
+                                        className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+                                    />
+                                    {projectForm.formState.errors.frontend_url ? (
+                                        <p className="text-xs text-rose-300">{projectForm.formState.errors.frontend_url.message}</p>
+                                    ) : null}
+                                    <p className="text-xs text-[#71717a]">
+                                        Optional. Verification and password-reset emails will link to this frontend when this project API key is used.
+                                    </p>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Allowed origins</Label>
+                                    <textarea
+                                        {...projectForm.register('allowed_origins_text')}
+                                        rows={4}
+                                        placeholder={`https://preview.example.com\nhttp://localhost:3000`}
+                                        className={textareaClassName}
+                                    />
+                                    {projectForm.formState.errors.allowed_origins_text ? (
+                                        <p className="text-xs text-rose-300">{projectForm.formState.errors.allowed_origins_text.message}</p>
+                                    ) : null}
+                                    <p className="text-xs text-[#71717a]">
+                                        Optional. One origin per line. Live app keys accept browser requests only from these origins plus the app frontend URL above. Test keys also allow localhost automatically.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 md:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-white">Allow public sign-up</p>
+                                        <p className="text-xs text-[#71717a]">Applies when this project key is used for app sign-up.</p>
+                                    </div>
+                                    <Toggle
+                                        checked={projectForm.watch('allow_signup')}
+                                        onChange={() =>
+                                            projectForm.setValue('allow_signup', !projectForm.watch('allow_signup'), {
+                                                shouldDirty: true,
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-2 md:col-span-2">
+                                    <Button
+                                        type="button"
+                                        onClick={() => setIsCreateProjectOpen(false)}
+                                        className="border border-[#27272a] bg-[#18181b] text-zinc-300 hover:bg-[#27272a] hover:text-white"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={projectMutation.isPending}
+                                        className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
+                                    >
+                                        {projectMutation.isPending ? 'Creating...' : 'Create project'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </SectionCard>
 
@@ -743,6 +744,8 @@ export default function SettingsPage() {
             >
                 <ProjectSocialProvidersSection projects={projects} />
             </SectionCard>
+
+            <ProjectEmailConfigSection projects={projects} />
         </div>
     )}
 
@@ -765,7 +768,7 @@ export default function SettingsPage() {
                             <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project name</Label>
                             <Input
                                 {...editProjectForm.register('name')}
-                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                             />
                         </div>
                         <div className="space-y-2">
@@ -777,7 +780,7 @@ export default function SettingsPage() {
                                     notifyEditProjectSlugEdited();
                                     editProjectSlugField.onChange(event);
                                 }}
-                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                             />
                         </div>
                         <div className="space-y-2">
@@ -785,7 +788,7 @@ export default function SettingsPage() {
                             <Input
                                 {...editProjectForm.register('frontend_url')}
                                 placeholder="https://app.example.com"
-                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-zinc-500/20"
                             />
                             {editProjectForm.formState.errors.frontend_url ? (
                                 <p className="text-xs text-rose-300">{editProjectForm.formState.errors.frontend_url.message}</p>
@@ -835,7 +838,7 @@ export default function SettingsPage() {
                             <Button
                                 type="submit"
                                 disabled={updateProjectMutation.isPending}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                             >
                                 {updateProjectMutation.isPending ? 'Saving...' : 'Save project'}
                             </Button>

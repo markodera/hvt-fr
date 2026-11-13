@@ -12,11 +12,12 @@ import {
 
 import { listApiKeys } from '@/api/apiKeys';
 import { listAuditLogs } from '@/api/auditLogs';
-import { listProjects } from '@/api/organizations';
 import { listUsers } from '@/api/users';
 import { getWebhookSummary } from '@/api/webhooks';
 import { formatDate, formatRelativeTime } from '@/lib/utils';
 import { OnboardingQuickstart } from '@/components/dashboard/OnboardingQuickstart';
+import { useProject } from '@/hooks/useProject';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 function Card({ children, className = '' }) {
     return (
@@ -56,7 +57,7 @@ function StatCard({ icon: Icon, label, value, helper }) {
                     <p className="mt-3 text-[28px] font-bold tracking-[-0.03em] text-white">{value}</p>
                     <p className="mt-2 text-xs text-[#71717a]">{helper}</p>
                 </div>
-                <div className="rounded-xl border border-[#7c3aed]/25 bg-[#111111] p-3 text-[#a78bfa]">
+                <div className="rounded-xl border border-zinc-800 bg-[#121214] p-3 text-zinc-300">
                     <Icon className="h-5 w-5" />
                 </div>
             </div>
@@ -68,22 +69,17 @@ function auditResource(log) {
     return log.target_type || log.project || 'system';
 }
 
-import { usePageTitle } from '@/hooks/usePageTitle';
-
 export default function DashboardHome() {
     usePageTitle('Dashboard');
+    const { projects, activeProject, isLoading: projectsLoading } = useProject();
+
     const { data: usersData, isLoading: usersLoading } = useQuery({
         queryKey: ['dashboard-users-count'],
         queryFn: () => listUsers({ page: 1, page_size: 1 }),
     });
 
-    const { data: projectsData, isLoading: projectsLoading } = useQuery({
-        queryKey: ['dashboard-projects'],
-        queryFn: listProjects,
-    });
-
     const { data: apiKeysData, isLoading: apiKeysLoading } = useQuery({
-        queryKey: ['dashboard-api-keys'],
+        queryKey: ['dashboard-api-keys', activeProject?.id],
         queryFn: () => listApiKeys({ page: 1, page_size: 3, ordering: '-last_used_at' }),
     });
 
@@ -105,8 +101,6 @@ export default function DashboardHome() {
         queryFn: getWebhookSummary,
     });
 
-    const projects = useMemo(() => projectsData?.results ?? projectsData ?? [], [projectsData]);
-    const activeProject = useMemo(() => projects.find((p) => p.is_default) || projects[0], [projects]);
     const apiKeys = useMemo(() => apiKeysData?.results ?? [], [apiKeysData]);
     const auditEvents = useMemo(() => auditData?.results ?? [], [auditData]);
     const activeProjects = projects.filter((project) => project.is_active).length;
@@ -120,6 +114,7 @@ export default function DashboardHome() {
     return (
         <div className="space-y-6">
             {activeProject ? <OnboardingQuickstart project={activeProject} /> : null}
+
             <section className="grid gap-4 lg:grid-cols-4">
                 {usersLoading ? (
                     <SkeletonBlock className="h-[132px]" />
@@ -170,30 +165,30 @@ export default function DashboardHome() {
                 )}
             </section>
 
-            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+            <section className="grid gap-6 lg:grid-cols-2">
                 <Card className="overflow-hidden">
                     <div className="flex items-center justify-between border-b border-[#27272a] px-5 py-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[#71717a]">
                                 Recent Audit Events
                             </p>
                             <p className="mt-1 text-sm text-[#a1a1aa]">
                                 Latest control-plane and runtime activity across your organisation.
                             </p>
                         </div>
-                        <ScrollText className="h-4 w-4 text-[#a78bfa]" />
+                        <ScrollText className="h-4 w-4 text-zinc-400" />
                     </div>
 
                     {auditLoading ? (
                         <div className="space-y-3 px-5 py-5">
-                            {Array.from({ length: 5 }).map((_, index) => (
+                            {Array.from({ length: 4 }).map((_, index) => (
                                 <SkeletonBlock key={index} className="h-12" />
                             ))}
                         </div>
                     ) : auditError ? (
                         <EmptyState
-                            icon={Activity}
-                            message="Audit events could not be loaded right now."
+                            icon={ScrollText}
+                            message="Could not load audit events. Refresh the page to try again."
                         />
                     ) : auditEvents.length === 0 ? (
                         <EmptyState
@@ -204,7 +199,7 @@ export default function DashboardHome() {
                         <div className="overflow-x-auto">
                             <table className="min-w-full">
                                 <thead>
-                                    <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
+                                    <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-wider text-[#71717a]">
                                         <th className="px-5 py-3 font-medium">Event</th>
                                         <th className="px-5 py-3 font-medium">Actor</th>
                                         <th className="px-5 py-3 font-medium">Resource</th>
@@ -213,7 +208,7 @@ export default function DashboardHome() {
                                 </thead>
                                 <tbody>
                                     {auditEvents.map((log) => (
-                                        <tr key={log.id} className="border-b border-[#27272a] last:border-b-0">
+                                        <tr key={log.id} className="border-b border-[#27272a] last:border-b-0 hover:bg-[#202024]/40 transition-colors">
                                             <td className="px-5 py-3 text-sm font-medium text-white">{log.event_type}</td>
                                             <td className="px-5 py-3 text-sm text-[#a1a1aa]">
                                                 {log.actor_email || log.actor_api_key_name || 'System'}
@@ -233,14 +228,14 @@ export default function DashboardHome() {
                 <Card className="overflow-hidden">
                     <div className="flex items-center justify-between border-b border-[#27272a] px-5 py-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[#71717a]">
                                 Projects
                             </p>
                             <p className="mt-1 text-sm text-[#a1a1aa]">
                                 Project boundaries define API keys, runtime auth, and provider configuration.
                             </p>
                         </div>
-                        <Boxes className="h-4 w-4 text-[#a78bfa]" />
+                        <Boxes className="h-4 w-4 text-zinc-400" />
                     </div>
 
                     {projectsLoading ? (
@@ -256,7 +251,7 @@ export default function DashboardHome() {
                             cta={
                                 <Link
                                     to="/dashboard/settings"
-                                    className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#18181b]"
+                                    className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-700 px-4 text-sm font-semibold text-zinc-300 transition-colors hover:bg-[#18181b] hover:text-white"
                                 >
                                     + New project
                                 </Link>
@@ -272,7 +267,7 @@ export default function DashboardHome() {
                                     <div className="min-w-0">
                                         <p className="truncate text-sm font-medium text-white">{project.name}</p>
                                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                                            <span className="rounded-full border border-[#3f3f46] bg-[#18181b] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]">
+                                            <span className="rounded-full border border-[#3f3f46] bg-[#18181b] px-2 py-0.5 font-mono text-[11px] text-zinc-300">
                                                 {project.slug}
                                             </span>
                                             {project.is_default ? (
@@ -294,7 +289,7 @@ export default function DashboardHome() {
                             ))}
                             <Link
                                 to="/dashboard/settings"
-                                className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/30 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#111111]"
+                                className="inline-flex h-9 items-center justify-center rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9]"
                             >
                                 + New project
                             </Link>
@@ -306,14 +301,14 @@ export default function DashboardHome() {
             <Card className="overflow-hidden">
                 <div className="flex items-center justify-between border-b border-[#27272a] px-5 py-4">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[#71717a]">
                             Recent API Key Activity
                         </p>
                         <p className="mt-1 text-sm text-[#a1a1aa]">
                             Latest key usage across projects. HTTP method is not exposed by the current API, so this view uses the last-used timestamp.
                         </p>
                     </div>
-                    <KeyRound className="h-4 w-4 text-[#a78bfa]" />
+                    <KeyRound className="h-4 w-4 text-zinc-400" />
                 </div>
 
                 {apiKeysLoading ? (
@@ -329,7 +324,7 @@ export default function DashboardHome() {
                         cta={
                             <Link
                                 to="/dashboard/api-keys"
-                                className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#18181b]"
+                                className="inline-flex h-9 items-center justify-center rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9]"
                             >
                                 Issue new key
                             </Link>
@@ -347,7 +342,7 @@ export default function DashboardHome() {
                                     <span
                                         className={`rounded-full px-2 py-1 text-[11px] font-medium ${
                                             key.environment === 'live'
-                                                ? 'border border-amber-500/30 bg-amber-500/10 text-amber-300'
+                                                ? 'border border-zinc-800 bg-[#121214] text-zinc-300'
                                                 : 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa]'
                                         }`}
                                     >

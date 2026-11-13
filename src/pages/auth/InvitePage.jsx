@@ -178,17 +178,17 @@ export function InvitePage() {
                         </div>
                         <div className="grid gap-3 text-sm text-[#a1a1aa]">
                             <p className="flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-[#a78bfa]" />
+                                <Mail className="h-4 w-4 text-zinc-400" />
                                 {invitation.email}
                             </p>
                             {invitation.invited_by_email ? (
                                 <p className="flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-[#a78bfa]" />
+                                    <Users className="h-4 w-4 text-zinc-400" />
                                     Invited by {invitation.invited_by_email}
                                 </p>
                             ) : null}
                             <p className="flex items-center gap-2">
-                                <ShieldCheck className="h-4 w-4 text-[#a78bfa]" />
+                                <ShieldCheck className="h-4 w-4 text-zinc-400" />
                                 Expires {formatDate(invitation.expires_at)}
                             </p>
                         </div>

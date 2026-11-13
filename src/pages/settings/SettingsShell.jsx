@@ -24,7 +24,7 @@ export function SettingsShell() {
                                 cn(
                                     'flex items-center px-4 h-[40px] text-[14px] w-full whitespace-nowrap transition-colors duration-120',
                                     isActive
-                                        ? 'text-white bg-[#18181b] border-b-[3px] md:border-b-0 md:border-l-[3px] border-[#7c3aed]'
+                                        ? 'text-white bg-[#18181b] border-b-[3px] md:border-b-0 md:border-l-[3px] border-zinc-500'
                                         : 'text-[#71717a] hover:text-[#a1a1aa] hover:bg-[#18181b] border-b-[3px] md:border-b-0 md:border-l-[3px] border-transparent'
                                 )
                             }

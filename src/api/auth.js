@@ -27,7 +27,12 @@ export function logout(options = {}) {
 }
 
 export function register(data, options = {}) {
-    return hvt.auth.register(data, options);
+    return hvt.request('/api/v1/auth/register/', {
+        method: 'POST',
+        body: data,
+        auth: 'none',
+        ...options,
+    });
 }
 
 export function resendVerificationEmail(data, options = {}) {
@@ -211,4 +216,25 @@ export function resendRuntimeScopedVerificationEmail(data, options = {}) {
 
 export function listSocialProviders(options = {}) {
     return hvt.auth.listSocialProviders(normalizeOptions(options));
+}
+
+export function listSessions(options = {}) {
+    return hvt.request('/api/v1/auth/sessions/', {
+        method: 'GET',
+        ...normalizeOptions(options),
+    });
+}
+
+export function revokeSession(sessionId, options = {}) {
+    return hvt.request('/api/v1/auth/sessions/' + sessionId + '/', {
+        method: 'DELETE',
+        ...normalizeOptions(options),
+    });
+}
+
+export function revokeAllOtherSessions(options = {}) {
+    return hvt.request('/api/v1/auth/sessions/revoke-all/', {
+        method: 'POST',
+        ...normalizeOptions(options),
+    });
 }

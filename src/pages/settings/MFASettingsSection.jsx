@@ -119,7 +119,7 @@ export function MFASettingsSection() {
                         type="button"
                         onClick={() => setupMutation.mutate()}
                         disabled={setupMutation.isPending || isLoading}
-                        className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                        className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                     >
                         {setupMutation.isPending ? 'Setting up...' : 'Enable 2FA'}
                     </Button>
@@ -131,7 +131,7 @@ export function MFASettingsSection() {
                 <DialogContent className="border-[#27272a] bg-[#111111] text-white sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-white">
-                            <QrCode className="h-5 w-5 text-[#a78bfa]" /> Set up Authenticator App
+                            <QrCode className="h-5 w-5 text-zinc-300" /> Set up Authenticator App
                         </DialogTitle>
                         <DialogDescription className="text-[#a1a1aa]">
                             Scan the QR code with your authenticator app (Google Authenticator, 1Password, Apple Keychain) or enter the setup key manually.
@@ -157,7 +157,7 @@ export function MFASettingsSection() {
                                 <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">
                                     Manual Setup Key (Base32)
                                 </Label>
-                                <p className="mt-2 font-mono text-sm font-bold tracking-widest text-[#a78bfa] select-all">
+                                <p className="mt-2 font-mono text-sm font-bold tracking-widest text-zinc-300 select-all">
                                     {setupData.secret}
                                 </p>
                             </div>
@@ -172,7 +172,7 @@ export function MFASettingsSection() {
                                     placeholder="123456"
                                     value={verifyCode}
                                     onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
-                                    className="h-11 text-center font-mono text-lg tracking-widest border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed]"
+                                    className="h-11 text-center font-mono text-lg tracking-widest border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500"
                                 />
                             </div>
                         </div>
@@ -191,7 +191,7 @@ export function MFASettingsSection() {
                             type="button"
                             onClick={() => verifyMutation.mutate(verifyCode)}
                             disabled={verifyCode.length < 6 || verifyMutation.isPending}
-                            className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                            className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                         >
                             {verifyMutation.isPending ? 'Verifying...' : 'Verify & Enable'}
                         </Button>
@@ -218,7 +218,7 @@ export function MFASettingsSection() {
                             placeholder="Current password"
                             value={disablePassword}
                             onChange={(e) => setDisablePassword(e.target.value)}
-                            className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed]"
+                            className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500"
                         />
                     </div>
 

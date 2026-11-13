@@ -17,8 +17,8 @@ import {
 import { formatDate, getErrorMessage } from '@/lib/utils';
 
 function roleBadgeClass(role) {
-    if (role === 'owner') return 'border-[#4c1d95] bg-[#2e1065] text-[#ddd6fe]';
-    if (role === 'admin') return 'border-[#6d28d9] bg-[#2b124c] text-[#c4b5fd]';
+    if (role === 'owner') return 'border-zinc-700 bg-zinc-800 text-white font-semibold';
+    if (role === 'admin') return 'border-zinc-700 bg-zinc-800 text-zinc-200';
     return 'border-[#3f3f46] bg-[#18181b] text-[#d4d4d8]';
 }
 
@@ -101,7 +101,7 @@ export function InvitationAcceptPage() {
                 <AuthCard>
                     <div className="space-y-6 text-center">
                         <Logo align="center" className="mx-auto" />
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-[#a78bfa]">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-zinc-300">
                             <Users className="h-7 w-7" />
                         </div>
                         <div className="space-y-2">
@@ -153,7 +153,7 @@ export function InvitationAcceptPage() {
                 <div className="space-y-6">
                     <div className="space-y-4 text-center">
                         <Logo align="center" className="mx-auto" />
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-[#a78bfa]">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-zinc-300">
                             <Users className="h-7 w-7" />
                         </div>
                         <div className="space-y-2">
@@ -178,19 +178,19 @@ export function InvitationAcceptPage() {
 
                         <div className="mt-4 space-y-3 text-sm text-[#a1a1aa]">
                             <div className="flex items-center gap-3">
-                                <Building2 className="h-4 w-4 text-[#a78bfa]" />
+                                <Building2 className="h-4 w-4 text-zinc-400" />
                                 <span>{invitation.organization_name}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <Mail className="h-4 w-4 text-[#a78bfa]" />
+                                <Mail className="h-4 w-4 text-zinc-400" />
                                 <span>{invitation.email}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <ShieldCheck className="h-4 w-4 text-[#a78bfa]" />
+                                <ShieldCheck className="h-4 w-4 text-zinc-400" />
                                 <span>Invited by {invitation.invited_by_email || 'your organization owner'}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#27272a] bg-[#111111] text-[10px] text-[#a78bfa]">
+                                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#27272a] bg-[#111111] text-[10px] text-zinc-400">
                                     i
                                 </span>
                                 <span>Expires {formatDate(invitation.expires_at)}</span>

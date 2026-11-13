@@ -319,7 +319,7 @@ export default function WebhooksPage() {
                 <button
                     type="button"
                     onClick={openCreateDialog}
-                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9] sm:w-auto"
+                    className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9] sm:w-auto"
                 >
                     <Plus className="h-4 w-4" />
                     Add endpoint
@@ -344,7 +344,7 @@ export default function WebhooksPage() {
                             <button
                                 type="button"
                                 onClick={openCreateDialog}
-                                className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#111111]"
+                                className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-700 text-zinc-300 hover:bg-zinc-800 px-4 text-sm font-semibold text-white transition-colors hover:bg-[#111111]"
                             >
                                 Add endpoint
                             </button>
@@ -363,7 +363,7 @@ export default function WebhooksPage() {
                                                 href={webhook.url}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="inline-flex min-w-0 items-center gap-1 break-all text-sm font-medium text-white transition-colors hover:text-[#a78bfa]"
+                                                className="inline-flex min-w-0 items-center gap-1 break-all text-sm font-medium text-white transition-colors hover:text-white"
                                             >
                                                 {truncate(webhook.url, 52)}
                                                 <ExternalLink className="h-3.5 w-3.5 shrink-0" />
@@ -374,7 +374,7 @@ export default function WebhooksPage() {
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
-                                            <span className="rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
+                                            <span className="rounded-full border border-zinc-700 bg-zinc-800/80 text-zinc-300 px-2 py-1 font-mono text-[11px] text-zinc-300">
                                                 {webhook.project_slug}
                                             </span>
                                             <span className="rounded-full border border-[#27272a] bg-[#111111] px-2 py-1 text-[11px] text-[#a1a1aa]">
@@ -458,7 +458,7 @@ export default function WebhooksPage() {
                                                             href={webhook.url}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors hover:text-[#a78bfa]"
+                                                            className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors hover:text-white"
                                                         >
                                                             {truncate(webhook.url, 52)}
                                                             <ExternalLink className="h-3.5 w-3.5" />
@@ -466,7 +466,7 @@ export default function WebhooksPage() {
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <div className="text-sm text-white">{webhook.project_name}</div>
-                                                        <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
+                                                        <div className="mt-1 inline-flex rounded-full border border-zinc-700 bg-zinc-800/80 text-zinc-300 px-2 py-1 font-mono text-[11px] text-zinc-300">
                                                             {webhook.project_slug}
                                                         </div>
                                                     </td>
@@ -542,7 +542,7 @@ export default function WebhooksPage() {
                             <select
                                 value={draft.project_id}
                                 onChange={(event) => setDraft((current) => ({ ...current, project_id: event.target.value }))}
-                                className="h-10 w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                                className="h-10 w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600"
                                 required
                             >
                                 <option value="">Select a project</option>
@@ -560,7 +560,7 @@ export default function WebhooksPage() {
                                 value={draft.url}
                                 onChange={(event) => setDraft((current) => ({ ...current, url: event.target.value }))}
                                 placeholder="https://example.com/webhooks/hvt"
-                                className="h-10 border-[#27272a] bg-[#18181b] text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white placeholder:text-[#71717a] focus:border-zinc-500 focus:ring-zinc-500/40/25"
                             />
                         </div>
 
@@ -570,7 +570,7 @@ export default function WebhooksPage() {
                                 value={draft.description}
                                 onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
                                 placeholder="Slack notifications"
-                                className="h-10 border-[#27272a] bg-[#18181b] text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white placeholder:text-[#71717a] focus:border-zinc-500 focus:ring-zinc-500/40/25"
                             />
                         </div>
 
@@ -586,8 +586,8 @@ export default function WebhooksPage() {
                                             onClick={() => toggleEvent(eventType.value)}
                                             className={`rounded-xl border px-3 py-3 text-left transition-colors ${
                                                 selected
-                                                    ? 'border-[#7c3aed]/50 bg-[#7c3aed]/10 text-white'
-                                                    : 'border-[#27272a] bg-[#18181b] text-[#a1a1aa] hover:border-[#7c3aed]/30'
+                                                    ? 'border-zinc-500 bg-zinc-800/80 text-white'
+                                                    : 'border-[#27272a] bg-[#18181b] text-[#a1a1aa] hover:border-zinc-600'
                                             }`}
                                         >
                                             <p className="text-sm font-medium">{eventType.label}</p>
@@ -603,7 +603,7 @@ export default function WebhooksPage() {
                                 type="checkbox"
                                 checked={draft.is_active}
                                 onChange={(event) => setDraft((current) => ({ ...current, is_active: event.target.checked }))}
-                                className="h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-[#7c3aed] focus:ring-[#7c3aed]/40"
+                                className="h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-zinc-100 accent-zinc-200 focus:ring-zinc-400/30"
                             />
                             Endpoint is active
                         </label>
@@ -620,7 +620,7 @@ export default function WebhooksPage() {
                             <Button
                                 type="submit"
                                 disabled={createMutation.isPending || updateMutation.isPending}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition"
                             >
                                 {createMutation.isPending || updateMutation.isPending
                                     ? 'Saving...'

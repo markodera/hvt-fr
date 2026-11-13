@@ -20,7 +20,7 @@ export function MembersTab() {
             <section>
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-semibold text-white">Team Members</h3>
-                    <Button className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]">
+                    <Button className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25">
                         <Mail className="w-4 h-4 mr-2" />
                         Invite Member
                     </Button>
@@ -43,7 +43,7 @@ export function MembersTab() {
                                             <div className="text-sm font-medium text-white flex items-center gap-2">
                                                 {getUserDisplayName(user)}
                                                 {user.role === 'owner' && (
-                                                    <Badge variant="outline" className="bg-[#7c3aed]/10 text-[#7c3aed] border-[#7c3aed]/20 text-xs">
+                                                    <Badge variant="outline" className="bg-zinc-800 text-zinc-200 border-zinc-700 text-xs">
                                                         <Shield className="w-3 h-3 mr-1" />
                                                         Owner
                                                     </Badge>

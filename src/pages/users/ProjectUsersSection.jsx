@@ -33,7 +33,7 @@ import { formatDate, getErrorMessage } from '@/lib/utils';
 import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 
 const selectClassName =
-    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25';
+    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600';
 
 function normalizeCollection(data) {
     return data?.results ?? data ?? [];
@@ -421,7 +421,7 @@ export function ProjectUsersSection() {
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <UsersIcon className="h-5 w-5 text-[#a78bfa]" />
+                            <UsersIcon className="h-5 w-5 text-zinc-300" />
                             <h2 className="text-lg font-bold text-white">Project users</h2>
                         </div>
                         <p className="max-w-3xl text-sm text-[#a1a1aa]">
@@ -452,7 +452,7 @@ export function ProjectUsersSection() {
                     <div className="rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
                             <p className="text-sm font-medium text-white">{selectedProject.name}</p>
-                            <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                            <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                 {selectedProject.slug}
                             </Badge>
                         </div>
@@ -490,7 +490,7 @@ export function ProjectUsersSection() {
                                         value={projectSearch}
                                         onChange={(event) => setProjectSearch(event.target.value)}
                                         placeholder="Search project users by name or email"
-                                        className="h-10 border-[#27272a] bg-[#111111] pl-10 text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                        className="h-10 border-[#27272a] bg-[#111111] pl-10 text-white placeholder:text-[#71717a] focus:border-zinc-500 focus:ring-zinc-600"
                                     />
                                 </div>
                             </div>
@@ -523,7 +523,7 @@ export function ProjectUsersSection() {
                                                 return (
                                                     <div key={user.id} className="space-y-4 px-4 py-4">
                                                         <div className="flex items-start gap-3">
-                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-[#111111] text-xs font-semibold text-zinc-300">
                                                                 {getUserInitials(user)}
                                                             </div>
                                                             <div className="min-w-0 flex-1">
@@ -575,7 +575,7 @@ export function ProjectUsersSection() {
                                                             <tr key={user.id} className="border-b border-[#27272a] last:border-b-0">
                                                                 <td className="px-4 py-3 align-top">
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-[#111111] text-xs font-semibold text-zinc-300">
                                                                             {getUserInitials(user)}
                                                                         </div>
                                                                         <div className="min-w-0">
@@ -750,7 +750,7 @@ export function ProjectUsersSection() {
                                 <Button
                                     type="button"
                                     onClick={resetInviteState}
-                                    className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
+                                    className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition sm:w-auto"
                                 >
                                     Invite another user
                                 </Button>
@@ -816,7 +816,7 @@ export function ProjectUsersSection() {
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Roles</Label>
                                     {selectedProject?.slug ? (
-                                        <span className="font-mono text-xs text-[#a78bfa]">{selectedProject.slug}</span>
+                                        <span className="font-mono text-xs text-zinc-300">{selectedProject.slug}</span>
                                     ) : null}
                                 </div>
 
@@ -843,7 +843,7 @@ export function ProjectUsersSection() {
                                                         key={role.id}
                                                         className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors ${
                                                             checked
-                                                                ? 'border-[#7c3aed]/60 bg-[#7c3aed]/10'
+                                                                ? 'border-zinc-500 bg-zinc-800/80 text-white'
                                                                 : 'border-[#27272a] bg-[#111111] hover:border-[#3f3f46]'
                                                         }`}
                                                     >
@@ -851,12 +851,12 @@ export function ProjectUsersSection() {
                                                             type="checkbox"
                                                             checked={checked}
                                                             onChange={() => toggleRole(role.slug)}
-                                                            className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-[#7c3aed] focus:ring-[#7c3aed]/40"
+                                                            className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-zinc-100 accent-zinc-200 focus:ring-zinc-400/30"
                                                         />
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex flex-wrap items-center gap-2">
                                                                 <p className="text-sm font-medium text-white">{role.name}</p>
-                                                                <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                                                <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                                                     {role.slug}
                                                                 </Badge>
                                                                 {role.is_self_assignable ? (
@@ -893,7 +893,7 @@ export function ProjectUsersSection() {
                                 <Button
                                     type="submit"
                                     disabled={createInvitationMutation.isPending || !selectedProjectId}
-                                    className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
+                                    className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition sm:w-auto"
                                 >
                                     <MailPlus className="mr-2 h-4 w-4" />
                                     {createInvitationMutation.isPending ? 'Sending...' : 'Send invite'}

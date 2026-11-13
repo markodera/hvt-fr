@@ -87,7 +87,7 @@ export default function TermsOfServicePage() {
             <LegalSection title="Related Privacy Terms">
                 <p>
                     Please also review the{' '}
-                    <Link to="/privacy-policy" className="text-white transition-colors hover:text-[#a78bfa]">
+                    <Link to="/privacy-policy" className="text-white transition-colors hover:text-zinc-400">
                         Privacy Policy
                     </Link>
                     .

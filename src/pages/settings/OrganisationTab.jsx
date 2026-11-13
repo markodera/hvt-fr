@@ -65,7 +65,7 @@ export function OrganisationTab() {
                     <Input
                         id="name"
                         {...orgForm.register('name')}
-                        className="bg-[#18181b] border-[#27272a] text-white focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] h-10 w-full max-w-[400px]"
+                        className="bg-[#18181b] border-[#27272a] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 h-10 w-full max-w-[400px]"
                     />
                     {orgForm.formState.errors.name && (
                         <p className="text-sm text-red-500 mt-1">{orgForm.formState.errors.name.message}</p>
@@ -93,7 +93,7 @@ export function OrganisationTab() {
                                 role="switch"
                                 aria-checked={field.value}
                                 onClick={() => field.onChange(!field.value)}
-                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c3aed] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] ${
+                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] ${
                                     field.value ? 'bg-[#7c3aed]' : 'bg-[#18181b] border border-[#27272a]'
                                 }`}
                             >
@@ -115,7 +115,7 @@ export function OrganisationTab() {
                     <Button
                         type="submit"
                         disabled={orgMutation.isPending}
-                        className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-6 h-10 font-medium"
+                        className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 px-6 h-10 font-medium"
                     >
                         {orgMutation.isPending ? 'Saving...' : 'Save organisation'}
                     </Button>

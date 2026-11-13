@@ -53,10 +53,10 @@ function accessBadgeClass(user) {
         return 'border border-[#0f766e]/40 bg-[#0f766e]/15 text-[#99f6e4]';
     }
     if (user?.role === 'owner') {
-        return 'border border-[#7c3aed]/40 bg-[#7c3aed]/15 text-[#c4b5fd]';
+        return 'border border-zinc-700 bg-zinc-800/80 text-zinc-300';
     }
     if (user?.role === 'admin') {
-        return 'border border-[#8b5cf6]/30 bg-[#8b5cf6]/10 text-[#c4b5fd]';
+        return 'border border-zinc-700 bg-zinc-800/80 text-zinc-300';
     }
     return 'border border-[#3f3f46] bg-[#111111] text-[#a1a1aa]';
 }
@@ -122,7 +122,7 @@ function ProjectBadge({ projectSlug }) {
 
     return (
         <span
-            className="inline-flex items-center whitespace-nowrap rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-[#a78bfa]"
+            className="inline-flex items-center whitespace-nowrap rounded-full border border-[#3f3f46] bg-[#111111] px-2 py-0.5 font-mono text-[11px] text-zinc-300"
             title={projectSlug}
         >
             {projectSlug}
@@ -225,7 +225,7 @@ function TabButton({ active, onClick, children }) {
             onClick={onClick}
             className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                 active
-                    ? 'border-[#7c3aed] text-white'
+                    ? 'border-zinc-400 text-white'
                     : 'border-transparent text-[#71717a] hover:text-white'
             }`}
         >
@@ -334,14 +334,14 @@ export default function UsersPage() {
                                 value={search}
                                 onChange={(event) => handleSearchChange(event.target.value)}
                                 placeholder="Search users by name or email"
-                                className="h-10 border-[#27272a] bg-[#18181b] pl-10 text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] pl-10 text-white placeholder:text-[#71717a] focus:border-zinc-500 focus:ring-zinc-600"
                             />
                         </div>
                         {currentUser?.role === 'owner' ? (
                             <button
                                 type="button"
                                 onClick={scrollToInvites}
-                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9] sm:w-auto"
+                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-200 sm:w-auto"
                             >
                                 <UserPlus className="h-4 w-4" />
                                 Invite teammate
@@ -375,7 +375,7 @@ export default function UsersPage() {
                                     {users.map((user) => (
                                         <div key={user.id} className="space-y-4 px-4 py-4">
                                             <div className="flex items-start gap-3">
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-[#111111] text-xs font-semibold text-zinc-300">
                                                     {getUserInitials(user)}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
@@ -413,7 +413,7 @@ export default function UsersPage() {
                                                 <tr key={user.id} className="border-b border-[#27272a] last:border-b-0">
                                                     <td className="px-3 py-3 align-top">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-[#111111] text-xs font-semibold text-zinc-300">
                                                                 {getUserInitials(user)}
                                                             </div>
                                                             <div className="min-w-0">

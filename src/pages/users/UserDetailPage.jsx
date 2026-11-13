@@ -22,7 +22,7 @@ import { ROLE_LABELS, ROLE_OPTIONS } from '@/lib/constants';
 import { getUserDisplayName, getUserInitials } from '@/lib/userIdentity';
 
 const selectClassName =
-    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25';
+    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600';
 
 function normalizeCollection(data) {
     return data?.results ?? data ?? [];
@@ -175,7 +175,7 @@ export function UserDetailPage() {
                                 </Badge>
                                 <StatusBadge status={user.is_active ? 'active' : 'inactive'} />
                                 {user.project_slug ? (
-                                    <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                    <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                         {user.project_slug}
                                     </Badge>
                                 ) : null}
@@ -281,7 +281,7 @@ export function UserDetailPage() {
                                             {selectedProject?.name || 'Selected project'}
                                         </p>
                                         {selectedProject?.slug ? (
-                                            <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                            <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                                 {selectedProject.slug}
                                             </Badge>
                                         ) : null}
@@ -314,7 +314,7 @@ export function UserDetailPage() {
                                                         key={role.id}
                                                         className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors ${
                                                             checked
-                                                                ? 'border-[#7c3aed]/60 bg-[#7c3aed]/10'
+                                                                ? 'border-zinc-500 bg-zinc-800/80 text-white'
                                                                 : 'border-border bg-bg-secondary hover:border-border-hover'
                                                         }`}
                                                     >
@@ -322,12 +322,12 @@ export function UserDetailPage() {
                                                             type="checkbox"
                                                             checked={checked}
                                                             onChange={() => toggleProjectRole(role.slug)}
-                                                            className="mt-1 h-4 w-4 rounded border-border bg-bg-primary text-[#7c3aed] focus:ring-[#7c3aed]/40"
+                                                            className="mt-1 h-4 w-4 rounded border-border bg-bg-primary text-zinc-100 accent-zinc-200 focus:ring-zinc-400/30"
                                                         />
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex flex-wrap items-center gap-2">
                                                                 <p className="text-sm font-medium text-text-primary">{role.name}</p>
-                                                                <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                                                <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                                                     {role.slug}
                                                                 </Badge>
                                                                 {role.is_default_signup ? <Badge variant="default">Default signup</Badge> : null}

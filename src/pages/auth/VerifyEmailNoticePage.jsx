@@ -84,7 +84,7 @@ export function VerifyEmailNoticePage() {
             <AuthCard>
                 <div className="space-y-6 text-center">
                     <Logo align="center" className="mx-auto" />
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-[#a78bfa]">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-zinc-400">
                         <Mail className="h-7 w-7" />
                     </div>
                     <div className="space-y-2">

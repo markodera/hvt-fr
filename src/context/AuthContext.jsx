@@ -167,6 +167,9 @@ export function AuthProvider({ children }) {
         if (session?.access) {
             hvt.setAccessToken(session.access);
         }
+        if (session?.refresh && typeof window !== 'undefined') {
+            try { localStorage.setItem('hvt_refresh_token', session.refresh); } catch (_e) { /* ignore */ }
+        }
         return waitForSession();
     }, [waitForSession]);
 
@@ -174,6 +177,9 @@ export function AuthProvider({ children }) {
         const session = await apiLoginWithMfa({ mfa_token, code });
         if (session?.access) {
             hvt.setAccessToken(session.access);
+        }
+        if (session?.refresh && typeof window !== 'undefined') {
+            try { localStorage.setItem('hvt_refresh_token', session.refresh); } catch (_e) { /* ignore */ }
         }
         return waitForSession();
     }, [waitForSession]);

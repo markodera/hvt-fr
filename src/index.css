@@ -10,29 +10,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Dark theme (default) ── */
+/* ── Dark theme (default - neutral zinc/charcoal standard) ── */
 :root {
-  --bg-primary: #000000;
-  --bg-secondary: #0A0A0F;
-  --bg-tertiary: #12101A;
-  --sidebar-bg: #06050D;
-  --border: #1E1535;
-  --border-hover: #2D2248;
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #18181b;
+  --bg-tertiary: #27272a;
+  --sidebar-bg: #111111;
+  --border: #27272a;
+  --border-hover: #3f3f46;
 
-  --text-primary: #F0F0F3;
-  --text-secondary: #8B8D98;
-  --text-muted: #5A4D7A;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
 
-  --primary: #7C3AED;
-  --primary-hover: #6D28D9;
-  --primary-muted: rgba(124, 58, 237, 0.10);
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-muted: rgba(124, 58, 237, 0.15);
 
-  --success: #22C55E;
-  --success-muted: rgba(34, 197, 94, 0.10);
-  --danger: #EF4444;
+  --success: #10b981;
+  --success-muted: rgba(16, 185, 129, 0.10);
+  --danger: #ef4444;
   --danger-muted: rgba(239, 68, 68, 0.10);
-  --warning: #F59E0B;
-  --warning-muted: rgba(245, 158, 11, 0.10);
+  --warning: #a1a1aa;
+  --warning-muted: rgba(161, 161, 170, 0.10);
 }
 
 /* ── Light theme ── */
@@ -48,9 +48,9 @@
   --text-secondary: #64748B;
   --text-muted: #94A3B8;
 
-  --primary: #7C3AED;
-  --primary-hover: #6D28D9;
-  --primary-muted: #F3E8FF;
+  --primary: #09090b;
+  --primary-hover: #18181b;
+  --primary-muted: #f4f4f5;
 }
 
 /* ── Base resets ── */

@@ -43,7 +43,7 @@ export function SocialProvidersTab() {
                     <select
                         value={selectedProjectId}
                         onChange={(e) => setSelectedProjectId(e.target.value)}
-                        className="bg-[#18181b] border border-[#27272a] text-white text-sm rounded-lg focus:ring-[#7c3aed] focus:border-[#7c3aed] block w-full sm:w-64 p-2.5"
+                        className="bg-[#18181b] border border-[#27272a] text-white text-sm rounded-lg focus:ring-zinc-500 focus:border-zinc-500 block w-full sm:w-64 p-2.5"
                     >
                         {projects.map((project) => (
                             <option key={project.id} value={project.id}>

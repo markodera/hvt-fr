@@ -84,7 +84,7 @@ export function PasskeySettingsSection() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Fingerprint className="h-5 w-5 text-[#a855f7]" />
+            <Fingerprint className="h-5 w-5 text-zinc-300" />
             <h3 className="text-base font-semibold text-white">Passkeys (WebAuthn / Biometrics)</h3>
           </div>
           <p className="mt-1 text-sm text-[#a1a1aa]">
@@ -94,7 +94,7 @@ export function PasskeySettingsSection() {
         <Button
           type="button"
           onClick={handleStartRegister}
-          className="bg-[#7c3aed] text-white hover:bg-[#6d28d9] flex items-center gap-2 self-start sm:self-auto"
+          className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 flex items-center gap-2 self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" />
           Add Passkey
@@ -119,7 +119,7 @@ export function PasskeySettingsSection() {
             {passkeys.map((cred) => (
               <div key={cred.id} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#27272a] text-[#a855f7]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#27272a] text-zinc-300">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
@@ -179,7 +179,7 @@ export function PasskeySettingsSection() {
               <Button
                 type="submit"
                 disabled={registerMutation.isPending}
-                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
               >
                 {registerMutation.isPending ? 'Verifying with Sensor...' : 'Continue'}
               </Button>

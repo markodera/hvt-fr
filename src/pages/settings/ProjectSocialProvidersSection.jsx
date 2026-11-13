@@ -32,9 +32,9 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getErrorMessage } from '@/lib/utils';
 
 const selectClassName =
-    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25';
+    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20';
 const textareaClassName =
-    'min-h-[120px] w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white placeholder:text-[#71717a] focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/25';
+    'min-h-[120px] w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white placeholder:text-[#71717a] focus:outline-none focus:ring-2 focus:ring-zinc-500/20';
 
 function serializeRedirectUris(value) {
     return value
@@ -177,7 +177,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <Globe2 className="h-5 w-5 text-[#a78bfa]" />
+                            <Globe2 className="h-5 w-5 text-zinc-300" />
                             <h2 className="text-lg font-bold text-white">Social Providers</h2>
                         </div>
                         <p className="mt-1 text-sm text-[#a1a1aa]">
@@ -188,7 +188,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                         type="button"
                         onClick={() => setCreateProviderOpen(true)}
                         disabled={!selectedProjectId || socialProviders.length >= 2}
-                        className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
+                        className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 sm:w-auto"
                     >
                         Add provider
                     </Button>
@@ -383,7 +383,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                             <Button
                                 type="submit"
                                 disabled={createProviderMutation.isPending || createForm.formState.isSubmitting || !selectedProjectId}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                             >
                                 {createProviderMutation.isPending ? 'Saving...' : 'Save provider'}
                             </Button>
@@ -462,7 +462,7 @@ export function ProjectSocialProvidersSection({ projects }) {
                             <Button
                                 type="submit"
                                 disabled={updateProviderMutation.isPending || editForm.formState.isSubmitting}
-                                className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                             >
                                 {updateProviderMutation.isPending ? 'Saving...' : 'Save provider'}
                             </Button>

@@ -91,7 +91,7 @@ export function ForgotPasswordPage() {
 
                 {submittedEmail ? (
                     <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3 text-sm text-[#a1a1aa]">
-                        <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#a78bfa]" />
+                        <Mail className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
                         <p>
                             If an account exists for <span className="text-white">{submittedEmail}</span>, a reset link
                             has been sent.

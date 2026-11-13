@@ -1,54 +1,101 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, KeyRound, Plus, ShieldCheck, Trash2 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import {
+    Check,
+    Copy,
+    KeyRound,
+    Plus,
+    Shield,
+    ShieldAlert,
+    ShieldCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-import { createApiKey, deleteApiKey, listApiKeys, revokeApiKey } from '@/api/apiKeys';
-import { listProjects } from '@/api/organizations';
-import { CopyButton } from '@/components/CopyButton';
+import { createApiKey, listApiKeys, revokeApiKey } from '@/api/apiKeys';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { PermissionDenied } from '@/components/PermissionDenied';
+import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { API_KEY_CANONICAL_SCOPES } from '@/lib/hvt';
-import { formatDate, formatRelativeTime, getErrorMessage } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useProject } from '@/hooks/useProject';
+import { formatDate, getErrorMessage } from '@/lib/utils';
 
-const scopeMeta = {
-    'organization:read': {
-        label: 'organization:read',
-        description: 'Read current organization details.',
-    },
-    'users:read': {
-        label: 'users:read',
-        description: 'List users and members in the current organization.',
-    },
-    'api_keys:read': {
-        label: 'api_keys:read',
-        description: 'Read issued API keys and their metadata.',
-    },
-    'webhooks:read': {
-        label: 'webhooks:read',
-        description: 'Read webhook endpoints and delivery logs.',
-    },
-    'audit_logs:read': {
-        label: 'audit_logs:read',
-        description: 'Read audit activity for the current organization.',
-    },
-    'auth:runtime': {
+const RUNTIME_SCOPES = [
+    {
+        id: 'auth:runtime',
         label: 'auth:runtime',
-        description: 'Required for runtime login and social auth.',
+        desc: 'Authenticate runtime users, exchange tokens, and manage sessions.',
     },
-};
+    {
+        id: 'organization:read',
+        label: 'organization:read',
+        desc: 'Read organization public profile.',
+    },
+    {
+        id: 'users:read',
+        label: 'users:read',
+        desc: 'Read end-user profile details.',
+    },
+];
+
+const MANAGEMENT_SCOPES = [
+    {
+        id: 'schema:sync',
+        label: 'schema:sync',
+        desc: 'Sync roles, permissions, and provider manifests via HVT CLI.',
+    },
+    {
+        id: 'roles:read',
+        label: 'roles:read',
+        desc: 'Inspect existing role definitions.',
+    },
+    {
+        id: 'roles:write',
+        label: 'roles:write',
+        desc: 'Create, update, and delete custom project roles.',
+    },
+    {
+        id: 'permissions:read',
+        label: 'permissions:read',
+        desc: 'Inspect granted and available permission namespaces.',
+    },
+    {
+        id: 'permissions:write',
+        label: 'permissions:write',
+        desc: 'Assign and revoke permission assignments.',
+    },
+    {
+        id: 'providers:read',
+        label: 'providers:read',
+        desc: 'Inspect configured OAuth and IdP providers.',
+    },
+    {
+        id: 'providers:write',
+        label: 'providers:write',
+        desc: 'Configure and rotate OAuth provider secrets.',
+    },
+    {
+        id: 'webhooks:read',
+        label: 'webhooks:read',
+        desc: 'Read webhook configurations and delivery logs.',
+    },
+    {
+        id: 'audit_logs:read',
+        label: 'audit_logs:read',
+        desc: 'Read audit log activity stream.',
+    },
+];
 
 function getApiKeyStatus(apiKey) {
-    if (apiKey?.status) {
-        return apiKey.status;
-    }
     if (!apiKey?.is_active) {
         return 'revoked';
     }
@@ -58,568 +105,578 @@ function getApiKeyStatus(apiKey) {
     return 'active';
 }
 
-function getApiKeyStatusMeta(apiKey) {
-    const status = getApiKeyStatus(apiKey);
+function StatusBadge({ status }) {
+    if (status === 'revoked') {
+        return (
+            <span className="inline-flex items-center rounded-md border border-[#27272a] bg-[#111111] px-2 py-0.5 text-xs font-medium text-[#71717a]">
+                Revoked
+            </span>
+        );
+    }
     if (status === 'expired') {
-        return {
-            status,
-            dotClassName: 'bg-amber-400',
-            label: 'Expired',
-        };
+        return (
+            <span className="inline-flex items-center rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-300">
+                Expired
+            </span>
+        );
     }
-    if (status === 'revoked') {
-        return {
-            status,
-            dotClassName: 'bg-rose-400',
-            label: 'Revoked',
-        };
-    }
-    return {
-        status,
-        dotClassName: 'bg-emerald-400',
-        label: 'Active',
-    };
-}
-
-function getApiKeyActionMeta(apiKey) {
-    const status = getApiKeyStatus(apiKey);
-    if (status === 'revoked') {
-        return {
-            mode: 'delete',
-            label: 'Delete',
-            description: 'Permanently remove this revoked key.',
-            className:
-                'inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15',
-        };
-    }
-
-    return {
-        mode: 'revoke',
-        label: 'Revoke',
-        description: 'Stop this key from authenticating requests.',
-        className:
-            'inline-flex h-9 items-center justify-center rounded-md border border-rose-500/30 bg-rose-500/10 px-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/15',
-    };
-}
-
-function TableCard({ children }) {
-    return <section className="overflow-hidden rounded-2xl border border-[#27272a] bg-[#18181b]">{children}</section>;
-}
-
-function EmptyState({ message, action }) {
     return (
-        <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#27272a] bg-[#111111] text-[#71717a]">
-                <KeyRound className="h-6 w-6" />
-            </div>
-            <p className="max-w-md text-sm leading-6 text-[#71717a]">{message}</p>
-            {action}
-        </div>
+        <span className="inline-flex items-center rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
+            Active
+        </span>
     );
-}
-
-function SkeletonRow() {
-    return (
-        <tr className="border-b border-[#27272a] last:border-b-0">
-            {Array.from({ length: 6 }).map((_, index) => (
-                <td key={index} className="px-4 py-4">
-                    <div className="h-5 animate-pulse rounded bg-[#1c1c1f]" />
-                </td>
-            ))}
-        </tr>
-    );
-}
-
-function Pagination({ count, page, onPageChange, pageSize = 10 }) {
-    const totalPages = Math.max(1, Math.ceil((count || 0) / pageSize));
-    return (
-        <div className="flex flex-col gap-3 border-t border-[#27272a] px-4 py-4 text-sm text-[#71717a] sm:flex-row sm:items-center sm:justify-between">
-            <p>
-                Page {page} of {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-                <button
-                    type="button"
-                    onClick={() => onPageChange(page - 1)}
-                    disabled={page <= 1}
-                    className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] px-3 text-white transition-colors hover:bg-[#111111] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                    Previous
-                </button>
-                <button
-                    type="button"
-                    onClick={() => onPageChange(page + 1)}
-                    disabled={page >= totalPages}
-                    className="inline-flex h-9 items-center justify-center rounded-md border border-[#27272a] px-3 text-white transition-colors hover:bg-[#111111] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                    Next
-                </button>
-            </div>
-        </div>
-    );
-}
-
-function buildInitialDraft(projectId = '') {
-    return {
-        name: '',
-        environment: 'test',
-        expires_at: '',
-        project_id: projectId,
-        scopes: ['auth:runtime'],
-    };
 }
 
 export default function ApiKeysPage() {
     usePageTitle('API Keys');
-    const { user } = useAuth();
+    const { projects, activeProjectId, environment } = useProject();
     const queryClient = useQueryClient();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [page, setPage] = useState(Number(searchParams.get('page') || 1));
-    const [projectFilter, setProjectFilter] = useState(searchParams.get('project') || '');
+
+    // Tab state: 'runtime' or 'management'
+    const [activeTab, setActiveTab] = useState('runtime');
     const [createOpen, setCreateOpen] = useState(false);
     const [revokeTarget, setRevokeTarget] = useState(null);
-    const [deleteTarget, setDeleteTarget] = useState(null);
-    const [createdKey, setCreatedKey] = useState(null);
+    const [createdKeyData, setCreatedKeyData] = useState(null);
+    const [copiedKey, setCopiedKey] = useState(false);
+    const [copiedEnv, setCopiedEnv] = useState(false);
 
-    const projectsQuery = useQuery({
-        queryKey: ['projects', { page_size: 100 }],
-        queryFn: () => listProjects({ page_size: 100 }),
-    });
+    // Form state
+    const [keyType, setKeyType] = useState('runtime');
+    const [keyName, setKeyName] = useState('');
+    const [keyEnvironment, setKeyEnvironment] = useState(environment);
+    const [keyProjectId, setKeyProjectId] = useState(activeProjectId);
+    const [keyExpiresAt, setKeyExpiresAt] = useState('');
+    const [selectedScopes, setSelectedScopes] = useState(['auth:runtime']);
 
-    const projects = useMemo(() => projectsQuery.data?.results ?? [], [projectsQuery.data?.results]);
-    const defaultProjectId = useMemo(
-        () => projects.find((project) => project.is_default)?.id || projects[0]?.id || '',
-        [projects]
-    );
+    // Keep form environment and project in sync with global header selections
+    useEffect(() => {
+        setKeyEnvironment(environment);
+    }, [environment]);
 
-    const [draft, setDraft] = useState(() => buildInitialDraft(''));
+    useEffect(() => {
+        if (activeProjectId) {
+            setKeyProjectId(activeProjectId);
+        }
+    }, [activeProjectId]);
 
+    // Query API keys filtered by project and environment
     const apiKeysQuery = useQuery({
-        queryKey: ['apiKeys', { page, project: projectFilter || null }],
+        queryKey: ['api-keys', { project_id: activeProjectId, environment }],
         queryFn: () =>
             listApiKeys({
-                page,
-                page_size: 10,
-                ...(projectFilter ? { project: projectFilter } : {}),
+                project_id: activeProjectId,
+                environment,
+                page_size: 100,
             }),
+        enabled: Boolean(activeProjectId),
     });
 
+    const keysList = useMemo(() => {
+        const raw = apiKeysQuery.data?.results ?? apiKeysQuery.data ?? [];
+        return Array.isArray(raw) ? raw : [];
+    }, [apiKeysQuery.data]);
+
+    // Partition keys by key_type plane: 'runtime' vs 'management'
+    const filteredKeys = useMemo(() => {
+        return keysList.filter((k) => {
+            const isMgmt = k.key_type === 'management';
+            if (activeTab === 'management') {
+                return isMgmt;
+            }
+            return !isMgmt;
+        });
+    }, [keysList, activeTab]);
+
+    const handleKeyTypeChange = (nextType) => {
+        setKeyType(nextType);
+        if (nextType === 'runtime') {
+            setSelectedScopes(['auth:runtime']);
+        } else {
+            // Default management scopes: schema sync + reading definitions
+            setSelectedScopes(['schema:sync', 'roles:read', 'permissions:read']);
+        }
+    };
+
+    const toggleScope = (scopeId) => {
+        if (selectedScopes.includes(scopeId)) {
+            // Don't allow deselecting auth:runtime for runtime keys
+            if (keyType === 'runtime' && scopeId === 'auth:runtime') {
+                toast.info('Runtime keys require auth:runtime scope to function.');
+                return;
+            }
+            setSelectedScopes(selectedScopes.filter((s) => s !== scopeId));
+        } else {
+            setSelectedScopes([...selectedScopes, scopeId]);
+        }
+    };
+
     const createMutation = useMutation({
-        mutationFn: createApiKey,
-        onSuccess: (response) => {
-            queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
-            queryClient.invalidateQueries({ queryKey: ['dashboard-api-keys'] });
-            setCreatedKey(response);
-            toast.success('API key issued');
+        mutationFn: (data) => createApiKey(data),
+        onSuccess: (newKey) => {
+            queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+            setCreatedKeyData(newKey);
+            toast.success('API key generated successfully');
         },
-        onError: (error) => {
-            toast.error(getErrorMessage(error));
+        onError: (err) => {
+            toast.error(getErrorMessage(err) || 'Failed to create API key');
         },
     });
 
     const revokeMutation = useMutation({
-        mutationFn: revokeApiKey,
+        mutationFn: (id) => revokeApiKey(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
-            queryClient.invalidateQueries({ queryKey: ['dashboard-api-keys'] });
+            queryClient.invalidateQueries({ queryKey: ['api-keys'] });
             setRevokeTarget(null);
             toast.success('API key revoked');
         },
-        onError: (error) => {
-            toast.error(getErrorMessage(error));
+        onError: (err) => {
+            toast.error(getErrorMessage(err) || 'Failed to revoke API key');
         },
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: deleteApiKey,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
-            queryClient.invalidateQueries({ queryKey: ['dashboard-api-keys'] });
-            setDeleteTarget(null);
-            toast.success('API key deleted');
-        },
-        onError: (error) => {
-            toast.error(getErrorMessage(error));
-        },
-    });
-
-    useEffect(() => {
-        if (searchParams.get('create') !== '1' || createOpen || createdKey) {
+    const handleCreateSubmit = (e) => {
+        e.preventDefault();
+        if (!keyProjectId) {
+            toast.error('Select a project for this key');
+            return;
+        }
+        if (!keyName.trim()) {
+            toast.error('Enter a key name');
             return;
         }
 
-        if (!projects.length) {
-            return;
+        // Defensive scope enforcement
+        let scopesToSubmit = [...selectedScopes];
+        if (keyType === 'runtime' && !scopesToSubmit.includes('auth:runtime')) {
+            scopesToSubmit.push('auth:runtime');
         }
-
-        const requestedProjectId = searchParams.get('project') || '';
-        const matchingProject = projects.find((project) => project.id === requestedProjectId);
-        const nextProjectId = matchingProject?.id || defaultProjectId;
-        if (!nextProjectId) {
-            return;
-        }
-
-        setDraft(buildInitialDraft(nextProjectId));
-        setCreatedKey(null);
-        setCreateOpen(true);
-
-        const params = new URLSearchParams(searchParams);
-        params.delete('create');
-        setSearchParams(params, { replace: true });
-    }, [createdKey, createOpen, defaultProjectId, projects, searchParams, setSearchParams]);
-
-    // Check if user has permission to access API keys (owner only)
-    if (!user || user.role !== 'owner') {
-        return <PermissionDenied featureName="API Keys" />;
-    }
-
-    const keys = apiKeysQuery.data?.results ?? [];
-
-    function syncSearchParams(nextProject, nextPage) {
-        const params = new URLSearchParams(searchParams);
-        if (nextProject) {
-            params.set('project', nextProject);
-        } else {
-            params.delete('project');
-        }
-        if (nextPage > 1) {
-            params.set('page', String(nextPage));
-        } else {
-            params.delete('page');
-        }
-        setSearchParams(params);
-    }
-
-    function updateProjectFilter(value) {
-        setProjectFilter(value);
-        setPage(1);
-        syncSearchParams(value, 1);
-    }
-
-    function updatePage(nextPage) {
-        setPage(nextPage);
-        syncSearchParams(projectFilter, nextPage);
-    }
-
-    function openCreateDialog() {
-        setCreatedKey(null);
-        setDraft(buildInitialDraft(defaultProjectId));
-        setCreateOpen(true);
-    }
-
-    function closeCreateDialog() {
-        setCreateOpen(false);
-        window.setTimeout(() => {
-            setCreatedKey(null);
-            setDraft(buildInitialDraft(defaultProjectId));
-        }, 120);
-    }
-
-    function openKeyActionDialog(apiKey) {
-        const action = getApiKeyActionMeta(apiKey);
-        if (action.mode === 'delete') {
-            setDeleteTarget(apiKey);
-            return;
-        }
-        setRevokeTarget(apiKey);
-    }
-
-    function toggleScope(scope) {
-        setDraft((current) => {
-            const exists = current.scopes.includes(scope);
-            return {
-                ...current,
-                scopes: exists
-                    ? current.scopes.filter((item) => item !== scope)
-                    : [...current.scopes, scope],
-            };
-        });
-    }
-
-    function submitCreate(event) {
-        event.preventDefault();
-
-        if (!draft.project_id) {
-            toast.error('Select a project for this key.');
-            return;
-        }
-
-        if (!draft.scopes.length) {
-            toast.error('Select at least one scope.');
-            return;
+        if (keyType === 'management') {
+            // Management keys should NEVER contain auth:runtime
+            scopesToSubmit = scopesToSubmit.filter((s) => s !== 'auth:runtime');
+            if (!scopesToSubmit.length) {
+                scopesToSubmit = ['schema:sync'];
+            }
         }
 
         createMutation.mutate({
-            name: draft.name.trim(),
-            environment: draft.environment,
-            project_id: draft.project_id,
-            scopes: draft.scopes,
-            expires_at: draft.expires_at || null,
+            name: keyName.trim(),
+            project: keyProjectId,
+            environment: keyEnvironment,
+            key_type: keyType,
+            scopes: scopesToSubmit,
+            expires_at: keyExpiresAt ? new Date(keyExpiresAt).toISOString() : null,
         });
-    }
+    };
+
+    const handleCopyRawKey = async () => {
+        if (!createdKeyData?.key) return;
+        try {
+            await navigator.clipboard.writeText(createdKeyData.key);
+            setCopiedKey(true);
+            toast.success('Secret key copied to clipboard');
+            setTimeout(() => setCopiedKey(false), 2000);
+        } catch {
+            toast.error('Failed to copy key');
+        }
+    };
+
+    const handleCopyEnvBlock = async () => {
+        if (!createdKeyData?.key) return;
+        const envBlock = [
+            `HVT_BASE_URL=${apiBaseUrl}`,
+            `HVT_PROJECT_ID=${activeProjectId}`,
+            `HVT_API_KEY=${createdKeyData.key}`,
+        ].join('\n');
+
+        try {
+            await navigator.clipboard.writeText(envBlock);
+            setCopiedEnv(true);
+            toast.success('Environment variables copied to clipboard');
+            setTimeout(() => setCopiedEnv(false), 2000);
+        } catch {
+            toast.error('Failed to copy environment block');
+        }
+    };
+
+    const handleCloseCreateModal = () => {
+        setCreateOpen(false);
+        setCreatedKeyData(null);
+        setKeyName('');
+        setKeyExpiresAt('');
+        setKeyType('runtime');
+        setSelectedScopes(['auth:runtime']);
+    };
+
+    const apiBaseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000';
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <select
-                        value={projectFilter}
-                        onChange={(event) => updateProjectFilter(event.target.value)}
-                        className="h-10 w-full rounded-md border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25 sm:min-w-[220px] sm:w-auto"
-                    >
-                        <option value="">All projects</option>
-                        {projects.map((project) => (
-                            <option key={project.id} value={project.id}>
-                                {project.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+            {/* Top: Integration Triad Card (Neutral Zinc styling) */}
+            <div className="rounded-2xl border border-[#27272a] bg-[#18181b] p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h2 className="text-sm font-semibold text-white">Developer Integration Triad</h2>
+                        <p className="mt-1 text-xs text-[#a1a1aa]">
+                            Configure your backend service, mobile app, or HVT CLI using these connection variables.
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-2 w-full sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                navigator.clipboard.writeText(apiBaseUrl);
+                                toast.success('Base URL copied');
+                            }}
+                            className="inline-flex w-full sm:w-80 h-8 items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] px-3 font-mono text-xs text-[#a1a1aa] transition hover:border-[#3f3f46] hover:text-white"
+                        >
+                            <div className="flex items-center gap-2 truncate">
+                                <span className="text-[#71717a] font-semibold">BASE:</span>
+                                <span className="truncate text-zinc-300">{apiBaseUrl}</span>
+                            </div>
+                            <Copy className="h-3.5 w-3.5 shrink-0 text-[#71717a]" />
+                        </button>
 
-                <button
-                    type="button"
-                    onClick={openCreateDialog}
-                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9] sm:w-auto"
-                >
-                    <Plus className="h-4 w-4" />
-                    Issue new key
-                </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (activeProjectId) {
+                                    navigator.clipboard.writeText(activeProjectId);
+                                    toast.success('Project ID copied');
+                                }
+                            }}
+                            className="inline-flex w-full sm:w-80 h-8 items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] px-3 font-mono text-xs text-[#a1a1aa] transition hover:border-[#3f3f46] hover:text-white"
+                        >
+                            <div className="flex items-center gap-2 truncate">
+                                <span className="text-[#71717a] font-semibold">PROJECT_ID:</span>
+                                <span className="truncate text-zinc-300">
+                                    {activeProjectId ? `${activeProjectId.slice(0, 14)}...` : 'None'}
+                                </span>
+                            </div>
+                            <Copy className="h-3.5 w-3.5 shrink-0 text-[#71717a]" />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                navigator.clipboard.writeText(environment || 'test');
+                                toast.success('Environment mode copied');
+                            }}
+                            className="inline-flex w-full sm:w-80 h-8 items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] px-3 font-mono text-xs text-[#a1a1aa] transition hover:border-[#3f3f46] hover:text-white"
+                        >
+                            <div className="flex items-center gap-2 truncate">
+                                <span className="text-[#71717a] font-semibold">ENV:</span>
+                                <span className="truncate text-zinc-300">{environment === 'live' ? 'live (production)' : 'test (sandbox)'}</span>
+                            </div>
+                            <Copy className="h-3.5 w-3.5 shrink-0 text-[#71717a]" />
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <TableCard>
-                {apiKeysQuery.isLoading ? (
-                    <div className="space-y-3 px-4 py-4">
-                        {Array.from({ length: 6 }).map((_, index) => (
-                            <div key={index} className="h-24 animate-pulse rounded-xl bg-[#111111]" />
-                        ))}
+            {/* Dual-Plane Segmented Tabs & Action Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="inline-flex rounded-xl border border-[#27272a] bg-[#111111] p-1">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('runtime')}
+                        className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+                            activeTab === 'runtime'
+                                ? 'bg-[#18181b] text-white shadow-sm border border-[#27272a]'
+                                : 'text-[#71717a] hover:text-[#a1a1aa]'
+                        }`}
+                    >
+                        <KeyRound className="h-3.5 w-3.5 text-zinc-400" />
+                        <span>Runtime Client Keys</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('management')}
+                        className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+                            activeTab === 'management'
+                                ? 'bg-[#18181b] text-white shadow-sm border border-[#27272a]'
+                                : 'text-[#71717a] hover:text-[#a1a1aa]'
+                        }`}
+                    >
+                        <Shield className="h-3.5 w-3.5 text-zinc-400" />
+                        <span>Management / CI Keys</span>
+                    </button>
+                </div>
+
+                <Button
+                    type="button"
+                    onClick={() => {
+                        handleKeyTypeChange(activeTab);
+                        setCreateOpen(true);
+                    }}
+                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9]"
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Issue new {activeTab === 'runtime' ? 'Runtime' : 'Management'} key</span>
+                </Button>
+            </div>
+
+            {/* Security Notice for Management Keys */}
+            {activeTab === 'management' ? (
+                <div className="flex items-start gap-3 rounded-xl border border-[#27272a] bg-[#111111] p-4 text-xs text-zinc-300">
+                    <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+                    <div>
+                        <p className="font-semibold text-white">Elevated Management Privilege Scope</p>
+                        <p className="mt-0.5 text-zinc-400 leading-relaxed">
+                            Management keys (`hvt_mgmt_...`) carry schema-sync and administrative provisioning rights.
+                            They bypass end-user runtime permissions and must strictly be held in CI/CD secrets or backend servers.
+                            Never expose management keys in frontend web or mobile client code.
+                        </p>
                     </div>
-                ) : null}
-                {!apiKeysQuery.isLoading && apiKeysQuery.isError ? (
-                    <EmptyState message="API keys could not be loaded right now." />
-                ) : null}
-                {!apiKeysQuery.isLoading && !apiKeysQuery.isError && keys.length === 0 ? (
+                </div>
+            ) : null}
+
+            {/* Keys Data Table (Clean Neutral Zinc Cards) */}
+            <div className="overflow-hidden rounded-2xl border border-[#27272a] bg-[#18181b]">
+                {apiKeysQuery.isLoading ? (
+                    <div className="p-8 text-center text-sm text-[#71717a]">Loading API keys...</div>
+                ) : filteredKeys.length === 0 ? (
                     <EmptyState
-                        message="No API keys yet. Issue a project-scoped key to connect your backend runtime to HVT."
-                        action={
-                            <button
-                                type="button"
-                                onClick={openCreateDialog}
-                                className="inline-flex h-10 items-center justify-center rounded-md border border-[#7c3aed]/40 px-4 text-sm font-semibold text-[#a78bfa] transition-colors hover:bg-[#111111]"
-                            >
-                                Issue new key
-                            </button>
-                        }
+                        title={`No ${activeTab === 'runtime' ? 'Runtime' : 'Management'} Keys`}
+                        description={`No ${activeTab} keys issued for this project in ${environment} mode.`}
+                        actionLabel={`Issue ${activeTab === 'runtime' ? 'Runtime' : 'Management'} Key`}
+                        onAction={() => {
+                            handleKeyTypeChange(activeTab);
+                            setCreateOpen(true);
+                        }}
                     />
-                ) : null}
-                {!apiKeysQuery.isLoading && !apiKeysQuery.isError && keys.length > 0 ? (
-                    <>
-                        <div className="divide-y divide-[#27272a] md:hidden">
-                            {keys.map((apiKey) => (
-                                <div key={apiKey.id} className="space-y-4 px-4 py-4">
-                                    {(() => {
-                                        const statusMeta = getApiKeyStatusMeta(apiKey);
-                                        const actionMeta = getApiKeyActionMeta(apiKey);
-                                        return (
-                                            <>
-                                    <div className="flex flex-wrap items-start justify-between gap-3">
-                                        <div>
-                                            <div className="font-mono text-sm text-white">{apiKey.prefix}...</div>
-                                            <div className="mt-1 text-xs text-[#71717a]">{apiKey.name}</div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`} />
-                                            <span className="text-sm text-[#a1a1aa]">{statusMeta.label}</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-sm text-white">{apiKey.project_name || 'No project'}</div>
-                                        <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
-                                            {apiKey.project_slug || 'unassigned'}
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-3 text-xs text-[#71717a] sm:grid-cols-2">
-                                        <p>Created: {formatDate(apiKey.created_at)}</p>
-                                        <p>Last used: {apiKey.last_used_at ? formatRelativeTime(apiKey.last_used_at) : 'Never'}</p>
-                                        <p>Expires: {apiKey.expires_at ? formatDate(apiKey.expires_at) : 'Never'}</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => openKeyActionDialog(apiKey)}
-                                        className={`${actionMeta.className} w-full`}
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        {actionMeta.label}
-                                    </button>
-                                            </>
-                                        );
-                                    })()}
-                                </div>
-                            ))}
-                        </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                            <thead className="border-b border-[#27272a] bg-[#111111]/70 text-[#71717a]">
+                                <tr>
+                                    <th className="px-4 py-3.5 font-semibold uppercase tracking-wider text-[11px]">Name & Prefix</th>
+                                    <th className="px-4 py-3.5 font-semibold uppercase tracking-wider text-[11px]">Type</th>
+                                    <th className="px-4 py-3.5 font-semibold uppercase tracking-wider text-[11px]">Environment</th>
+                                    <th className="px-4 py-3.5 font-semibold uppercase tracking-wider text-[11px]">Status</th>
+                                    <th className="px-4 py-3.5 font-semibold uppercase tracking-wider text-[11px]">Scopes</th>
+                                    <th className="px-4 py-3.5 font-semibold uppercase tracking-wider text-[11px]">Created</th>
+                                    <th className="px-4 py-3.5 text-right font-semibold uppercase tracking-wider text-[11px]">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#27272a]">
+                                {filteredKeys.map((k) => {
+                                    const status = getApiKeyStatus(k);
+                                    const isMgmt = k.key_type === 'management';
+                                    const prefixDisplay = isMgmt
+                                        ? `hvt_mgmt_${k.environment}_${k.prefix}...`
+                                        : `hvt_${k.environment}_${k.prefix}...`;
 
-                        <div className="hidden overflow-x-auto md:block">
-                            <table className="w-full min-w-[980px]">
-                                <thead>
-                                    <tr className="border-b border-[#27272a] text-left text-[11px] uppercase tracking-[0.18em] text-[#71717a]">
-                                        <th className="px-4 py-3 font-medium">Key prefix</th>
-                                        <th className="px-4 py-3 font-medium">Project</th>
-                                        <th className="px-4 py-3 font-medium">Created</th>
-                                        <th className="px-4 py-3 font-medium">Last used</th>
-                                        <th className="px-4 py-3 font-medium">Status</th>
-                                        <th className="px-4 py-3 font-medium text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {keys.map((apiKey) => (
-                                        <tr key={apiKey.id} className="border-b border-[#27272a] last:border-b-0">
-                                            {(() => {
-                                                const statusMeta = getApiKeyStatusMeta(apiKey);
-                                                const actionMeta = getApiKeyActionMeta(apiKey);
-                                                return (
-                                                    <>
-                                            <td className="px-4 py-4">
-                                                <div className="font-mono text-sm text-white">{apiKey.prefix}...</div>
-                                                <div className="mt-1 text-xs text-[#71717a]">{apiKey.name}</div>
+                                    return (
+                                        <tr key={k.id} className="transition-colors hover:bg-[#202024]/50">
+                                            <td className="px-4 py-3.5">
+                                                <p className="font-semibold text-white">{k.name}</p>
+                                                <p className="mt-0.5 font-mono text-[11px] text-[#71717a]">
+                                                    {prefixDisplay}
+                                                </p>
                                             </td>
-                                            <td className="px-4 py-4">
-                                                <div className="text-sm text-white">{apiKey.project_name || 'No project'}</div>
-                                                <div className="mt-1 inline-flex rounded-full border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-2 py-1 font-mono text-[11px] text-[#c4b5fd]">
-                                                    {apiKey.project_slug || 'unassigned'}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 font-mono text-xs text-[#71717a]">{formatDate(apiKey.created_at)}</td>
-                                            <td className="px-4 py-4 font-mono text-xs text-[#71717a]">
-                                                {apiKey.last_used_at ? formatRelativeTime(apiKey.last_used_at) : 'Never'}
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`} />
-                                                    <span className="text-sm text-[#a1a1aa]">{statusMeta.label}</span>
-                                                </div>
-                                                {apiKey.expires_at ? (
-                                                    <div className="mt-1 text-xs text-[#71717a]">Expires {formatDate(apiKey.expires_at)}</div>
-                                                ) : null}
-                                            </td>
-                                            <td className="px-4 py-4 text-right">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openKeyActionDialog(apiKey)}
-                                                    className={actionMeta.className}
+                                            <td className="px-4 py-3.5">
+                                                <span
+                                                    className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium ${
+                                                        isMgmt
+                                                            ? 'border border-zinc-700/80 bg-zinc-800/80 text-zinc-200'
+                                                            : 'border border-[#27272a] bg-[#111111] text-[#a1a1aa]'
+                                                    }`}
                                                 >
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    {actionMeta.label}
-                                                </button>
+                                                    {isMgmt ? 'Management' : 'Runtime'}
+                                                </span>
                                             </td>
-                                                    </>
-                                                );
-                                            })()}
+                                            <td className="px-4 py-3.5">
+                                                <span
+                                                    className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ${
+                                                        k.environment === 'live'
+                                                            ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                                            : 'border border-zinc-700/80 bg-zinc-800/80 text-zinc-300'
+                                                    }`}
+                                                >
+                                                    {k.environment.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <StatusBadge status={status} />
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <span className="font-mono text-[11px] text-[#a1a1aa]">
+                                                    {Array.isArray(k.scopes) ? k.scopes.length : 0} scope(s)
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3.5 text-[#71717a]">
+                                                {formatDate(k.created_at)}
+                                            </td>
+                                            <td className="px-4 py-3.5 text-right">
+                                                {status === 'active' ? (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setRevokeTarget(k)}
+                                                        className="h-8 text-xs text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                                                    >
+                                                        Revoke
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-[#3f3f46]">—</span>
+                                                )}
+                                            </td>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>
-                ) : null}
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
 
-                {apiKeysQuery.data?.count ? <Pagination count={apiKeysQuery.data.count} page={page} onPageChange={updatePage} /> : null}
-            </TableCard>
-
-            <Dialog open={createOpen} onOpenChange={(open) => (open ? setCreateOpen(true) : closeCreateDialog())}>
-                <DialogContent className="sm:max-w-2xl xl:max-w-4xl border-[#27272a] bg-[#111111] text-white">
-                    {!createdKey ? (
+            {/* Modal 1: Issue New API Key Dialog */}
+            <Dialog open={createOpen} onOpenChange={(open) => (open ? setCreateOpen(true) : handleCloseCreateModal())}>
+                <DialogContent className="border-[#27272a] bg-[#18181b] text-white shadow-2xl sm:max-w-2xl">
+                    {!createdKeyData ? (
                         <>
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-bold tracking-[-0.03em] text-white">Issue new API key</DialogTitle>
-                                <DialogDescription className="text-[#71717a]">
-                                    Create a project-scoped key for server-side integration. Choose only the scopes the runtime needs.
+                                <DialogTitle className="text-base font-bold text-white">
+                                    Issue New API Key
+                                </DialogTitle>
+                                <DialogDescription className="text-xs text-[#a1a1aa]">
+                                    Generate an authentication key for application runtime or schema provisioning.
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <form onSubmit={submitCreate} className="mt-6 space-y-8">
-                                <div className="grid gap-6 md:grid-cols-2">
-                                    <div className="space-y-2.5">
-                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Project</Label>
+                            <form onSubmit={handleCreateSubmit} className="mt-4 space-y-5">
+                                {/* Key Type Selector */}
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold text-[#a1a1aa]">Key Type</Label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleKeyTypeChange('runtime')}
+                                            className={`rounded-xl border p-3.5 text-left transition ${
+                                                keyType === 'runtime'
+                                                    ? 'border-[#7c3aed] bg-[#7c3aed]/10 text-white shadow-sm ring-1 ring-[#7c3aed]/40'
+                                                    : 'border-[#27272a] bg-[#111111] text-[#a1a1aa] hover:border-[#3f3f46] hover:text-white'
+                                            }`}
+                                        >
+                                            <p className="font-semibold text-xs text-white">Runtime Client Key</p>
+                                            <p className="mt-1 text-[11px] text-[#71717a] leading-snug">
+                                                For web, mobile, and client apps to log users in. Prefixed `hvt_...`
+                                            </p>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleKeyTypeChange('management')}
+                                            className={`rounded-xl border p-3.5 text-left transition ${
+                                                keyType === 'management'
+                                                    ? 'border-[#7c3aed] bg-[#7c3aed]/10 text-white shadow-sm ring-1 ring-[#7c3aed]/40'
+                                                    : 'border-[#27272a] bg-[#111111] text-[#a1a1aa] hover:border-[#3f3f46] hover:text-white'
+                                            }`}
+                                        >
+                                            <p className="font-semibold text-xs text-zinc-200">Management / CI Key</p>
+                                            <p className="mt-1 text-[11px] text-[#71717a] leading-snug">
+                                                For CI/CD and CLI schema sync. Prefixed `hvt_mgmt_...`
+                                            </p>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Project & Environment Pickers */}
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-[#a1a1aa]">Project</Label>
                                         <select
-                                            value={draft.project_id}
-                                            onChange={(event) => setDraft((current) => ({ ...current, project_id: event.target.value }))}
-                                            className="h-11 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                                            value={keyProjectId}
+                                            onChange={(e) => setKeyProjectId(e.target.value)}
+                                            className="h-10 w-full rounded-lg border border-[#27272a] bg-[#111111] px-3 text-xs text-white outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
                                             required
                                         >
                                             <option value="">Select a project</option>
-                                            {projects.map((project) => (
-                                                <option key={project.id} value={project.id}>
-                                                    {project.name}
+                                            {projects.map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name}
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
 
-                                    <div className="space-y-2.5">
-                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Environment</Label>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-[#a1a1aa]">Environment</Label>
                                         <select
-                                            value={draft.environment}
-                                            onChange={(event) => setDraft((current) => ({ ...current, environment: event.target.value }))}
-                                            className="h-11 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                                            value={keyEnvironment}
+                                            onChange={(e) => setKeyEnvironment(e.target.value)}
+                                            className="h-10 w-full rounded-lg border border-[#27272a] bg-[#111111] px-3 text-xs text-white outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
                                         >
-                                            <option value="test">Test</option>
-                                            <option value="live">Live</option>
+                                            <option value="test">Test Mode (Sandbox)</option>
+                                            <option value="live">Live Mode (Production)</option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <div className="grid gap-6 md:grid-cols-2">
-                                    <div className="space-y-2.5">
-                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Key name</Label>
+                                {/* Name & Expiration */}
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-[#a1a1aa]">Key Name</Label>
                                         <Input
-                                            value={draft.name}
-                                            onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-                                            placeholder="Storefront runtime"
-                                            className="h-11 border-[#27272a] bg-[#18181b] text-white placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            value={keyName}
+                                            onChange={(e) => setKeyName(e.target.value)}
+                                            placeholder={keyType === 'runtime' ? 'Storefront Frontend' : 'GitHub Actions Sync'}
+                                            className="h-10 border-[#27272a] bg-[#111111] text-xs text-white placeholder:text-[#71717a] focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
                                             required
                                         />
                                     </div>
 
-                                    <div className="space-y-2.5">
-                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Expiry (optional)</Label>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-[#a1a1aa]">Expiration (Optional)</Label>
                                         <Input
                                             type="datetime-local"
-                                            value={draft.expires_at}
-                                            onChange={(event) => setDraft((current) => ({ ...current, expires_at: event.target.value }))}
-                                            className="h-11 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                            value={keyExpiresAt}
+                                            onChange={(e) => setKeyExpiresAt(e.target.value)}
+                                            className="h-10 border-[#27272a] bg-[#111111] text-xs text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-4 rounded-2xl border border-[#27272a]/60 bg-[#0c0c0e] p-5">
+                                {/* Scopes Selection */}
+                                <div className="space-y-2 rounded-xl border border-[#27272a] bg-[#111111] p-3.5">
                                     <div className="flex items-center justify-between">
-                                        <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Scopes</Label>
-                                        {!draft.scopes.length ? (
-                                            <span className="text-xs text-rose-300">Select at least one scope.</span>
-                                        ) : null}
+                                        <Label className="text-xs font-semibold text-white">
+                                            {keyType === 'runtime' ? 'Runtime Scopes' : 'Management Scopes'}
+                                        </Label>
+                                        <span className="text-[11px] text-[#71717a]">
+                                            {selectedScopes.length} selected
+                                        </span>
                                     </div>
-                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                        {API_KEY_CANONICAL_SCOPES.map((scope) => {
-                                            const selected = draft.scopes.includes(scope);
-                                            const meta = scopeMeta[scope];
+                                    <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto sm:grid-cols-2">
+                                        {(keyType === 'runtime' ? RUNTIME_SCOPES : MANAGEMENT_SCOPES).map((s) => {
+                                            const isChecked = selectedScopes.includes(s.id);
                                             return (
                                                 <button
-                                                    key={scope}
+                                                    key={s.id}
                                                     type="button"
-                                                    onClick={() => toggleScope(scope)}
-                                                    className={`rounded-xl border px-4 py-5 text-left transition-colors ${
-                                                        selected
-                                                            ? 'border-[#7c3aed]/50 bg-[#7c3aed]/10 text-white'
-                                                            : 'border-[#27272a] bg-[#18181b] text-[#a1a1aa] hover:border-[#7c3aed]/30'
+                                                    onClick={() => toggleScope(s.id)}
+                                                    className={`flex items-start gap-2.5 rounded-lg border p-2 text-left transition ${
+                                                        isChecked
+                                                            ? 'border-zinc-400 bg-zinc-800/90 text-white'
+                                                            : 'border-[#27272a] bg-[#18181b] text-[#a1a1aa] hover:border-[#3f3f46]'
                                                     }`}
                                                 >
-                                                    <div className="flex items-start gap-3">
-                                                        <div className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border ${selected ? 'border-[#7c3aed] bg-[#7c3aed]' : 'border-[#3f3f46] bg-[#111111]'}`}>
-                                                            {selected ? <ShieldCheck className="h-3.5 w-3.5 text-white" /> : null}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-mono text-sm text-white">{meta.label}</p>
-                                                            <p className="mt-1 text-xs leading-5 text-[#71717a]">{meta.description}</p>
-                                                        </div>
+                                                    <div
+                                                        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                                                            isChecked
+                                                                ? 'border-[#7c3aed] bg-[#7c3aed] text-white shadow-sm shadow-[#7c3aed]/25'
+                                                                : 'border-[#27272a] bg-[#111111]'
+                                                        }`}
+                                                    >
+                                                        {isChecked ? <Check className="h-3 w-3" /> : null}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-mono text-xs font-semibold text-white">
+                                                            {s.label}
+                                                        </p>
+                                                        <p className="text-[11px] text-[#71717a] leading-snug line-clamp-1">
+                                                            {s.desc}
+                                                        </p>
                                                     </div>
                                                 </button>
                                             );
@@ -627,90 +684,100 @@ export default function ApiKeysPage() {
                                     </div>
                                 </div>
 
-                                <div className="border-t border-[#27272a]/60 pt-6">
-                                <DialogFooter>
+                                <DialogFooter className="pt-2">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={closeCreateDialog}
-                                        className="border-[#27272a] bg-transparent text-white hover:bg-[#18181b]"
+                                        onClick={handleCloseCreateModal}
+                                        className="border-[#27272a] bg-transparent text-xs text-[#a1a1aa] hover:bg-[#202024] hover:text-white"
                                     >
                                         Cancel
                                     </Button>
                                     <Button
                                         type="submit"
-                                        disabled={createMutation.isPending || !draft.scopes.length}
-                                        className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                        disabled={createMutation.isPending || !selectedScopes.length}
+                                        className="bg-[#7c3aed] text-xs font-semibold text-white hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition"
                                     >
-                                        {createMutation.isPending ? 'Generating...' : 'Generate key'}
+                                        {createMutation.isPending ? 'Generating...' : 'Generate API Key'}
                                     </Button>
                                 </DialogFooter>
-                                </div>
                             </form>
                         </>
                     ) : (
-                        <>
+                        /* Modal State 2: Show-Once Secret Reveal */
+                        <div className="space-y-4">
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-bold tracking-[-0.03em] text-white">Copy your API key now</DialogTitle>
-                                <DialogDescription className="text-[#71717a]">
-                                    This key will not be shown again.
+                                <DialogTitle className="flex items-center gap-2 text-base font-bold text-white">
+                                    <ShieldCheck className="h-5 w-5 text-emerald-400" />
+                                    <span>API Key Created</span>
+                                </DialogTitle>
+                                <DialogDescription className="text-xs text-zinc-400">
+                                    Save this secret key now. For security, it will never be displayed again.
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <div className="mt-4 space-y-4">
-                                <div className="rounded-2xl border border-[#7c3aed]/30 bg-[#18181b] p-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div>
-                                            <p className="text-sm font-medium text-white">{createdKey.name}</p>
-                                            <p className="mt-1 text-xs text-[#71717a]">
-                                                Project: {createdKey.project_name || 'No project'} ({createdKey.project_slug || 'unassigned'})
-                                            </p>
-                                        </div>
-                                        <CopyButton value={createdKey.key} className="border border-[#27272a] bg-[#111111] text-white hover:bg-[#18181b]" />
-                                    </div>
-                                    <div className="mt-4 overflow-x-auto rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3">
-                                        <code className="break-all font-mono text-sm text-[#c4b5fd]">{createdKey.key}</code>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                                    <p>This key will not be shown again. Copy it now and store it somewhere secure.</p>
+                            {/* Raw Full Key Display */}
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-[#a1a1aa]">Raw API Key</Label>
+                                <div className="flex items-center gap-2 rounded-xl border border-[#27272a] bg-[#111111] p-3">
+                                    <code className="flex-1 font-mono text-xs font-semibold text-emerald-400 break-all select-all">
+                                        {createdKeyData.key}
+                                    </code>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={handleCopyRawKey}
+                                        className="shrink-0 bg-[#7c3aed] text-xs font-semibold text-white hover:bg-[#6d28d9] transition"
+                                    >
+                                        {copiedKey ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                        <span className="ml-1.5">{copiedKey ? 'Copied' : 'Copy'}</span>
+                                    </Button>
                                 </div>
                             </div>
 
-                            <DialogFooter className="mt-6">
+                            {/* Pre-formatted .env Snippet */}
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-xs font-semibold text-[#a1a1aa]">Integration .env Block</Label>
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyEnvBlock}
+                                        className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:underline"
+                                    >
+                                        {copiedEnv ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                        <span>{copiedEnv ? 'Copied block' : 'Copy .env variables'}</span>
+                                    </button>
+                                </div>
+                                <pre className="rounded-xl border border-[#27272a] bg-[#111111] p-3 font-mono text-xs text-[#f4f4f5] overflow-x-auto">
+{`HVT_BASE_URL=${apiBaseUrl}
+HVT_PROJECT_ID=${activeProjectId}
+HVT_API_KEY=${createdKeyData.key}`}
+                                </pre>
+                            </div>
+
+                            <DialogFooter className="pt-2">
                                 <Button
                                     type="button"
-                                    onClick={closeCreateDialog}
-                                    className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                                    onClick={handleCloseCreateModal}
+                                    className="w-full bg-[#27272a] text-xs font-semibold text-white hover:bg-[#3f3f46]"
                                 >
-                                    Done
+                                    I have stored this key securely
                                 </Button>
                             </DialogFooter>
-                        </>
+                        </div>
                     )}
                 </DialogContent>
             </Dialog>
 
+            {/* Modal 2: Revoke Confirmation Dialog */}
             <ConfirmDialog
-                open={!!revokeTarget}
-                onOpenChange={() => setRevokeTarget(null)}
-                title="Revoke API key"
-                description={`Revoke ${revokeTarget?.name || 'this API key'}? It will stop authenticating requests immediately.`}
-                confirmLabel="Revoke"
-                onConfirm={() => revokeMutation.mutate(revokeTarget.id)}
-                isLoading={revokeMutation.isPending}
-            />
-
-            <ConfirmDialog
-                open={!!deleteTarget}
-                onOpenChange={() => setDeleteTarget(null)}
-                title="Delete revoked API key"
-                description={`Delete ${deleteTarget?.name || 'this API key'}? This permanently removes the revoked key from the organization.`}
-                confirmLabel="Delete"
-                onConfirm={() => deleteMutation.mutate(deleteTarget.id)}
-                isLoading={deleteMutation.isPending}
+                open={Boolean(revokeTarget)}
+                onOpenChange={(open) => !open && setRevokeTarget(null)}
+                title="Revoke API Key"
+                description={`Are you sure you want to revoke "${revokeTarget?.name}"? Any application or script authenticating with this key will immediately fail.`}
+                confirmLabel="Revoke Key"
+                variant="destructive"
+                onConfirm={() => revokeTarget && revokeMutation.mutate(revokeTarget.id)}
             />
         </div>
     );

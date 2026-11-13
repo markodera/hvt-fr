@@ -49,52 +49,52 @@ export function OnboardingQuickstart({ project }) {
 
     return (
         <div className="space-y-4">
-            {/* One-line explanations in the UI: test mode is a safe sandbox, live mode is for real users */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs sm:text-sm text-amber-300">
+            {/* One-line explanation in the UI: test mode is a safe sandbox */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#27272a] bg-[#111111] px-4 py-2.5 text-xs text-[#a1a1aa]">
                 <div className="flex items-center gap-2">
-                    <FlaskConical className="h-4 w-4 shrink-0 text-amber-400" />
+                    <FlaskConical className="h-4 w-4 shrink-0 text-zinc-400" />
                     <span>
-                        <strong className="font-semibold text-amber-200">Test mode:</strong> Test mode is a safe sandbox, live mode is for real users.
+                        <strong className="font-semibold text-zinc-200">Test mode:</strong> Test mode is a safe sandbox, live mode is for real users.
                     </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-text-muted">
-                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Project: <strong className="text-text-primary">{project?.name || 'Default'}</strong></span>
+                <div className="flex items-center gap-2 text-xs text-[#71717a]">
+                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+                    <span>Project: <strong className="text-white">{project?.name || 'Default'}</strong></span>
                 </div>
             </div>
 
             {/* Quickstart Card */}
-            <div className="rounded-2xl border border-border bg-bg-secondary p-5 sm:p-6 shadow-sm">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
+            <div className="rounded-2xl border border-[#27272a] bg-[#18181b] p-5 sm:p-6 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#27272a] pb-5">
                     <div>
-                        <h2 className="text-lg font-semibold tracking-tight text-text-primary">
+                        <h2 className="text-lg font-semibold tracking-tight text-white">
                             {allCompleted ? 'Onboarding Complete!' : 'Quickstart: Integrate Authentication'}
                         </h2>
-                        <p className="mt-1 text-sm text-text-muted">
+                        <p className="mt-1 text-sm text-[#a1a1aa]">
                             {allCompleted
                                 ? 'All 4 onboarding milestones verified. Your project is ready for development or live rollout.'
                                 : 'Connect your application using modern AI coding agents or the command line in under 5 minutes.'}
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                         <button
                             type="button"
                             onClick={() => setIsAiModalOpen(true)}
                             disabled={!canUseSetupPrompt}
                             title={!canUseSetupPrompt ? setupPromptNotice : 'Generate copy-paste prompt for AI agents'}
-                            className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500"
+                            className="inline-flex h-9 w-full sm:w-48 items-center justify-center gap-2 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Bot className="h-4 w-4 text-purple-200" />
-                            Set up with AI
+                            <Bot className="h-4 w-4 text-white" />
+                            <span>Set up with AI</span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setIsCliModalOpen(true)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg-primary px-3.5 py-2.5 text-xs sm:text-sm font-medium text-text-secondary hover:text-text-primary hover:border-text-muted transition"
+                            className="inline-flex h-9 w-full sm:w-48 items-center justify-center gap-2 rounded-lg border border-[#27272a] bg-[#111111] px-4 text-xs font-semibold text-zinc-300 transition hover:border-[#3f3f46] hover:text-white"
                         >
-                            <Terminal className="h-4 w-4 text-text-muted" />
-                            Set up with the CLI
+                            <Terminal className="h-4 w-4 text-zinc-400" />
+                            <span>Set up with the CLI</span>
                         </button>
                     </div>
                 </div>
@@ -139,41 +139,41 @@ export function OnboardingQuickstart({ project }) {
                     <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5">
                         <div className="flex items-center gap-2.5 text-emerald-400 mb-2">
                             <CheckCircle2 className="h-5 w-5" />
-                            <h3 className="font-semibold text-text-primary">Next Steps: Take Your Auth to Production</h3>
+                            <h3 className="font-semibold text-white">Next Steps: Take Your Auth to Production</h3>
                         </div>
-                        <p className="text-xs sm:text-sm text-text-muted mb-4">
+                        <p className="text-xs sm:text-sm text-[#a1a1aa] mb-4">
                             Your runtime authentication pipeline is verified. Customize your authentication methods, invite teammates, or graduate to production:
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <Link
                                 to="/dashboard/settings"
-                                className="flex items-center justify-between rounded-lg border border-border bg-bg-primary p-3.5 text-xs sm:text-sm font-medium text-text-primary hover:border-purple-500 transition group"
+                                className="flex items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] p-3.5 text-xs sm:text-sm font-medium text-white hover:border-zinc-500 transition group"
                             >
                                 <span className="flex items-center gap-2.5">
-                                    <Radio className="h-4 w-4 text-purple-400" />
+                                    <Radio className="h-4 w-4 text-zinc-400" />
                                     Add Google / Social Login
                                 </span>
-                                <ArrowRight className="h-4 w-4 text-text-muted group-hover:translate-x-0.5 transition" />
+                                <ArrowRight className="h-4 w-4 text-[#71717a] group-hover:translate-x-0.5 transition" />
                             </Link>
                             <Link
                                 to="/dashboard/settings"
-                                className="flex items-center justify-between rounded-lg border border-border bg-bg-primary p-3.5 text-xs sm:text-sm font-medium text-text-primary hover:border-purple-500 transition group"
+                                className="flex items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] p-3.5 text-xs sm:text-sm font-medium text-white hover:border-zinc-500 transition group"
                             >
                                 <span className="flex items-center gap-2.5">
-                                    <UserPlus className="h-4 w-4 text-purple-400" />
+                                    <UserPlus className="h-4 w-4 text-zinc-400" />
                                     Invite a Teammate
                                 </span>
-                                <ArrowRight className="h-4 w-4 text-text-muted group-hover:translate-x-0.5 transition" />
+                                <ArrowRight className="h-4 w-4 text-[#71717a] group-hover:translate-x-0.5 transition" />
                             </Link>
                             <Link
                                 to="/dashboard/api-keys"
-                                className="flex items-center justify-between rounded-lg border border-border bg-bg-primary p-3.5 text-xs sm:text-sm font-medium text-text-primary hover:border-purple-500 transition group"
+                                className="flex items-center justify-between rounded-lg border border-[#27272a] bg-[#111111] p-3.5 text-xs sm:text-sm font-medium text-white hover:border-zinc-500 transition group"
                             >
                                 <span className="flex items-center gap-2.5">
                                     <KeyRound className="h-4 w-4 text-emerald-400" />
                                     Go Live (Issue Live Keys)
                                 </span>
-                                <ArrowRight className="h-4 w-4 text-text-muted group-hover:translate-x-0.5 transition" />
+                                <ArrowRight className="h-4 w-4 text-[#71717a] group-hover:translate-x-0.5 transition" />
                             </Link>
                         </div>
                     </div>
@@ -200,21 +200,21 @@ export function OnboardingQuickstart({ project }) {
 
 function ChecklistItem({ title, description, done, pendingAction, onAction, link, linkLabel }) {
     return (
-        <div className={`rounded-xl border p-4 transition ${done ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-border bg-bg-primary/50'}`}>
+        <div className={`rounded-xl border p-4 transition ${done ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-[#27272a] bg-[#111111]'}`}>
             <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-text-primary">{title}</span>
+                <span className="text-xs font-semibold text-white">{title}</span>
                 {done ? (
                     <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                 ) : (
-                    <Circle className="h-4 w-4 text-text-muted shrink-0" />
+                    <Circle className="h-4 w-4 text-[#71717a] shrink-0" />
                 )}
             </div>
-            <p className="mt-1.5 text-xs text-text-muted line-clamp-2">{description}</p>
+            <p className="mt-1.5 text-xs text-[#71717a] line-clamp-2">{description}</p>
             {!done && pendingAction && (
                 <button
                     type="button"
                     onClick={onAction}
-                    className="mt-2.5 text-xs font-medium text-purple-400 hover:text-purple-300 transition"
+                    className="mt-2.5 text-xs font-medium text-zinc-400 hover:text-zinc-300 transition"
                 >
                     {pendingAction} &rarr;
                 </button>
@@ -222,7 +222,7 @@ function ChecklistItem({ title, description, done, pendingAction, onAction, link
             {!done && link && (
                 <Link
                     to={link}
-                    className="mt-2.5 inline-block text-xs font-medium text-purple-400 hover:text-purple-300 transition"
+                    className="mt-2.5 inline-block text-xs font-medium text-zinc-400 hover:text-zinc-300 transition"
                 >
                     {linkLabel} &rarr;
                 </Link>
@@ -305,22 +305,22 @@ function AISetupModal({ project, isOpen, onClose, onSuccess }) {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-xl">
-                <DialogHeader>
+            <DialogContent className="border-[#27272a] bg-[#18181b] text-white shadow-2xl sm:max-w-xl flex flex-col max-h-[85vh] p-5 sm:p-6">
+                <DialogHeader className="shrink-0">
                     <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Bot className="h-5 w-5 text-purple-400" />
+                        <Bot className="h-5 w-5 text-zinc-400" />
                         Set Up With AI (Claude Code, Cursor, Copilot)
                     </DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm">
+                    <DialogDescription className="text-xs text-[#a1a1aa]">
                         One-click setup prompt for autonomous AI coding assistants. Integrates HVT into your app in under 5 minutes.
                     </DialogDescription>
                 </DialogHeader>
 
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
-                        <RotateCw className="h-8 w-8 animate-spin text-purple-400 mb-3" />
-                        <p className="text-sm font-medium text-text-primary">Minting temporary test management key...</p>
-                        <p className="text-xs text-text-muted mt-1">Bound to test sandbox with 15-minute expiration.</p>
+                        <RotateCw className="h-8 w-8 animate-spin text-zinc-400 mb-3" />
+                        <p className="text-sm font-medium text-white">Minting temporary test management key...</p>
+                        <p className="text-xs text-[#71717a] mt-1">Bound to test sandbox for automated setup.</p>
                     </div>
                 ) : error ? (
                     <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs sm:text-sm text-red-300">
@@ -335,17 +335,17 @@ function AISetupModal({ project, isOpen, onClose, onSuccess }) {
                         </button>
                     </div>
                 ) : promptData ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3.5 flex flex-col flex-1 min-h-0">
                         {/* Masked key preview and expiry countdown */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-bg-primary p-3.5 text-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#27272a] bg-[#111111] p-3 text-xs shrink-0">
                             <div className="space-y-1">
-                                <span className="text-text-muted">Temporary Test Key (Shown Once):</span>
-                                <div className="font-mono text-purple-300 font-semibold tracking-wide">
+                                <span className="text-[#71717a]">Temporary Test Key (Shown Once):</span>
+                                <div className="font-mono text-zinc-300 font-semibold tracking-wide">
                                     {promptData.masked_key}
                                 </div>
                             </div>
                             <div className="flex items-center gap-2.5">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${isExpired ? 'bg-red-500/20 text-red-400' : 'bg-purple-500/20 text-purple-300'}`}>
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${isExpired ? 'bg-red-500/20 text-red-400' : 'bg-zinc-800 text-zinc-300'}`}>
                                     <Clock className="h-3 w-3" />
                                     {isExpired ? 'Key Expired' : `Expires: ${formatTimer(secondsRemaining)}`}
                                 </span>
@@ -353,7 +353,7 @@ function AISetupModal({ project, isOpen, onClose, onSuccess }) {
                                     type="button"
                                     onClick={loadPrompt}
                                     title="Regenerate key"
-                                    className="p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-secondary transition"
+                                    className="p-1 rounded-md text-[#71717a] hover:text-white hover:bg-[#18181b] transition"
                                 >
                                     <RotateCw className="h-3.5 w-3.5" />
                                 </button>
@@ -361,21 +361,21 @@ function AISetupModal({ project, isOpen, onClose, onSuccess }) {
                         </div>
 
                         {/* Security Disclaimer */}
-                        <p className="text-[11px] text-text-muted">
-                            <strong className="text-text-secondary">Security note:</strong> This key is generated once in memory with test provisioning scopes and strictly never stored in localStorage, cookies, or analytics.
+                        <p className="text-[11px] text-[#71717a] shrink-0">
+                            <strong className="text-[#a1a1aa]">Security note:</strong> This key is generated once in memory with test provisioning scopes and strictly never stored in localStorage, cookies, or analytics.
                         </p>
 
                         {/* Preview box */}
-                        <div className="relative rounded-xl border border-border bg-[#101012] p-3 text-xs font-mono text-neutral-300 max-h-48 overflow-y-auto">
+                        <div className="relative rounded-xl border border-[#27272a] bg-[#111111] p-3 text-xs font-mono text-[#f4f4f5] max-h-32 sm:max-h-36 overflow-y-auto flex-1">
                             <pre className="whitespace-pre-wrap">{promptData.prompt}</pre>
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-1 shrink-0">
                             <button
                                 type="button"
                                 onClick={loadPrompt}
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-primary transition"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#27272a] bg-[#111111] px-3.5 py-2 text-xs font-medium text-[#a1a1aa] hover:text-white hover:border-[#3f3f46] transition"
                             >
                                 <RotateCw className="h-3.5 w-3.5" /> Regenerate
                             </button>
@@ -384,7 +384,7 @@ function AISetupModal({ project, isOpen, onClose, onSuccess }) {
                                 type="button"
                                 onClick={handleCopy}
                                 disabled={isExpired}
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-purple-500 disabled:opacity-50"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#7c3aed] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9] disabled:opacity-50"
                             >
                                 {copied ? (
                                     <>
@@ -411,8 +411,8 @@ function CLISetupModal({ project, isOpen, onClose }) {
 
     const commands = [
         {
-            title: '1. Authenticate with HVT CLI',
-            cmd: 'npx @hvt/cli login',
+            title: '1. Set Project ID and Login with HVT CLI',
+            cmd: `npx @hvt/cli login --project ${project?.id || ''}`,
         },
         {
             title: '2. Pull or inspect project schema',
@@ -437,28 +437,28 @@ function CLISetupModal({ project, isOpen, onClose }) {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="border-[#27272a] bg-[#18181b] text-white shadow-2xl sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Terminal className="h-5 w-5 text-purple-400" />
+                        <Terminal className="h-5 w-5 text-zinc-400" />
                         Set Up With the HVT CLI
                     </DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm">
-                        Use <code className="text-purple-300">@hvt/cli</code> for declarative, scriptable authentication management in your terminal or CI/CD pipelines.
+                    <DialogDescription className="text-xs text-[#a1a1aa]">
+                        Use <code className="text-zinc-300">@hvt/cli</code> for declarative, scriptable authentication management in your terminal or CI/CD pipelines.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-3.5 mt-3">
                     {commands.map((c, i) => (
                         <div key={i} className="space-y-1">
-                            <span className="text-xs font-medium text-text-secondary">{c.title}</span>
-                            <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-[#101012] px-3 py-2 font-mono text-xs text-purple-300">
+                            <span className="text-xs font-semibold text-[#a1a1aa]">{c.title}</span>
+                            <div className="flex items-center justify-between gap-2 rounded-xl border border-[#27272a] bg-[#111111] px-3 py-2 font-mono text-xs text-zinc-300">
                                 <code>{c.cmd}</code>
                                 <button
                                     type="button"
                                     onClick={() => copyCmd(c.cmd, i)}
                                     title="Copy command"
-                                    className="p-1 rounded text-text-muted hover:text-white transition"
+                                    className="p-1 rounded text-[#71717a] hover:text-white transition"
                                 >
                                     {copiedIndex === i ? (
                                         <Check className="h-3.5 w-3.5 text-emerald-400" />

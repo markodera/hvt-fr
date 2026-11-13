@@ -3,7 +3,8 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { listProjects } from '@/api/organizations';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { AppShell } from '@/components/layout/AppShell';
+import { ProjectProvider } from '@/context/ProjectContext';
 import { useAuth } from '@/hooks/useAuth';
 
 export function DashboardLayout() {
@@ -52,8 +53,10 @@ export function DashboardLayout() {
     }
 
     return (
-        <DashboardShell>
-            <Outlet />
-        </DashboardShell>
+        <ProjectProvider>
+            <AppShell>
+                <Outlet />
+            </AppShell>
+        </ProjectProvider>
     );
 }

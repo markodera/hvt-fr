@@ -26,11 +26,19 @@ import WebhooksPage from '@/pages/webhooks/WebhooksPage';
 import { WebhookDetailPage } from '@/pages/webhooks/WebhookDetailPage';
 import AuditLogsPage from '@/pages/audit/AuditLogsPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
+import EmailSettingsPage from '@/pages/email/EmailSettingsPage';
+import PersonalAccessTokensPage from '@/pages/tokens/PersonalAccessTokensPage';
 import { CreateOrganizationPage } from '@/pages/settings/CreateOrganizationPage';
 import { CreateProjectPage } from '@/pages/settings/CreateProjectPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import RuntimeCommerceDemoPage from '@/pages/runtime/RuntimeCommerceDemoPage';
 import RuntimePlaygroundPage from '@/pages/runtime/RuntimePlaygroundPage';
+
+import FeatureEnginePage from '@/pages/features/FeatureEnginePage';
+import FeatureDualPlanePage from '@/pages/features/FeatureDualPlanePage';
+import FeaturePasskeysPage from '@/pages/features/FeaturePasskeysPage';
+import FeatureSessionsPage from '@/pages/features/FeatureSessionsPage';
+import FeatureByoEmailPage from '@/pages/features/FeatureByoEmailPage';
 
 function InviteAcceptRedirect() {
     const location = useLocation();
@@ -63,6 +71,14 @@ const router = createBrowserRouter([
     { path: '/runtime-playground', element: <RuntimePlaygroundPage /> },
     { path: '/runtime-playground/callback/:provider', element: <RuntimePlaygroundPage /> },
     { path: '/runtime-demo', element: <RuntimeCommerceDemoPage /> },
+
+    // In-depth dedicated feature pages
+    { path: '/features/engine', element: <FeatureEnginePage /> },
+    { path: '/features/dual-plane', element: <FeatureDualPlanePage /> },
+    { path: '/features/passkeys', element: <FeaturePasskeysPage /> },
+    { path: '/features/sessions', element: <FeatureSessionsPage /> },
+    { path: '/features/byo-email', element: <FeatureByoEmailPage /> },
+
     {
         element: (
             <ProtectedRoute>
@@ -73,9 +89,11 @@ const router = createBrowserRouter([
             { path: '/dashboard', element: <DashboardHome /> },
             { path: '/dashboard/create-organization', element: <CreateOrganizationPage /> },
             { path: '/dashboard/create-project', element: <CreateProjectPage /> },
+            { path: '/dashboard/email', element: <EmailSettingsPage /> },
             { path: '/dashboard/users', element: <UsersPage /> },
             { path: '/dashboard/users/:id', element: <UserDetailPage /> },
             { path: '/dashboard/api-keys', element: <ApiKeysPage /> },
+            { path: '/dashboard/tokens', element: <PersonalAccessTokensPage /> },
             { path: '/dashboard/webhooks', element: <WebhooksPage /> },
             { path: '/dashboard/webhooks/:id', element: <WebhookDetailPage /> },
             { path: '/dashboard/audit-logs', element: <AuditLogsPage /> },

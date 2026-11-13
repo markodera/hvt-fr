@@ -86,8 +86,8 @@ export function VerifyEmailPage() {
             <AuthCard>
                 <div className="space-y-6 text-center">
                     <Logo align="center" className="mx-auto" />
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-[#a78bfa]">
-                        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#7c3aed]" />
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-zinc-300">
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                     </div>
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Verifying your email</h1>

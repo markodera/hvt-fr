@@ -1,12 +1,15 @@
-import { Fragment, useMemo } from 'react';
+// SPDX-License-Identifier: Apache-2.0
+import { Fragment, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { CalendarRange, Info, ScrollText } from 'lucide-react';
+import { CalendarRange, ChevronRight, Info, ScrollText } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import { listAuditLogs } from '@/api/auditLogs';
 import { PermissionDenied } from '@/components/PermissionDenied';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDate } from '@/lib/utils';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { AuditLogInspectorDrawer } from './AuditLogInspectorDrawer';
 
 const actionOptions = [
     { value: '', label: 'All actions' },
@@ -67,7 +70,7 @@ function actionBadgeClass(eventType) {
         return 'border border-rose-500/30 bg-rose-500/10 text-rose-300';
     }
     if (eventType.includes('passkey')) {
-        return 'border border-purple-500/30 bg-purple-500/10 text-purple-300';
+        return 'border border-cyan-500/30 bg-cyan-500/10 text-cyan-300';
     }
     if (eventType.includes('magic_link')) {
         return 'border border-amber-500/30 bg-amber-500/10 text-amber-300';
@@ -85,7 +88,7 @@ function actionBadgeClass(eventType) {
         return 'border border-rose-500/30 bg-rose-500/10 text-rose-300';
     }
     if (eventType.includes('login')) {
-        return 'border border-violet-500/30 bg-violet-500/10 text-violet-300';
+        return 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300';
     }
     if (eventType.includes('logout')) {
         return 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa]';
@@ -120,12 +123,11 @@ function withinDateRange(value, from, to) {
     return true;
 }
 
-import { usePageTitle } from '@/hooks/usePageTitle';
-
 export default function AuditLogsPage() {
     usePageTitle('Audit Logs');
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
+    const [selectedLog, setSelectedLog] = useState(null);
     const eventType = searchParams.get('event_type') || '';
     const actorSearch = searchParams.get('actor_search') || '';
     const dateFrom = searchParams.get('date_from') || '';
@@ -181,9 +183,9 @@ export default function AuditLogsPage() {
         <div className="space-y-6">
             {projectScoped ? (
                 <section className="flex items-start gap-3 rounded-2xl border border-[#27272a] bg-[#18181b] px-4 py-3 text-sm text-[#a1a1aa]">
-                    <Info className="h-4 w-4 text-[#a78bfa]" />
+                    <Info className="h-4 w-4 text-zinc-400" />
                     <p>
-                        Showing results scoped to project: <span className="font-mono text-[#c4b5fd]">{user.project_slug}</span>
+                        Showing results scoped to project: <span className="font-mono text-zinc-200">{user.project_slug}</span>
                     </p>
                 </section>
             ) : null}
@@ -193,7 +195,7 @@ export default function AuditLogsPage() {
                     <select
                         value={eventType}
                         onChange={(event) => updateParams({ event_type: event.target.value || null })}
-                        className="h-10 rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                        className="h-10 rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600"
                     >
                         {actionOptions.map((option) => (
                             <option key={option.value || 'all'} value={option.value}>
@@ -218,13 +220,13 @@ export default function AuditLogsPage() {
                             value={actorSearch}
                             onChange={(event) => updateParams({ actor_search: event.target.value || null })}
                             placeholder="Filter visible actors"
-                            className="h-10 rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm text-white outline-none transition-colors placeholder:text-[#71717a] focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                            className="h-10 rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm text-white outline-none transition-colors placeholder:text-[#71717a] focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600"
                         />
                         <input
                             type="date"
                             value={dateTo}
                             onChange={(event) => updateParams({ date_to: event.target.value || null })}
-                            className="h-10 rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                            className="h-10 rounded-md border border-[#27272a] bg-[#111111] px-3 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600"
                         />
                     </div>
                 </div>
@@ -245,12 +247,27 @@ export default function AuditLogsPage() {
                     <>
                         <div className="divide-y divide-[#27272a] md:hidden">
                             {logs.map((log) => (
-                                <div key={log.id} className="space-y-3 px-4 py-4">
+                                <div
+                                    key={log.id}
+                                    onClick={() => setSelectedLog(log)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            setSelectedLog(log);
+                                        }
+                                    }}
+                                    className="space-y-3 px-4 py-4 cursor-pointer hover:bg-[#1c1c1f] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500"
+                                >
                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                         <p className="font-mono text-xs text-[#71717a]">{formatDate(log.created_at)}</p>
-                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${actionBadgeClass(log.event_type)}`}>
-                                            {log.event_type}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${actionBadgeClass(log.event_type)}`}>
+                                                {log.event_type}
+                                            </span>
+                                            <ChevronRight className="h-4 w-4 text-[#71717a]" />
+                                        </div>
                                     </div>
                                     <div className="space-y-2 text-sm text-[#a1a1aa]">
                                         <p>Actor: {log.actor_email || log.actor_api_key_name || 'System'}</p>
@@ -279,12 +296,24 @@ export default function AuditLogsPage() {
                                         <th className="px-4 py-3 font-medium">Resource</th>
                                         <th className="px-4 py-3 font-medium">IP</th>
                                         <th className="px-4 py-3 font-medium">Project</th>
+                                        <th className="px-4 py-3 font-medium text-right">Details</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {logs.map((log) => (
                                         <Fragment key={log.id}>
-                                            <tr className="border-b border-[#27272a] last:border-b-0">
+                                            <tr
+                                                onClick={() => setSelectedLog(log)}
+                                                role="button"
+                                                tabIndex={0}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter' || event.key === ' ') {
+                                                        event.preventDefault();
+                                                        setSelectedLog(log);
+                                                    }
+                                                }}
+                                                className="border-b border-[#27272a] last:border-b-0 cursor-pointer transition-colors hover:bg-[#1c1c1f] focus-visible:outline-none focus-visible:bg-[#1c1c1f]"
+                                            >
                                                 <td className="px-4 py-3 font-mono text-xs text-[#71717a]">
                                                     {formatDate(log.created_at)}
                                                 </td>
@@ -309,6 +338,11 @@ export default function AuditLogsPage() {
                                                             : String(log.project).slice(0, 8)
                                                         : 'Org'}
                                                 </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <span className="inline-flex items-center text-xs font-medium text-zinc-400 hover:text-white">
+                                                        Inspect <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                                                    </span>
+                                                </td>
                                             </tr>
                                         </Fragment>
                                     ))}
@@ -331,6 +365,14 @@ export default function AuditLogsPage() {
                     </>
                 )}
             </section>
+
+            <AuditLogInspectorDrawer
+                log={selectedLog}
+                open={Boolean(selectedLog)}
+                onOpenChange={(open) => {
+                    if (!open) setSelectedLog(null);
+                }}
+            />
         </div>
     );
 }

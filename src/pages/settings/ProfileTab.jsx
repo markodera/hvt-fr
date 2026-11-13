@@ -57,7 +57,7 @@ export function ProfileTab() {
                         <Input
                             id="first_name"
                             {...profileForm.register('first_name')}
-                            className="bg-[#18181b] border-[#27272a] text-white focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] h-10 w-full"
+                            className="bg-[#18181b] border-[#27272a] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 h-10 w-full"
                         />
                         {profileForm.formState.errors.first_name && (
                             <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.first_name.message}</p>
@@ -68,7 +68,7 @@ export function ProfileTab() {
                         <Input
                             id="last_name"
                             {...profileForm.register('last_name')}
-                            className="bg-[#18181b] border-[#27272a] text-white focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] h-10 w-full"
+                            className="bg-[#18181b] border-[#27272a] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 h-10 w-full"
                         />
                         {profileForm.formState.errors.last_name && (
                             <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.last_name.message}</p>
@@ -79,7 +79,7 @@ export function ProfileTab() {
                 <Button
                     type="submit"
                     disabled={profileMutation.isPending}
-                    className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-6 h-10 font-medium"
+                    className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 px-6 h-10 font-medium"
                 >
                     {profileMutation.isPending ? 'Saving...' : 'Save changes'}
                 </Button>

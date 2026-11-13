@@ -451,14 +451,14 @@ function buildProviderAuthUrl(providerConfig, callbackUrl) {
 }
 
 function inputClassName() {
-    return 'h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 text-sm text-white outline-none transition focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed40]';
+    return 'h-10 w-full rounded-lg border border-[#27272a] bg-[#0c0c0e] px-3 text-sm text-white outline-none transition focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500';
 }
 
 function buttonClassName(variant = 'primary') {
     if (variant === 'secondary') {
         return 'inline-flex h-10 items-center justify-center rounded-lg border border-[#27272a] bg-transparent px-4 text-sm font-medium text-white transition hover:border-[#3f3f46] hover:bg-[#18181b]';
     }
-    return 'inline-flex h-10 items-center justify-center rounded-lg bg-[#7c3aed] px-4 text-sm font-semibold text-white transition hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:opacity-60';
+    return 'inline-flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60';
 }
 
 function SectionCard({ title, description, children }) {
@@ -608,7 +608,7 @@ function RuntimeCallbackCard() {
                 <Logo className="mb-8" />
                 {status === 'loading' ? (
                     <div className="space-y-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-[#a78bfa]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#27272a] bg-[#18181b] text-zinc-300">
                             <Loader2 className="h-5 w-5 animate-spin" />
                         </div>
                         <div>
@@ -874,12 +874,12 @@ export default function RuntimePlaygroundPage() {
                         <Logo />
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="rounded-full border border-[#27272a] bg-[#111111] px-4 py-2 text-center text-xs uppercase tracking-[0.18em] text-[#a78bfa]">
+                        <div className="rounded-full border border-[#27272a] bg-[#111111] px-4 py-2 text-center text-xs uppercase tracking-[0.18em] text-zinc-300">
                             Internal runtime test surface
                         </div>
                         <Link
                             to="/runtime-demo"
-                            className="rounded-full border border-[#7c3aed]/20 bg-[#7c3aed]/10 px-4 py-2 text-[13px] font-semibold text-[#c4b5fd] transition-colors hover:border-[#7c3aed]/40 hover:bg-[#7c3aed]/20"
+                            className="rounded-full border border-zinc-700 bg-zinc-800 px-4 py-2 text-[13px] font-semibold text-zinc-200 transition-colors hover:bg-zinc-700 hover:text-white"
                         >
                             Open Roles Demo →
                         </Link>
@@ -960,7 +960,7 @@ export default function RuntimePlaygroundPage() {
                                     />
                                 </label>
                             </div>
-                            <div className="mt-4 rounded-xl border border-[#312e81] bg-[#1e1b4b] px-4 py-3 text-sm text-[#c4b5fd]">
+                            <div className="mt-4 rounded-xl border border-[#27272a] bg-[#111111] px-4 py-3 text-sm text-zinc-300">
                                 Add those exact callback URLs to the project social provider redirect URI allowlist before testing runtime social login.
                             </div>
                             <div className="mt-4 rounded-xl border border-[#14532d] bg-[#052e16] px-4 py-3 text-sm text-[#bbf7d0]">
@@ -1157,7 +1157,7 @@ export default function RuntimePlaygroundPage() {
                                         )
                                     }
                                 >
-                                    {busyAction === 'Register passkey' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4 text-[#a78bfa]" />}
+                                    {busyAction === 'Register passkey' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fingerprint className="mr-2 h-4 w-4 text-zinc-300" />}
                                     Register Passkey on active session
                                 </button>
                             </div>
@@ -1272,7 +1272,7 @@ export default function RuntimePlaygroundPage() {
                                                     <div className="text-[11px] uppercase tracking-[0.16em] text-[#71717a]">
                                                         Provider authorize base URL
                                                     </div>
-                                                    <div className="mt-1 font-mono text-[11px] text-[#a78bfa]">
+                                                    <div className="mt-1 font-mono text-[11px] text-zinc-300">
                                                         {providerConfig.authorization_url}
                                                     </div>
                                                     <div className="mt-1 text-[11px] text-[#71717a]">
@@ -1320,7 +1320,7 @@ export default function RuntimePlaygroundPage() {
                                         </p>
                                         <div className="mt-3 flex flex-wrap gap-2 text-xs">
                                             {session.me?.project_slug || session.claims?.project_slug ? (
-                                                <span className="rounded-full border border-[#27272a] bg-[#111111] px-3 py-1 font-mono text-[#c4b5fd]">
+                                                <span className="rounded-full border border-[#27272a] bg-[#111111] px-3 py-1 font-mono text-zinc-200">
                                                     {session.me?.project_slug || session.claims?.project_slug}
                                                 </span>
                                             ) : null}

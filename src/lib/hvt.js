@@ -110,9 +110,19 @@ function scheduleRefresh(accessToken) {
 
 export async function refreshDashboardSession() {
     if (!refreshPromise) {
+        const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('hvt_refresh_token') : null;
+        const requestHeaders = {};
+        let body;
+        if (storedRefreshToken) {
+            requestHeaders['Content-Type'] = 'application/json';
+            body = JSON.stringify({ refresh: storedRefreshToken });
+        }
+
         refreshPromise = rawFetch(new URL('/api/v1/auth/token/refresh/', API_BASE_URL), {
             method: 'POST',
             credentials: 'include',
+            headers: requestHeaders,
+            body,
         })
             .then(async (response) => {
                 let payload;
@@ -135,6 +145,9 @@ export async function refreshDashboardSession() {
                 }
 
                 hvt.setAccessToken(payload?.access || null);
+                if (payload?.refresh && typeof window !== 'undefined') {
+                    try { localStorage.setItem('hvt_refresh_token', payload.refresh); } catch (_e) { /* ignore */ }
+                }
                 return payload;
             })
             .finally(() => {
@@ -186,9 +199,12 @@ async function authAwareFetch(input, init = {}) {
     });
 }
 
+const savedAccessToken = typeof window !== 'undefined' ? localStorage.getItem('hvt_access_token') : null;
+
 export const hvt = new HVTClient({
     baseUrl: API_BASE_URL,
     fetch: authAwareFetch,
+    accessToken: savedAccessToken,
 });
 
 const baseSetAccessToken = hvt.setAccessToken.bind(hvt);
@@ -196,6 +212,19 @@ const baseSetAccessToken = hvt.setAccessToken.bind(hvt);
 hvt.setAccessToken = (accessToken) => {
     const normalizedAccessToken = accessToken || null;
     const result = baseSetAccessToken(normalizedAccessToken);
+
+    if (typeof window !== 'undefined') {
+        try {
+            if (normalizedAccessToken) {
+                localStorage.setItem('hvt_access_token', normalizedAccessToken);
+            } else {
+                localStorage.removeItem('hvt_access_token');
+                localStorage.removeItem('hvt_refresh_token');
+            }
+        } catch {
+            // Ignore storage errors in restricted contexts
+        }
+    }
 
     if (normalizedAccessToken) {
         scheduleRefresh(normalizedAccessToken);
@@ -205,5 +234,9 @@ hvt.setAccessToken = (accessToken) => {
 
     return result;
 };
+
+if (savedAccessToken) {
+    scheduleRefresh(savedAccessToken);
+}
 
 export { API_KEY_CANONICAL_SCOPES, HVTApiError, HVTClient };

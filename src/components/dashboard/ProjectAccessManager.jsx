@@ -35,7 +35,7 @@ import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const selectClassName =
-    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25';
+    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600';
 
 function normalizeCollection(data) {
     return data?.results ?? data ?? [];
@@ -319,13 +319,13 @@ export function ProjectAccessManager({ projects = [] }) {
                     </div>
                 </div>
                 {selectedProject ? (
-                    <p className="mt-3 font-mono text-xs text-[#a78bfa]">{selectedProject.slug}</p>
+                    <p className="mt-3 font-mono text-xs text-zinc-300">{selectedProject.slug}</p>
                 ) : null}
             </div>
 
             <div className="rounded-2xl border border-[#27272a] bg-[#111111] p-5">
                 <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-[#a78bfa]" />
+                    <ShieldCheck className="h-5 w-5 text-zinc-300" />
                     <h3 className="text-base font-semibold text-white">Your current project access</h3>
                 </div>
                 <p className="mt-1 text-sm text-[#71717a]">
@@ -356,7 +356,7 @@ export function ProjectAccessManager({ projects = [] }) {
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {currentAccess?.permissions?.length ? (
                                     currentAccess.permissions.map((permission) => (
-                                        <Badge key={permission} variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                        <Badge key={permission} variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                             {permission}
                                         </Badge>
                                     ))
@@ -374,14 +374,14 @@ export function ProjectAccessManager({ projects = [] }) {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <div className="flex items-center gap-2">
-                                <KeyRound className="h-5 w-5 text-[#a78bfa]" />
+                                <KeyRound className="h-5 w-5 text-zinc-300" />
                                 <h3 className="text-base font-semibold text-white">Project permissions</h3>
                             </div>
                             <p className="mt-1 text-sm text-[#71717a]">
-                                Create fine-grained permission slugs like <span className="font-mono text-[#c4b5fd]">orders.read.own</span> or <span className="font-mono text-[#c4b5fd]">classes.grade</span>.
+                                Create fine-grained permission slugs like <span className="font-mono text-zinc-300">orders.read.own</span> or <span className="font-mono text-zinc-300">classes.grade</span>.
                             </p>
                         </div>
-                        <Button onClick={openCreatePermissionDialog} className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto">
+                        <Button onClick={openCreatePermissionDialog} className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition sm:w-auto">
                             Add permission
                         </Button>
                     </div>
@@ -402,7 +402,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                         <div>
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="text-sm font-medium text-white">{permission.name}</p>
-                                                <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                                <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                                     {permission.slug}
                                                 </Badge>
                                             </div>
@@ -443,14 +443,14 @@ export function ProjectAccessManager({ projects = [] }) {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <div className="flex items-center gap-2">
-                                <ShieldCheck className="h-5 w-5 text-[#a78bfa]" />
+                                <ShieldCheck className="h-5 w-5 text-zinc-300" />
                                 <h3 className="text-base font-semibold text-white">Project roles</h3>
                             </div>
                             <p className="mt-1 text-sm text-[#71717a]">
                                 Bundle permissions into reusable roles developers can assign to buyers, sellers, teachers, students, or any other app model.
                             </p>
                         </div>
-                        <Button onClick={openCreateRoleDialog} className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto">
+                        <Button onClick={openCreateRoleDialog} className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition sm:w-auto">
                             Add role
                         </Button>
                     </div>
@@ -470,7 +470,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="text-sm font-medium text-white">{role.name}</p>
-                                                <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                                <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                                     {role.slug}
                                                 </Badge>
                                                 {role.is_default_signup ? (
@@ -546,7 +546,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                     permissionSlugField.onChange(event);
                                 }}
                                 placeholder="orders.read.own"
-                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-zinc-500/40/25"
                             />
                             {permissionForm.formState.errors.slug ? (
                                 <p className="text-xs text-danger">{permissionForm.formState.errors.slug.message}</p>
@@ -557,7 +557,7 @@ export function ProjectAccessManager({ projects = [] }) {
                             <Input
                                 {...permissionForm.register('name')}
                                 placeholder="Read own orders"
-                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-zinc-500/40/25"
                             />
                             {permissionForm.formState.errors.name ? (
                                 <p className="text-xs text-danger">{permissionForm.formState.errors.name.message}</p>
@@ -569,7 +569,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                 {...permissionForm.register('description')}
                                 rows={4}
                                 placeholder="Describe what this permission allows in the customer app."
-                                className="w-full rounded-xl border border-[#27272a] bg-[#18181b] px-3 py-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                                className="w-full rounded-xl border border-[#27272a] bg-[#18181b] px-3 py-3 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600"
                             />
                             {permissionForm.formState.errors.description ? (
                                 <p className="text-xs text-danger">{permissionForm.formState.errors.description.message}</p>
@@ -587,7 +587,7 @@ export function ProjectAccessManager({ projects = [] }) {
                             <Button
                                 type="submit"
                                 disabled={createPermissionMutation.isPending || updatePermissionMutation.isPending}
-                                className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
+                                className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition sm:w-auto"
                             >
                                 {editingPermission
                                     ? updatePermissionMutation.isPending
@@ -622,7 +622,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                         roleSlugField.onChange(event);
                                     }}
                                     placeholder="seller"
-                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-zinc-500/40/25"
                                 />
                                 {roleForm.formState.errors.slug ? (
                                     <p className="text-xs text-danger">{roleForm.formState.errors.slug.message}</p>
@@ -633,7 +633,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                 <Input
                                     {...roleForm.register('name')}
                                     placeholder="Seller"
-                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-[#7c3aed] focus:ring-[#7c3aed]/25"
+                                    className="h-10 border-[#27272a] bg-[#18181b] text-white focus:border-zinc-500 focus:ring-zinc-500/40/25"
                                 />
                                 {roleForm.formState.errors.name ? (
                                     <p className="text-xs text-danger">{roleForm.formState.errors.name.message}</p>
@@ -647,7 +647,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                 {...roleForm.register('description')}
                                 rows={4}
                                 placeholder="Describe who should receive this role in the customer app."
-                                className="w-full rounded-xl border border-[#27272a] bg-[#18181b] px-3 py-3 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25"
+                                className="w-full rounded-xl border border-[#27272a] bg-[#18181b] px-3 py-3 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600"
                             />
                             {roleForm.formState.errors.description ? (
                                 <p className="text-xs text-danger">{roleForm.formState.errors.description.message}</p>
@@ -664,7 +664,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                         shouldValidate: true,
                                     })
                                 }
-                                className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-[#7c3aed] focus:ring-[#7c3aed]/40"
+                                className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-zinc-100 accent-zinc-200 focus:ring-zinc-400/30"
                             />
                             <div>
                                 <p className="text-sm font-medium text-white">Assign on public signup</p>
@@ -684,7 +684,7 @@ export function ProjectAccessManager({ projects = [] }) {
                                         shouldValidate: true,
                                     })
                                 }
-                                className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-[#7c3aed] focus:ring-[#7c3aed]/40"
+                                className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-zinc-100 accent-zinc-200 focus:ring-zinc-400/30"
                             />
                             <div>
                                 <p className="text-sm font-medium text-white">Allow self-assignment at signup</p>
@@ -713,12 +713,12 @@ export function ProjectAccessManager({ projects = [] }) {
                                                     type="checkbox"
                                                     checked={checked}
                                                     onChange={() => toggleRolePermission(permission.id)}
-                                                    className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-[#7c3aed] focus:ring-[#7c3aed]/40"
+                                                    className="mt-1 h-4 w-4 rounded border-[#3f3f46] bg-[#111111] text-zinc-100 accent-zinc-200 focus:ring-zinc-400/30"
                                                 />
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <p className="text-sm font-medium text-white">{permission.name}</p>
-                                                        <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                                        <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                                             {permission.slug}
                                                         </Badge>
                                                     </div>
@@ -748,7 +748,7 @@ export function ProjectAccessManager({ projects = [] }) {
                             <Button
                                 type="submit"
                                 disabled={createRoleMutation.isPending || updateRoleMutation.isPending}
-                                className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:w-auto"
+                                className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition sm:w-auto"
                             >
                                 {editingRole
                                     ? updateRoleMutation.isPending

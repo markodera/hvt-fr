@@ -706,13 +706,13 @@ export default function RuntimeCommerceDemoPage() {
                                         type="button"
                                         variant="outline"
                                         disabled={busyAction === 'passkey-login'}
-                                        className="h-10 border-[#7c3aed]/40 bg-[#7c3aed]/10 text-[#a78bfa] hover:bg-[#7c3aed]/20"
+                                        className="h-10 border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-white"
                                         onClick={handlePasskeyLogin}
                                     >
                                         {busyAction === 'passkey-login' ? (
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         ) : (
-                                            <Fingerprint className="mr-2 h-4 w-4 text-[#a78bfa]" />
+                                            <Fingerprint className="mr-2 h-4 w-4 text-zinc-400" />
                                         )}
                                         Sign in with Passkey
                                     </Button>
@@ -788,7 +788,7 @@ export default function RuntimeCommerceDemoPage() {
                                     <div className="rounded-xl border border-[#27272a] bg-[#0d0d11] p-3">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <Fingerprint className="h-4 w-4 text-[#a78bfa]" />
+                                                <Fingerprint className="h-4 w-4 text-zinc-400" />
                                                 <div>
                                                     <p className="text-xs font-semibold text-white">Biometric Passkey</p>
                                                     <p className="text-[11px] text-[#71717a]">Register hardware key for this account</p>
@@ -800,7 +800,7 @@ export default function RuntimeCommerceDemoPage() {
                                                 size="sm"
                                                 disabled={busyAction === 'passkey-register'}
                                                 onClick={handlePasskeyRegister}
-                                                className="h-8 border-[#7c3aed]/40 bg-[#7c3aed]/10 text-xs text-[#a78bfa] hover:bg-[#7c3aed]/20"
+                                                className="h-8 border-zinc-700 bg-zinc-800 text-xs text-zinc-200 hover:bg-zinc-700 hover:text-white"
                                             >
                                                 {busyAction === 'passkey-register' ? (
                                                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />

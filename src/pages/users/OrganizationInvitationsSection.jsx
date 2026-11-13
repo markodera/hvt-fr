@@ -22,7 +22,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { formatDate, getErrorMessage } from '@/lib/utils';
 
 const selectClassName =
-    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/25';
+    'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600';
 
 function badgeVariantForStatus(status) {
     if (status === 'accepted') return 'success';
@@ -113,7 +113,7 @@ export function OrganizationInvitationsSection() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <ShieldPlus className="h-5 w-5 text-[#a78bfa]" />
+                            <ShieldPlus className="h-5 w-5 text-zinc-400" />
                             <h2 className="text-lg font-bold text-white">Invite teammates</h2>
                         </div>
                         <p className="mt-1 text-sm text-[#a1a1aa]">
@@ -157,7 +157,7 @@ export function OrganizationInvitationsSection() {
                         <div className="flex items-end">
                             <Button
                                 type="submit"
-                                className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] md:w-auto"
+                                className="w-full bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 transition md:w-auto"
                                 disabled={createInvitationMutation.isPending}
                             >
                                 <MailPlus className="mr-2 h-4 w-4" />
@@ -241,7 +241,7 @@ export function OrganizationInvitationsSection() {
                                         <div className="flex flex-wrap items-center gap-2">
                                             <p className="text-sm font-medium text-white">{invitation.project_name}</p>
                                             {invitation.project_slug ? (
-                                                <Badge variant="secondary" className="font-mono text-[11px] text-[#c4b5fd]">
+                                                <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
                                                     {invitation.project_slug}
                                                 </Badge>
                                             ) : null}
@@ -277,7 +277,7 @@ export function OrganizationInvitationsSection() {
                                     setPageSize(Number(event.target.value));
                                     setPage(1);
                                 }}
-                                className="h-8 rounded-md border border-[#27272a] bg-[#18181b] px-2 text-xs text-white outline-none transition-colors focus:border-[#7c3aed]"
+                                className="h-8 rounded-md border border-[#27272a] bg-[#18181b] px-2 text-xs text-white outline-none transition-colors focus:border-zinc-500"
                             >
                                 <option value={5}>5</option>
                                 <option value={10}>10</option>

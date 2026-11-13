@@ -130,7 +130,7 @@ function CallbackStatus({ error }) {
                     {!error ? (
                         <>
                             <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-[#27272a] bg-[#18181b] px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[#a1a1aa]">
-                                <span className="h-2 w-2 rounded-full bg-[#7c3aed] animate-pulse" />
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                 Social auth
                             </div>
                             <h1 className="mt-6 text-2xl font-bold tracking-[-0.03em] text-white">Finishing sign-in...</h1>
@@ -138,13 +138,13 @@ function CallbackStatus({ error }) {
                                 We are verifying your refreshed session before opening the dashboard.
                             </p>
                             <div className="mx-auto mt-8 h-1.5 w-40 overflow-hidden rounded-full bg-[#1c1c1f]">
-                                <div className="h-full w-1/2 animate-pulse rounded-full bg-[#7c3aed]/60" />
+                                <div className="h-full w-1/2 rounded-full bg-zinc-600" />
                             </div>
                         </>
                     ) : (
                         <>
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[#3f3f46] bg-[#18181b] text-[#f4f4f5]">
-                                <AlertCircle className="h-5 w-5 text-[#a78bfa]" />
+                                <AlertCircle className="h-5 w-5 text-rose-400" />
                             </div>
                             <h1 className="mt-6 text-2xl font-bold tracking-[-0.03em] text-white">We couldn&apos;t finish sign-in.</h1>
                             <p className="mt-3 text-sm leading-7 text-[#a1a1aa]">{error}</p>
@@ -157,7 +157,7 @@ function CallbackStatus({ error }) {
                                 </Link>
                                 <Link
                                     to="/signup"
-                                    className="inline-flex h-10 items-center justify-center rounded-md bg-[#7c3aed] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6d28d9]"
+                                    className="inline-flex h-10 items-center justify-center rounded-md bg-white px-4 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-200"
                                 >
                                     Create an account
                                 </Link>

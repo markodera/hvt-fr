@@ -20,7 +20,7 @@ const RUNTIME_AUTH_METHODS = [
         subtitle: 'FIDO2 / WebAuthn / Touch ID / Face ID / Windows Hello / YubiKey',
         badge: 'Native & Phishing Resistant',
         icon: Fingerprint,
-        iconBg: 'bg-[#7c3aed]/10 text-[#a78bfa] border-[#7c3aed]/20',
+        iconBg: 'border border-[#27272a] bg-[#18181b] text-zinc-300',
         description:
             'Enable your users to log in instantly using built-in device biometrics or physical security keys without ever typing a password.',
         capabilities: [
@@ -134,7 +134,7 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
                     <select
                         value={selectedProjectId}
                         onChange={(e) => setSelectedProjectId(e.target.value)}
-                        className="h-10 rounded-lg border border-[#27272a] bg-[#18181b] px-3 text-sm text-white focus:border-[#7c3aed] focus:outline-none"
+                        className="h-10 rounded-lg border border-[#27272a] bg-[#18181b] px-3 text-sm text-white focus:border-zinc-500 focus:outline-none"
                     >
                         {projects.map((p) => (
                             <option key={p.id} value={p.id}>
@@ -143,7 +143,7 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
                         ))}
                     </select>
                 ) : (
-                    <Badge variant="outline" className="border-[#27272a] text-[#a78bfa] font-mono">
+                    <Badge variant="outline" className="border-[#27272a] text-zinc-300 font-mono">
                         {activeProject?.name || 'Default Project'}
                     </Badge>
                 )}
@@ -152,10 +152,10 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
             <div className="grid gap-3 sm:grid-cols-2">
                 <Link
                     to="/runtime-playground"
-                    className="flex items-center justify-between rounded-2xl border border-[#27272a] bg-[#111114] p-4 transition-all hover:border-[#7c3aed]/50 hover:bg-[#18181f]"
+                    className="flex items-center justify-between rounded-2xl border border-[#27272a] bg-[#111114] p-4 transition-all hover:border-zinc-500/50 hover:bg-[#18181f]"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#7c3aed]/30 bg-[#7c3aed]/10 text-[#a78bfa]">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#27272a] bg-[#18181b] text-zinc-300">
                             <Play className="h-5 w-5" />
                         </div>
                         <div>
@@ -168,7 +168,7 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
 
                 <Link
                     to="/runtime-demo"
-                    className="flex items-center justify-between rounded-2xl border border-[#27272a] bg-[#111114] p-4 transition-all hover:border-[#7c3aed]/50 hover:bg-[#18181f]"
+                    className="flex items-center justify-between rounded-2xl border border-[#27272a] bg-[#111114] p-4 transition-all hover:border-zinc-500/50 hover:bg-[#18181f]"
                 >
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
@@ -194,7 +194,7 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
                             onClick={() => setActiveTab(method.id)}
                             className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
                                 isActive
-                                    ? 'border-[#7c3aed] bg-[#7c3aed]/15 text-white'
+                                    ? 'border-[#7c3aed] bg-[#7c3aed] text-white shadow-sm shadow-[#7c3aed]/25'
                                     : 'border-[#27272a] bg-[#111111] text-[#a1a1aa] hover:border-[#3f3f46] hover:text-white'
                             }`}
                         >
@@ -236,7 +236,7 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
                 <div className="mt-6 space-y-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Code2 className="h-4 w-4 text-[#a78bfa]" />
+                            <Code2 className="h-4 w-4 text-zinc-300" />
                             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#71717a]">
                                 SDK Integration (@hvt/sdk)
                             </span>
@@ -256,7 +256,7 @@ export function ProjectRuntimeAuthSection({ projects = [] }) {
                                 key={idx}
                                 className="flex items-center gap-3 rounded-lg border border-[#27272a] bg-[#0d0d10] px-3 py-1.5 font-mono text-xs"
                             >
-                                <span className="font-bold text-[#a78bfa]">{ep.method}</span>
+                                <span className="font-bold text-zinc-300">{ep.method}</span>
                                 <span className="text-[#a1a1aa] break-all">{ep.path}</span>
                             </div>
                         ))}

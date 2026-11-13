@@ -77,7 +77,7 @@ export function SecurityTab() {
                             id="old_password"
                             type={showPassword.old ? 'text' : 'password'}
                             {...passwordForm.register('old_password')}
-                            className="bg-[#18181b] border-[#27272a] text-white focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] h-10 w-full pr-10"
+                            className="bg-[#18181b] border-[#27272a] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 h-10 w-full pr-10"
                         />
                         <button
                             type="button"
@@ -100,7 +100,7 @@ export function SecurityTab() {
                                 id="new_password"
                                 type={showPassword.new ? 'text' : 'password'}
                                 {...passwordForm.register('new_password')}
-                                className="bg-[#18181b] border-[#27272a] text-white focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] h-10 w-full pr-10"
+                                className="bg-[#18181b] border-[#27272a] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 h-10 w-full pr-10"
                             />
                             <button
                                 type="button"
@@ -137,7 +137,7 @@ export function SecurityTab() {
                                 id="confirm_new_password"
                                 type={showPassword.confirm ? 'text' : 'password'}
                                 {...passwordForm.register('confirm_new_password')}
-                                className="bg-[#18181b] border-[#27272a] text-white focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] h-10 w-full pr-10"
+                                className="bg-[#18181b] border-[#27272a] text-white focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 h-10 w-full pr-10"
                             />
                             <button
                                 type="button"
@@ -157,14 +157,14 @@ export function SecurityTab() {
                     <Button
                         type="submit"
                         disabled={passwordMutation.isPending}
-                        className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-6 h-10 font-medium"
+                        className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25 px-6 h-10 font-medium"
                     >
                         {passwordMutation.isPending ? 'Updating...' : 'Change password'}
                     </Button>
                 </div>
                 
                 <div className="mt-4 pt-4 border-t border-[#27272a]">
-                    <Link to="/forgot-password" target="_blank" className="text-sm text-[#7c3aed] hover:text-[#a78bfa] transition-colors">
+                    <Link to="/forgot-password" target="_blank" className="text-sm text-zinc-200 hover:text-zinc-300 transition-colors">
                         Forgot your password?
                     </Link>
                 </div>

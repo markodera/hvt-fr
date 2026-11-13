@@ -23,7 +23,7 @@ function Toggle({ checked, onChange }) {
             aria-checked={checked}
             onClick={onChange}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                checked ? 'bg-[#7c3aed]' : 'border border-[#27272a] bg-[#111111]'
+                checked ? 'bg-[#7c3aed] text-white shadow-sm shadow-[#7c3aed]/25' : 'border border-[#27272a] bg-[#111111] text-[#a1a1aa]'
             }`}
         >
             <span
@@ -87,7 +87,7 @@ export function CreateOrganizationPage() {
             <section className="rounded-3xl border border-[#27272a] bg-[#18181b] p-6 md:p-8">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div className="max-w-2xl space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#7c3aed]/25 bg-[#7c3aed]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800 text-zinc-300 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
                             <Building2 className="h-3.5 w-3.5" />
                             First-time setup
                         </div>
@@ -166,7 +166,7 @@ export function CreateOrganizationPage() {
                         <Button
                             type="submit"
                             disabled={mutation.isPending}
-                            className="h-11 min-w-[190px] bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                            className="h-11 min-w-[190px] bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25"
                         >
                             {mutation.isPending ? 'Creating organization...' : 'Create organization'}
                             {!mutation.isPending ? <ArrowRight className="ml-2 h-4 w-4" /> : null}

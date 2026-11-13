@@ -22,7 +22,7 @@ export function LegalDocumentLayout({ title, summary, updatedOn, children }) {
                     </Link>
 
                     <div className="mt-5 space-y-3">
-                        <div className="text-xs font-medium uppercase tracking-[0.18em] text-[#a78bfa]">Legal</div>
+                        <div className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">Legal</div>
                         <h1 className="text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">{title}</h1>
                         <p className="max-w-3xl text-sm leading-7 text-[#a1a1aa]">{summary}</p>
                         <div className="inline-flex rounded-full border border-[#27272a] bg-[#18181b] px-3 py-1 text-xs text-[#d4d4d8]">
@@ -50,7 +50,7 @@ export function LegalList({ items }) {
     return (
         <ul className="space-y-3 pl-5 text-[#a1a1aa]">
             {items.map((item) => (
-                <li key={item} className="list-disc marker:text-[#a78bfa]">
+                <li key={item} className="list-disc marker:text-zinc-400">
                     {item}
                 </li>
             ))}

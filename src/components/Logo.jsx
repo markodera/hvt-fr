@@ -24,7 +24,7 @@ export function HvtLogoMark({ className = '' }) {
                     <rect x="13" y="13" width="6" height="7" fill="white" />
                 </mask>
             </defs>
-            <rect width="32" height="32" rx="7" fill="#5b21b6" mask={`url(#${maskId})`} />
+            <rect width="32" height="32" rx="7" fill="#7c3aed" mask={`url(#${maskId})`} />
         </svg>
     );
 }

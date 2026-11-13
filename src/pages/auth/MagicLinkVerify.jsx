@@ -74,7 +74,7 @@ export default function MagicLinkVerify() {
 
         {status === 'verifying' && (
           <div className="py-8">
-            <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#7c3aed]" />
+            <Loader2 className="mx-auto h-10 w-10 animate-spin text-white" />
             <h2 className="mt-4 text-xl font-bold text-white">Verifying Magic Link...</h2>
             <p className="mt-2 text-sm text-[#a1a1aa]">Authenticating your session securely.</p>
           </div>
@@ -95,7 +95,7 @@ export default function MagicLinkVerify() {
             <p className="mt-2 text-sm text-[#f87171]">{errorMessage}</p>
             <div className="mt-6">
               <Link to="/login">
-                <Button className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]">
+                <Button className="bg-[#7c3aed] text-white font-semibold hover:bg-[#6d28d9] shadow-sm shadow-[#7c3aed]/25">
                   Return to Login
                 </Button>
               </Link>

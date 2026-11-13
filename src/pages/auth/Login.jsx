@@ -1,14 +1,14 @@
+// SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Github, Fingerprint, Mail, KeyRound, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Github, Fingerprint, Mail, KeyRound, ShieldCheck } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 
-import { listSocialProviders, loginWithPasskey, requestMagicLink } from '@/api/auth';
+import { loginWithPasskey, requestMagicLink } from '@/api/auth';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { hvt } from '@/lib/hvt';
@@ -20,12 +20,6 @@ import {
 } from '@/lib/invitations';
 import { getErrorMessage } from '@/lib/utils';
 import { DOCS_URL } from '@/lib/appLinks';
-
-const DOT_GRID_STYLE = {
-  backgroundImage:
-    'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 18 18%27%3E%3Ccircle cx=%279%27 cy=%279%27 r=%271.5%27 fill=%27%2327272a%27 /%3E%3C/svg%3E")',
-  backgroundRepeat: 'repeat',
-};
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -47,42 +41,6 @@ function GoogleIcon() {
   );
 }
 
-function AuthBackground() {
-  return (
-    <>
-      <style>{`
-        @keyframes authGlowPulse {
-          0%, 100% { opacity: 0.18; }
-          50% { opacity: 0.34; }
-        }
-      `}</style>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at top center, rgba(124,58,237,0.15), transparent 56%)',
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          ...DOT_GRID_STYLE,
-          WebkitMaskImage:
-            'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.88) 68%, transparent 100%)',
-          maskImage:
-            'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.88) 68%, transparent 100%)',
-        }}
-      />
-    </>
-  );
-}
-
-function Wordmark({ centered = false }) {
-  return <Logo href="/" align={centered ? 'center' : 'left'} className={centered ? 'mx-auto' : ''} />;
-}
-
 export default function Login() {
   const { login, completeMfaLogin, waitForSession } = useAuth();
   const navigate = useNavigate();
@@ -91,61 +49,53 @@ export default function Login() {
   const [authMethod, setAuthMethod] = useState('password'); // 'password' | 'magic_link'
   const [magicLinkSentTo, setMagicLinkSentTo] = useState(null);
   const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
-  const [mfaData, setMfaData] = useState(null);
+
+  // 2FA TOTP state
+  const [mfaData, setMfaData] = useState(null); // { mfa_required: true, mfa_token: '...' }
   const [mfaCode, setMfaCode] = useState('');
   const [isMfaSubmitting, setIsMfaSubmitting] = useState(false);
+
   const inviteToken = searchParams.get('invite_token') || '';
 
-  useEffect(() => {
-    document.title = 'Sign in | HVT';
-  }, []);
-
-  useEffect(() => {
-    if (inviteToken) {
-      markInvitationResumeAfterAuth(inviteToken);
-    }
-  }, [inviteToken]);
-
   const {
-    register: registerPassword,
-    handleSubmit: handleSubmitPassword,
-    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
+    register: loginRegister,
+    handleSubmit: handleLoginSubmit,
+    formState: { errors: loginErrors, isSubmitting: isLoginSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
   const {
-    register: registerMagicLink,
-    handleSubmit: handleSubmitMagicLink,
+    register: magicLinkRegister,
+    handleSubmit: handleMagicLinkSubmit,
     formState: { errors: magicLinkErrors, isSubmitting: isMagicLinkSubmitting },
   } = useForm({
     resolver: zodResolver(magicLinkSchema),
     defaultValues: { email: '' },
   });
 
-  const { data: socialProviderData } = useQuery({
-    queryKey: ['controlPlaneSocialProviders'],
-    queryFn: listSocialProviders,
-  });
-
-  const controlPlaneProviders = socialProviderData?.providers ?? [];
-  const googleAvailable = controlPlaneProviders.some((provider) => provider.provider === 'google');
-  const githubAvailable = controlPlaneProviders.some((provider) => provider.provider === 'github');
-
-  const handleSocialLogin = (provider, label) => {
+  useEffect(() => {
+    document.title = 'Sign in | HVT';
     if (inviteToken) {
       markInvitationResumeAfterAuth(inviteToken);
     }
-    const started = startSocialSignIn(provider, controlPlaneProviders);
-    if (!started) {
-      toast.error(`${label} login is not configured`);
+  }, [inviteToken]);
+
+  const handleSocialLogin = (provider, providerName) => {
+    try {
+      if (inviteToken) {
+        markInvitationResumeAfterAuth(inviteToken);
+      }
+      startSocialSignIn(provider);
+    } catch {
+      toast.error(`Unable to start sign in with ${providerName}.`);
     }
   };
 
   const onPasswordSubmit = async (values) => {
     try {
-      const res = await login(values);
+      const res = await login({ email: values.email, password: values.password });
       if (res?.mfa_required) {
         setMfaData(res);
         toast.info('Two-factor authentication required. Please enter your code.');
@@ -219,9 +169,7 @@ export default function Login() {
     } catch (error) {
       const msg = error?.message || '';
       if (error?.name === 'NotAllowedError' || msg.includes('not allowed') || msg.includes('timed out')) {
-        toast.error('Passkey authentication was canceled or timed out.');
-      } else if (msg.includes('already registered')) {
-        toast.info('This passkey is already registered.');
+        toast.error('Passkey authentication was canceled.');
       } else {
         toast.error(getErrorMessage(error) || 'Passkey authentication failed.');
       }
@@ -231,63 +179,55 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#09090b] text-white flex flex-col justify-center px-4 py-12 sm:px-6">
       <Helmet>
         <title>Sign in | HVT - Identity & Access Management</title>
-        <meta
-          name="description"
-          content="Sign in to your HVT control plane. Manage multi-tenant projects, runtime user authentication, API keys, WebAuthn passkeys, and RBAC permissions."
-        />
-        <meta property="og:title" content="Sign in | HVT Identity Platform" />
-        <meta
-          property="og:description"
-          content="Secure, developer-first authentication with Passkeys, Magic Links, Social OAuth, and TOTP Two-Factor Auth."
-        />
       </Helmet>
-      <AuthBackground />
 
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
-        <div className="w-full max-w-[440px] rounded-[20px] border border-[#27272a] bg-[#111111]/92 p-8 shadow-[0_0_0_1px_rgba(124,58,237,0.06)] backdrop-blur-sm transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] sm:p-10">
-          <div className="flex justify-center">
-            <Wordmark centered />
-          </div>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <Logo href="/" />
+        </div>
+      </div>
 
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[420px]">
+        <div className="rounded-2xl border border-[#27272a] bg-[#121215] p-6 sm:p-8 shadow-xl">
           {mfaData ? (
-            /* 2FA TOTP Challenge View */
-            <div className="mt-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#7c3aed]/40 bg-[#7c3aed]/10 text-[#a855f7]">
-                <ShieldCheck className="h-7 w-7" />
+            /* ── Two-Factor Authentication Challenge ── */
+            <div className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-[#27272a] bg-[#18181b] text-zinc-300">
+                <ShieldCheck className="h-6 w-6" />
               </div>
-              <h1 className="mt-4 text-2xl font-bold tracking-tight text-white">Two-Factor Authentication</h1>
-              <p className="mt-2 text-sm text-[#a1a1aa]">
-                Enter the 6-digit verification code from your authenticator app (Google Authenticator, Authy, 1Password) to continue.
+              <h1 className="mt-4 text-xl font-bold tracking-tight text-white">Two-Factor Authentication</h1>
+              <p className="mt-1.5 text-xs text-zinc-400">
+                Enter the 6-digit code from your authenticator app or an 8-character recovery backup code.
               </p>
 
               <form onSubmit={onMfaSubmit} className="mt-6 space-y-4 text-left">
                 <div>
-                  <label htmlFor="totp-code" className="block text-xs font-semibold uppercase tracking-wider text-[#a1a1aa]">
-                    Authentication Code
+                  <label htmlFor="totp-code" className="block text-xs font-semibold text-zinc-400">
+                    Verification Code
                   </label>
                   <input
                     id="totp-code"
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
-                    maxLength={6}
+                    maxLength={9}
                     autoFocus
                     placeholder="000 000"
                     value={mfaCode}
-                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="mt-2 w-full rounded-lg border border-[#27272a] bg-[#09090b] px-4 py-3 text-center font-mono text-2xl font-bold tracking-[0.3em] text-white outline-none transition-colors focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed]"
+                    onChange={(e) => setMfaCode(e.target.value.toUpperCase())}
+                    className="mt-1.5 w-full rounded-lg border border-[#27272a] bg-[#0c0c0e] px-4 py-2.5 text-center font-mono text-xl font-bold tracking-widest text-white outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isMfaSubmitting || mfaCode.length < 6}
-                  className="w-full rounded-lg bg-[#7c3aed] px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full h-10 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isMfaSubmitting ? 'Verifying code...' : 'Verify and Sign In'}
+                  {isMfaSubmitting ? 'Verifying...' : 'Verify and continue'}
                 </button>
 
                 <button
@@ -296,203 +236,200 @@ export default function Login() {
                     setMfaData(null);
                     setMfaCode('');
                   }}
-                  className="w-full text-center text-xs text-[#71717a] transition-colors hover:text-white hover:underline pt-2"
+                  className="w-full text-center text-xs text-zinc-500 transition hover:text-white pt-1"
                 >
-                  Cancel and return to sign in
+                  Cancel and return to login
                 </button>
               </form>
             </div>
           ) : (
-            <>
-              <div className="mt-8 text-center">
-                <h1 className="text-3xl font-bold tracking-[-0.03em] text-white">Sign in</h1>
-                <p className="mt-2 text-sm leading-6 text-[#a1a1aa]">
-                  Access your organization control plane and runtime settings.
+            /* ── Standard Login ── */
+            <div>
+              <div className="text-center pb-5 border-b border-[#27272a]">
+                <h1 className="text-xl font-bold tracking-tight text-white">Sign in to HVT</h1>
+                <p className="mt-1 text-xs text-zinc-400">
+                  Access your projects, API keys, and identity console.
                 </p>
               </div>
 
-              {/* Passkey Fast Sign-in */}
-              <div className="mt-6">
+              {/* Social Login Buttons - Always Available */}
+              <div className="mt-5 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GOOGLE, 'Google')}
+                  className="flex w-full h-10 items-center justify-center gap-2.5 rounded-lg border border-[#27272a] bg-[#18181b] px-4 text-xs font-medium text-zinc-200 transition hover:bg-[#202025] hover:border-[#3f3f46] hover:text-white"
+                >
+                  <GoogleIcon />
+                  <span>Continue with Google</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GITHUB, 'GitHub')}
+                  className="flex w-full h-10 items-center justify-center gap-2.5 rounded-lg border border-[#27272a] bg-[#18181b] px-4 text-xs font-medium text-zinc-200 transition hover:bg-[#202025] hover:border-[#3f3f46] hover:text-white"
+                >
+                  <Github className="h-4 w-4" />
+                  <span>Continue with GitHub</span>
+                </button>
+              </div>
+
+              {/* Passkey Button - Matching exact width */}
+              <div className="mt-2.5">
                 <button
                   type="button"
                   onClick={handlePasskeyLogin}
                   disabled={isPasskeyLoading}
-                  className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#7c3aed]/40 bg-[#7c3aed]/10 px-4 py-3 text-sm font-semibold text-white transition-all hover:border-[#7c3aed] hover:bg-[#7c3aed]/20 disabled:opacity-50"
+                  className="flex w-full h-10 items-center justify-center gap-2.5 rounded-lg border border-[#27272a] bg-[#18181b] px-4 text-xs font-semibold text-zinc-200 transition hover:bg-[#202025] hover:border-[#3f3f46] hover:text-white disabled:opacity-50"
                 >
-                  <Fingerprint className="h-5 w-5 text-[#a855f7]" />
-                  {isPasskeyLoading ? 'Waiting for biometric sensor...' : 'Sign in with Passkey'}
+                  <Fingerprint className="h-4 w-4 text-zinc-400" />
+                  <span>{isPasskeyLoading ? 'Waiting for biometric sensor...' : 'Sign in with Passkey'}</span>
                 </button>
               </div>
 
-          <div className="mt-4 space-y-3">
-            <button
-              type="button"
-              onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GOOGLE, 'Google')}
-              disabled={!googleAvailable}
-              className="flex w-full items-center justify-center gap-3 rounded-md border border-[#27272a] bg-transparent px-4 py-2.5 text-sm font-medium text-[#e4e4e7] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <GoogleIcon />
-              Continue with Google
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GITHUB, 'GitHub')}
-              disabled={!githubAvailable}
-              className="flex w-full items-center justify-center gap-3 rounded-md border border-[#27272a] bg-transparent px-4 py-2.5 text-sm font-medium text-[#e4e4e7] transition-colors duration-150 hover:border-[rgba(124,58,237,0.6)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Github className="h-4 w-4" />
-              Continue with GitHub
-            </button>
-          </div>
-
-          <div className="relative my-6">
-            <div className="h-px w-full bg-[#27272a]" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#111111] px-3 text-xs uppercase tracking-[0.14em] text-[#71717a]">
-              or continue with email
-            </span>
-          </div>
-
-          {/* Auth Method Tabs */}
-          <div className="mb-5 flex rounded-lg border border-[#27272a] bg-[#09090b] p-1">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod('password');
-                setMagicLinkSentTo(null);
-              }}
-              className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-all ${
-                authMethod === 'password'
-                  ? 'bg-[#27272a] text-white shadow-sm'
-                  : 'text-[#71717a] hover:text-[#d4d4d8]'
-              }`}
-            >
-              Password
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthMethod('magic_link')}
-              className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-all ${
-                authMethod === 'magic_link'
-                  ? 'bg-[#27272a] text-white shadow-sm'
-                  : 'text-[#71717a] hover:text-[#d4d4d8]'
-              }`}
-            >
-              Magic Link
-            </button>
-          </div>
-
-          {authMethod === 'password' ? (
-            <form onSubmit={handleSubmitPassword(onPasswordSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="email" className="text-sm font-medium text-white">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@company.com"
-                  {...registerPassword('email')}
-                  className="w-full rounded-md border border-[#27272a] bg-[#0a0a0a] px-4 py-2.5 text-sm text-white outline-none transition-colors duration-150 placeholder:text-[#52525b] focus:border-[#7c3aed]"
-                />
-                {passwordErrors.email ? <p className="text-xs text-[#f87171]">{passwordErrors.email.message}</p> : null}
+              {/* Divider */}
+              <div className="relative my-5">
+                <div className="h-px w-full bg-[#27272a]" />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#121215] px-2 text-[11px] text-zinc-500">
+                  or with email
+                </span>
               </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="password" className="text-sm font-medium text-white">
+              {/* Method Switcher */}
+              <div className="mb-4 flex rounded-lg border border-[#27272a] bg-[#0c0c0e] p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMethod('password');
+                    setMagicLinkSentTo(null);
+                  }}
+                  className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${
+                    authMethod === 'password'
+                      ? 'bg-zinc-800 text-white shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
                   Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    {...registerPassword('password')}
-                    className="w-full rounded-md border border-[#27272a] bg-[#0a0a0a] px-4 py-2.5 pr-11 text-sm text-white outline-none transition-colors duration-150 placeholder:text-[#52525b] focus:border-[#7c3aed]"
-                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMethod('magic_link')}
+                  className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${
+                    authMethod === 'magic_link'
+                      ? 'bg-zinc-800 text-white shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  Magic Link
+                </button>
+              </div>
+
+              {/* Method 1: Password Form */}
+              {authMethod === 'password' && (
+                <form onSubmit={handleLoginSubmit(onPasswordSubmit)} className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400">Email address</label>
+                    <input
+                      type="email"
+                      {...loginRegister('email')}
+                      autoComplete="email"
+                      placeholder="name@company.com"
+                      className="mt-1.5 h-10 w-full rounded-lg border border-[#27272a] bg-[#0c0c0e] px-3 text-xs text-white outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+                    />
+                    {loginErrors.email && (
+                      <p className="mt-1 text-xs text-rose-400">{loginErrors.email.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-zinc-400">Password</label>
+                      <Link to="/forgot-password" className="text-xs text-zinc-400 hover:text-white">
+                        Forgot?
+                      </Link>
+                    </div>
+                    <div className="relative mt-1.5">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        {...loginRegister('password')}
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        className="h-10 w-full rounded-lg border border-[#27272a] bg-[#0c0c0e] px-3 pr-10 text-xs text-white outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {loginErrors.password && (
+                      <p className="mt-1 text-xs text-rose-400">{loginErrors.password.message}</p>
+                    )}
+                  </div>
+
                   <button
-                    type="button"
-                    onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717a] transition-colors hover:text-white"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    type="submit"
+                    disabled={isLoginSubmitting}
+                    className="w-full h-10 mt-2 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9] disabled:opacity-50"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {isLoginSubmitting ? 'Signing in...' : 'Sign in with password'}
                   </button>
-                </div>
-                {passwordErrors.password ? <p className="text-xs text-[#f87171]">{passwordErrors.password.message}</p> : null}
-                <div className="flex justify-end">
-                  <Link to="/forgot-password" className="text-xs text-[#71717a] transition-colors hover:text-[#a78bfa]">
-                    Forgot password?
-                  </Link>
-                </div>
-              </div>
+                </form>
+              )}
 
-              <button
-                type="submit"
-                disabled={isPasswordSubmitting}
-                className="w-full rounded-md bg-[#7c3aed] px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isPasswordSubmitting ? 'Signing in...' : 'Sign in'}
-              </button>
-            </form>
-          ) : magicLinkSentTo ? (
-            <div className="rounded-xl border border-[#27272a] bg-[#09090b] p-6 text-center">
-              <CheckCircle2 className="mx-auto h-10 w-10 text-[#22c55e]" />
-              <h3 className="mt-3 text-base font-semibold text-white">Check your email</h3>
-              <p className="mt-1 text-xs text-[#a1a1aa]">
-                We sent a 1-click magic sign-in link to <span className="font-medium text-white">{magicLinkSentTo}</span>.
-              </p>
-              <button
-                type="button"
-                onClick={() => setMagicLinkSentTo(null)}
-                className="mt-4 text-xs text-[#a78bfa] hover:underline"
-              >
-                Send to a different email
-              </button>
+              {/* Method 2: Magic Link Form */}
+              {authMethod === 'magic_link' && (
+                <div>
+                  {magicLinkSentTo ? (
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
+                      <Mail className="mx-auto h-6 w-6 text-emerald-400" />
+                      <p className="mt-2 text-xs font-semibold text-white">Check your email</p>
+                      <p className="mt-1 text-xs text-emerald-300">
+                        We sent a sign-in link to <strong className="text-white">{magicLinkSentTo}</strong>.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setMagicLinkSentTo(null)}
+                        className="mt-3 text-xs text-zinc-400 underline hover:text-white"
+                      >
+                        Use a different email
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleMagicLinkSubmit(onMagicLinkSubmit)} className="space-y-3.5">
+                      <div>
+                        <label className="block text-xs font-semibold text-zinc-400">Email address</label>
+                        <input
+                          type="email"
+                          {...magicLinkRegister('email')}
+                          placeholder="name@company.com"
+                          className="mt-1.5 h-10 w-full rounded-lg border border-[#27272a] bg-[#0c0c0e] px-3 text-xs text-white outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+                        />
+                        {magicLinkErrors.email && (
+                          <p className="mt-1 text-xs text-rose-400">{magicLinkErrors.email.message}</p>
+                        )}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isMagicLinkSubmitting}
+                        className="w-full h-10 mt-2 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9] disabled:opacity-50"
+                      >
+                        {isMagicLinkSubmitting ? 'Sending link...' : 'Send magic link'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {/* Footer link to sign up */}
+              <div className="mt-6 text-center text-xs text-zinc-400 pt-4 border-t border-[#27272a]">
+                Don’t have an account?{' '}
+                <Link to="/signup" className="font-semibold text-white hover:underline">
+                  Create an account
+                </Link>
+              </div>
             </div>
-          ) : (
-            <form onSubmit={handleSubmitMagicLink(onMagicLinkSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="magic-email" className="text-sm font-medium text-white">
-                  Email
-                </label>
-                <input
-                  id="magic-email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@company.com"
-                  {...registerMagicLink('email')}
-                  className="w-full rounded-md border border-[#27272a] bg-[#0a0a0a] px-4 py-2.5 text-sm text-white outline-none transition-colors duration-150 placeholder:text-[#52525b] focus:border-[#7c3aed]"
-                />
-                {magicLinkErrors.email ? <p className="text-xs text-[#f87171]">{magicLinkErrors.email.message}</p> : null}
-              </div>
-
-              <button
-                type="submit"
-                disabled={isMagicLinkSubmitting}
-                className="w-full rounded-md bg-[#7c3aed] px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
-              >
-                <Mail className="h-4 w-4" />
-                {isMagicLinkSubmitting ? 'Sending link...' : 'Send Magic Link'}
-              </button>
-            </form>
-          )}
-
-          <p className="mt-8 text-center text-sm text-[#a1a1aa]">
-            Don't have an account?{' '}
-            <Link to="/signup" className="font-medium text-[#a78bfa] transition-colors hover:text-white">
-              Get started free
-            </Link>
-          </p>
-
-          <p className="mt-2 text-center text-xs text-[#71717a]">
-            Need setup help?{' '}
-            <a href={DOCS_URL} target="_blank" rel="noreferrer" className="text-[#a78bfa] transition-colors hover:text-white">
-              Read the docs
-            </a>
-          </p>
-            </>
           )}
         </div>
       </div>

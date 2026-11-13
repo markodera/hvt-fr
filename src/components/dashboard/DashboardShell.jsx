@@ -86,7 +86,7 @@ function NavItem({ item, mobile = false }) {
             {({ isActive }) => (
                 <>
                     {!mobile && isActive ? (
-                        <span className="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-[#7c3aed]" />
+                        <span className="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-white" />
                     ) : null}
                     <Icon className="h-4 w-4" />
                     <span className={mobile ? 'truncate' : ''}>{item.label}</span>
@@ -137,7 +137,7 @@ export function DashboardShell({ children }) {
 
                 <div className="border-t border-[#27272a] px-4 py-4">
                     <div className="flex items-center gap-3 rounded-xl border border-[#27272a] bg-[#111111] px-3 py-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7c3aed]/50 bg-[#18181b] text-sm font-semibold text-[#a78bfa]">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-[#18181b] text-sm font-semibold text-zinc-200">
                             {initials}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -182,9 +182,9 @@ export function DashboardShell({ children }) {
                                 <DropdownMenuTrigger asChild>
                                     <button
                                         type="button"
-                                        className="hidden cursor-pointer items-center gap-2.5 rounded-full border border-[#27272a] bg-[#18181b] px-3 py-1.5 text-left transition hover:border-[#3f3f46] hover:bg-[#27272a]/50 focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/30 md:flex"
+                                        className="hidden cursor-pointer items-center gap-2.5 rounded-full border border-[#27272a] bg-[#18181b] px-3 py-1.5 text-left transition hover:border-[#3f3f46] hover:bg-[#27272a]/50 focus:outline-none focus:ring-2 focus:ring-zinc-600 md:flex"
                                     >
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#7c3aed]/40 bg-[#111111] text-xs font-semibold text-[#a78bfa]">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-[#111111] text-xs font-semibold text-zinc-200">
                                             {initials}
                                         </div>
                                         <div className="text-left">
@@ -200,7 +200,7 @@ export function DashboardShell({ children }) {
                                             <p className="text-sm font-semibold leading-none text-white">{displayName}</p>
                                             <p className="text-xs leading-none text-[#71717a]">{user?.email}</p>
                                             {user?.organization ? (
-                                                <p className="mt-1 text-[11px] text-[#a78bfa]">
+                                                <p className="mt-1 text-[11px] text-zinc-200">
                                                     {typeof user.organization === 'object' ? user.organization.name : user.organization}
                                                 </p>
                                             ) : null}
