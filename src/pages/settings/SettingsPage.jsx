@@ -37,7 +37,6 @@ import { DeviceSessionsSection } from '@/pages/settings/DeviceSessionsSection';
 import { PasskeySettingsSection } from '@/pages/settings/PasskeySettingsSection';
 import { ProjectRuntimeAuthSection } from '@/pages/settings/ProjectRuntimeAuthSection';
 import { PersonalAccessTokensSection } from '@/pages/settings/PersonalAccessTokensSection';
-import { ProjectEmailConfigSection } from '@/pages/settings/ProjectEmailConfigSection';
 
 const SETTINGS_TABS = [
     {
@@ -744,8 +743,6 @@ export default function SettingsPage() {
             >
                 <ProjectSocialProvidersSection projects={projects} />
             </SectionCard>
-
-            <ProjectEmailConfigSection projects={projects} />
         </div>
     )}
 
