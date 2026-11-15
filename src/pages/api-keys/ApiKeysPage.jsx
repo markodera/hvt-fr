@@ -411,7 +411,7 @@ export default function ApiKeysPage() {
                     className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm shadow-[#7c3aed]/25 transition hover:bg-[#6d28d9]"
                 >
                     <Plus className="h-4 w-4" />
-                    <span>Issue new {activeTab === 'runtime' ? 'Runtime' : 'Management'} key</span>
+                    <span>Create new API key</span>
                 </Button>
             </div>
 
@@ -438,7 +438,7 @@ export default function ApiKeysPage() {
                     <EmptyState
                         title={`No ${activeTab === 'runtime' ? 'Runtime' : 'Management'} Keys`}
                         description={`No ${activeTab} keys issued for this project in ${environment} mode.`}
-                        actionLabel={`Issue ${activeTab === 'runtime' ? 'Runtime' : 'Management'} Key`}
+                        actionLabel="Create new API key"
                         onAction={() => {
                             handleKeyTypeChange(activeTab);
                             setCreateOpen(true);

@@ -29,27 +29,31 @@ import { DOCS_URL, GITHUB_URL } from '@/lib/appLinks';
 const CODE_EXAMPLES = {
   fastapi: {
     title: 'FastAPI (Python)',
-    code: `from fastapi import FastAPI, Header, HTTPException, status
-from hvt import HVTClient
+    code: `import jwt
+from jwt import PyJWKClient
+from fastapi import FastAPI, Header, HTTPException, status
 
 app = FastAPI()
-hvt = HVTClient(project_id="prj_live_948f21", api_key="hvt_live_c10b...")
+
+# Cache public JWKS keys in memory for offline verification
+jwks_client = PyJWKClient("https://api.hvt.dev/.well-known/jwks.json", cache_keys=True)
 
 @app.post("/v1/orders/{order_id}/refund")
 def refund_order(order_id: str, authorization: str = Header(...)):
     token = authorization.replace("Bearer ", "")
-    
+
     # Mathematical in-memory verification against cached public JWKS (0.1ms)
     # Zero database or network calls made
-    claims = hvt.tokens.verify(token)
-    
-    if not claims.has_permission("orders:refund"):
+    signing_key = jwks_client.get_signing_key_from_jwt(token)
+    claims = jwt.decode(token, signing_key.key, algorithms=["RS256"])
+
+    if "orders:refund" not in claims.get("app_permissions", []):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Missing permission: orders:refund"
         )
-        
-    return {"status": "refunded", "actor": claims.sub, "org_id": claims.org_id}`,
+
+    return {"status": "refunded", "actor": claims["sub"], "org_id": claims["org_id"]}`,
   },
   nextjs: {
     title: 'Next.js Edge Runtime',
@@ -82,31 +86,47 @@ export async function middleware(req: NextRequest) {
 }`,
   },
   golang: {
-    title: 'Go (Standard Library)',
+    title: 'Go (net/http)',
     code: `package main
 
 import (
     "net/http"
-    "os"
-    "github.com/hvt-dev/hvt-go"
+    "strings"
+
+    "github.com/MicahParks/keyfunc/v3"
+    "github.com/golang-jwt/jwt/v5"
 )
 
-var client = hvt.NewClient(hvt.Config{
-    ProjectID: os.Getenv("HVT_PROJECT_ID"),
-    APIKey:    os.Getenv("HVT_LIVE_KEY"),
-})
+// Cache public JWKS keys in memory for offline verification
+var jwks, _ = keyfunc.NewDefault([]string{"https://api.hvt.dev/.well-known/jwks.json"})
 
 func RefundHandler(w http.ResponseWriter, r *http.Request) {
+    tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+    claims := jwt.MapClaims{}
+
     // Verified offline in memory — zero database round-trips
-    claims, err := client.Tokens.Verify(r.Header.Get("Authorization"))
-    if err != nil || !claims.HasPermission("orders:refund") {
+    token, err := jwt.ParseWithClaims(tokenString, claims, jwks.Keyfunc,
+        jwt.WithValidMethods([]string{"RS256"}))
+    if err != nil || !token.Valid {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    perms, _ := claims["app_permissions"].([]interface{})
+    allowed := false
+    for _, p := range perms {
+        if p == "orders:refund" {
+            allowed = true
+        }
+    }
+    if !allowed {
         http.Error(w, "Forbidden", http.StatusForbidden)
         return
     }
 
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
-    w.Write([]byte(\`{"status":"refunded","org_id":"\` + claims.OrgID + \`"}\`))
+    w.Write([]byte(\`{"status":"refunded"}\`))
 }`,
   },
 };

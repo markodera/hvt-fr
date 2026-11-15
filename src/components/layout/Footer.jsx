@@ -79,16 +79,6 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href={`${DOCS_URL}#python`} target="_blank" rel="noreferrer" className="transition hover:text-white">
-                  Python SDK
-                </a>
-              </li>
-              <li>
-                <a href={`${DOCS_URL}#go`} target="_blank" rel="noreferrer" className="transition hover:text-white">
-                  Go SDK
-                </a>
-              </li>
-              <li>
                 <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 transition hover:text-white">
                   <Github className="h-3 w-3" />
                   <span>GitHub Repository</span>

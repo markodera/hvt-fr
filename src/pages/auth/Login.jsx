@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Github, Fingerprint, Mail, KeyRound, ShieldCheck } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 
-import { loginWithPasskey, requestMagicLink } from '@/api/auth';
+import { listSocialProviders, loginWithPasskey, requestMagicLink } from '@/api/auth';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { hvt } from '@/lib/hvt';
@@ -82,14 +83,21 @@ export default function Login() {
     }
   }, [inviteToken]);
 
+  const socialProvidersQuery = useQuery({
+    queryKey: ['control-plane-social-providers'],
+    queryFn: listSocialProviders,
+    retry: 1,
+  });
+
+  const providers = useMemo(() => socialProvidersQuery.data?.providers || [], [socialProvidersQuery.data]);
+
   const handleSocialLogin = (provider, providerName) => {
-    try {
-      if (inviteToken) {
-        markInvitationResumeAfterAuth(inviteToken);
-      }
-      startSocialSignIn(provider);
-    } catch {
-      toast.error(`Unable to start sign in with ${providerName}.`);
+    if (inviteToken) {
+      markInvitationResumeAfterAuth(inviteToken);
+    }
+    const started = startSocialSignIn(provider, providers);
+    if (!started) {
+      toast.error(`${providerName} sign-in is not available yet.`);
     }
   };
 
@@ -257,7 +265,8 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GOOGLE, 'Google')}
-                  className="flex w-full h-10 items-center justify-center gap-2.5 rounded-lg border border-[#27272a] bg-[#18181b] px-4 text-xs font-medium text-zinc-200 transition hover:bg-[#202025] hover:border-[#3f3f46] hover:text-white"
+                  disabled={socialProvidersQuery.isLoading}
+                  className="flex w-full h-10 items-center justify-center gap-2.5 rounded-lg border border-[#27272a] bg-[#18181b] px-4 text-xs font-medium text-zinc-200 transition hover:bg-[#202025] hover:border-[#3f3f46] hover:text-white disabled:opacity-50"
                 >
                   <GoogleIcon />
                   <span>Continue with Google</span>
@@ -265,7 +274,8 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => handleSocialLogin(SOCIAL_AUTH_PROVIDERS.GITHUB, 'GitHub')}
-                  className="flex w-full h-10 items-center justify-center gap-2.5 rounded-lg border border-[#27272a] bg-[#18181b] px-4 text-xs font-medium text-zinc-200 transition hover:bg-[#202025] hover:border-[#3f3f46] hover:text-white"
+                  disabled={socialProvidersQuery.isLoading}
+                  className="flex w-full h-10 items-center justify-center gap-2.5 rounded-lg border border-[#27272a] bg-[#18181b] px-4 text-xs font-medium text-zinc-200 transition hover:bg-[#202025] hover:border-[#3f3f46] hover:text-white disabled:opacity-50"
                 >
                   <Github className="h-4 w-4" />
                   <span>Continue with GitHub</span>

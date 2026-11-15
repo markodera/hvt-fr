@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
     BookOpen,
     Globe,
@@ -31,9 +31,9 @@ const navSections = [
         title: 'Product Configuration',
         items: [
             { label: 'Email Delivery', to: '/dashboard/email', icon: Mail },
-            { label: 'Social Providers', to: '/dashboard/settings?tab=projects', icon: Globe },
-            { label: 'Runtime Auth & Security', to: '/dashboard/settings?tab=projects', icon: ShieldCheck },
-            { label: 'Roles & App Access', to: '/dashboard/settings?tab=projects', icon: LockKeyhole },
+            { label: 'Social Providers', to: '/dashboard/settings?tab=projects&section=social-providers', icon: Globe },
+            { label: 'Runtime Auth & Security', to: '/dashboard/settings?tab=projects&section=runtime-auth', icon: ShieldCheck },
+            { label: 'Roles & App Access', to: '/dashboard/settings?tab=projects&section=app-access', icon: LockKeyhole },
         ],
     },
     {
@@ -57,6 +57,30 @@ const navSections = [
 
 export function ProjectSidebar({ onCloseMobile }) {
     const { activeProject, activeProjectId } = useProject();
+    const location = useLocation();
+    const currentParams = new URLSearchParams(location.search);
+    const currentTab = currentParams.get('tab') || 'account';
+    const currentSection = currentParams.get('section') || '';
+
+    // NavLink ignores query strings, so settings deep-links need manual matching.
+    const isItemActive = (item) => {
+        const [path, query = ''] = item.to.split('?');
+        if (query) {
+            const itemParams = new URLSearchParams(query);
+            return (
+                location.pathname === path &&
+                (itemParams.get('tab') || 'account') === currentTab &&
+                (itemParams.get('section') || '') === currentSection
+            );
+        }
+        if (path === '/dashboard/settings') {
+            return location.pathname === path && currentTab === 'account' && !currentSection;
+        }
+        if (item.exact) {
+            return location.pathname === path;
+        }
+        return location.pathname === path || location.pathname.startsWith(`${path}/`);
+    };
 
     return (
         <aside className="flex h-full w-[240px] flex-col border-r border-[#27272a] bg-[#111111]">
@@ -90,36 +114,31 @@ export function ProjectSidebar({ onCloseMobile }) {
                                             </a>
                                         );
                                     }
+                                    const isActive = isItemActive(item);
                                     return (
-                                        <NavLink
-                                            key={item.to}
+                                        <Link
+                                            key={item.label}
                                             to={item.to}
-                                            end={item.exact}
                                             onClick={onCloseMobile}
-                                            className={({ isActive }) =>
-                                                `group relative flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                                                    isActive
-                                                        ? 'bg-[#18181b] text-white font-semibold'
-                                                        : 'text-[#71717a] hover:bg-[#18181b] hover:text-[#a1a1aa]'
-                                                }`
-                                            }
+                                            aria-current={isActive ? 'page' : undefined}
+                                            className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                                                isActive
+                                                    ? 'bg-[#18181b] text-white font-semibold'
+                                                    : 'text-[#71717a] hover:bg-[#18181b] hover:text-[#a1a1aa]'
+                                            }`}
                                         >
-                                            {({ isActive }) => (
-                                                <>
-                                                    {isActive ? (
-                                                        <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-white" />
-                                                    ) : null}
-                                                    <Icon
-                                                        className={`h-4 w-4 transition-colors ${
-                                                            isActive
-                                                                ? 'text-white'
-                                                                : 'text-[#71717a] group-hover:text-[#a1a1aa]'
-                                                        }`}
-                                                    />
-                                                    <span className="truncate">{item.label}</span>
-                                                </>
-                                            )}
-                                        </NavLink>
+                                            {isActive ? (
+                                                <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-white" />
+                                            ) : null}
+                                            <Icon
+                                                className={`h-4 w-4 transition-colors ${
+                                                    isActive
+                                                        ? 'text-white'
+                                                        : 'text-[#71717a] group-hover:text-[#a1a1aa]'
+                                                }`}
+                                            />
+                                            <span className="truncate">{item.label}</span>
+                                        </Link>
                                     );
                                 })}
                             </div>

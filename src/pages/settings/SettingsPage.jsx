@@ -59,9 +59,9 @@ const SETTINGS_TABS = [
     },
 ];
 
-function SectionCard({ label, title, description, children }) {
+function SectionCard({ id, label, title, description, children }) {
     return (
-        <section className="rounded-2xl border border-[#27272a] bg-[#18181b] p-5">
+        <section id={id} className="scroll-mt-24 rounded-2xl border border-[#27272a] bg-[#18181b] p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#71717a]">{label}</p>
             <div className="mt-3">
                 <h2 className="text-lg font-semibold text-white">{title}</h2>
@@ -139,6 +139,16 @@ export default function SettingsPage() {
     const { user, refreshSession } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'account';
+    const activeSection = searchParams.get('section') || '';
+
+    useEffect(() => {
+        if (activeTab !== 'projects' || !activeSection) {
+            return;
+        }
+        document
+            .getElementById(`settings-section-${activeSection}`)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [activeTab, activeSection]);
 
     const [editingProject, setEditingProject] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -557,7 +567,7 @@ export default function SettingsPage() {
                                                 </span>
                                                 <span
                                                     className={`rounded-full px-2 py-0.5 text-[11px] ${project.allow_signup
-                                                            ? 'border border-zinc-500/40 bg-zinc-100 text-zinc-950/10 text-zinc-200'
+                                                            ? 'border border-violet-500/30 bg-violet-500/10 text-violet-300'
                                                             : 'border border-[#27272a] bg-[#18181b] text-[#a1a1aa]'
                                                         }`}
                                                 >
@@ -721,6 +731,7 @@ export default function SettingsPage() {
             </SectionCard>
 
             <SectionCard
+                id="settings-section-app-access"
                 label="App Access"
                 title="Project app roles and permissions"
                 description="Owners and admins can define dynamic app permissions, bundle them into roles, and control the roles developers or invitees can receive."
@@ -729,6 +740,7 @@ export default function SettingsPage() {
             </SectionCard>
 
             <SectionCard
+                id="settings-section-runtime-auth"
                 label="Runtime Auth & Security"
                 title="Project authentication methods & security"
                 description="WebAuthn & Passkeys biometrics, Passwordless Magic Links, and Two-Factor Authentication (2FA) for your client applications."
@@ -737,6 +749,7 @@ export default function SettingsPage() {
             </SectionCard>
 
             <SectionCard
+                id="settings-section-social-providers"
                 label="Social Providers"
                 title="Per-project provider credentials"
                 description="Google and GitHub OAuth settings are isolated per project."

@@ -31,10 +31,11 @@ import {
 import { Helmet } from 'react-helmet-async';
 
 import { HvtLogoMark } from '@/components/Logo';
+import { AsciiLock } from '@/components/landing/AsciiLock';
 import { Footer } from '@/components/layout/Footer';
 import { CHANGELOG_URL, DOCS_URL, GITHUB_URL, SITE_URL, STATUS_URL } from '@/lib/appLinks';
 
-const SEO_TITLE = 'HVT — In-Memory Identity Engine for Modern APIs';
+const SEO_TITLE = 'HVT | In-Memory Identity Engine for Modern APIs';
 const SEO_DESCRIPTION =
   'Open-source authentication and authorization engine. HVT signs fine-grained permissions directly into cryptographic RS256 JWTs so microservices and edge workers evaluate access in memory with zero database round-trips.';
 
@@ -67,62 +68,6 @@ export async function authenticateRequest(req: Request) {
   }
 
   return { actor: claims.sub, orgId: claims.org_id };
-}`,
-  },
-  python: {
-    filename: 'api/endpoints/orders.py',
-    lang: 'python',
-    code: `import os
-from fastapi import FastAPI, Header, HTTPException, status
-from hvt import HVTClient
-
-client = HVTClient(
-    project_id=os.environ["HVT_PROJECT_ID"],
-    api_key=os.environ["HVT_LIVE_KEY"],
-)
-
-@app.post("/v1/orders/{order_id}/refund")
-def refund_order(order_id: str, authorization: str = Header(...)):
-    # Local RSA signature verification via cached JWKS public key
-    token = authorization.replace("Bearer ", "")
-    claims = client.tokens.verify(token)
-    
-    # 0ms database lookup — evaluated strictly in memory
-    if not claims.has_permission("orders:refund"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Missing permission: orders:refund",
-        )
-        
-    return {"status": "refunded", "actor": claims.sub, "org_id": claims.org_id}`,
-  },
-  go: {
-    filename: 'handlers/orders.go',
-    lang: 'go',
-    code: `package main
-
-import (
-    "net/http"
-    "os"
-    "github.com/hvt-dev/hvt-go"
-)
-
-var client = hvt.NewClient(hvt.Config{
-    ProjectID: os.Getenv("HVT_PROJECT_ID"),
-    APIKey:    os.Getenv("HVT_LIVE_KEY"),
-})
-
-func RefundHandler(w http.ResponseWriter, r *http.Request) {
-    // Verify asymmetric signature offline in memory
-    claims, err := client.Tokens.Verify(r.Header.Get("Authorization"))
-    if err != nil || !claims.HasPermission("orders:refund") {
-        http.Error(w, "Forbidden", http.StatusForbidden)
-        return
-    }
-
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(\`{"status":"refunded","org_id":"\` + claims.OrgID + \`"}\`))
 }`,
   },
   curl: {
@@ -172,6 +117,24 @@ const ROUTE_CHECKS = [
   { method: 'POST', path: '/v1/deploy/preview', perm: 'deploy:preview', description: 'Trigger preview deployment' },
   { method: 'POST', path: '/v1/deploy/production', perm: 'deploy:production', description: 'Promote to production' },
   { method: 'DELETE', path: '/v1/apikeys/revoke', perm: 'apikeys:provision', description: 'Revoke management API key' },
+];
+
+const ARCHITECTURE_STEPS = [
+  {
+    title: 'Define access',
+    body: 'Declare roles and permissions in a schema file and push it from CI with one command.',
+    detail: 'hvt sync',
+  },
+  {
+    title: 'Sign the token',
+    body: 'At login, HVT signs the user’s roles and permissions into an RS256 JWT and publishes its public keys.',
+    detail: '/.well-known/jwks.json',
+  },
+  {
+    title: 'Verify in memory',
+    body: 'Your services check the signature against cached keys and read the claims locally on every request.',
+    detail: '0 database queries',
+  },
 ];
 
 export default function Landing() {
@@ -285,8 +248,8 @@ export default function Landing() {
 
       {/* ── HERO SECTION ──────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-[#27272a] px-5 py-16 sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl space-y-5">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-12">
+          <div className="space-y-5 lg:col-span-7">
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl leading-[1.08]">
               Auth without the database bottleneck.
             </h1>
@@ -317,53 +280,40 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Clean Monospace ASCII Architecture Terminal (Quiet & Monochromatic) */}
-          <div className="mt-12 rounded-2xl border border-[#27272a] bg-[#0c0c0e] overflow-hidden shadow-2xl">
-            {/* Terminal Header Bar */}
-            <div className="flex items-center justify-between border-b border-[#27272a] bg-[#141416] px-4 py-2.5">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-zinc-700 inline-block" />
-                <span className="h-3 w-3 rounded-full bg-zinc-700 inline-block" />
-                <span className="h-3 w-3 rounded-full bg-zinc-700 inline-block" />
-                <span className="ml-2 font-mono text-xs text-zinc-400">
-                  bash — hvt-engine-architecture (v2.2.2)
-                </span>
-              </div>
-              <div className="flex items-center gap-3 font-mono text-[11px]">
-                <span className="text-zinc-500 hidden sm:inline">ALGO: RS256</span>
-                <span className="text-emerald-400">LATENCY: 0.1ms</span>
-                <span className="text-zinc-400">DB QUERIES: 0</span>
-              </div>
-            </div>
+          <div className="lg:col-span-5">
+            <AsciiLock />
+          </div>
+        </div>
+      </section>
 
-            {/* Clean Monochromatic Monospace ASCII Schematic */}
-            <div className="p-5 font-mono text-[11px] sm:text-xs leading-relaxed text-zinc-300 overflow-x-auto bg-[#09090b]">
-              <pre className="text-zinc-300">
-{`┌─────────────────────────── CONTROL PLANE (CI/CD & CLI) ───────────────────────────┐
-│  hvt_mgmt_9a4f... ──► POST /api/v1/projects/:id/sync                              │
-│                       ├── Declarative Roles & Permissions Schema                  │
-│                       └── Outbox Webhook Subscriptions (HMAC-SHA256)              │
-└────────────────────────────────────────┬──────────────────────────────────────────┘
-                                         │  [Asymmetric RS256 Private Key Sign]
-                                         ▼
-┌─────────────────────────── RUNTIME AUTH ENGINE (EDGE) ────────────────────────────┐
-│  hvt_live_c10b... ──► POST /api/v1/auth/runtime/login/                            │
-│                       ├── WebAuthn Passkeys / Biometrics (Apple TouchID, Hello)   │
-│                       ├── Issues Self-Contained RS256 Access Token Pair           │
-│                       └── Public Key Distribution: /.well-known/jwks.json         │
-└────────────────────────────────────────┬──────────────────────────────────────────┘
-                                         │  In-Memory Signature Verification (0.1ms)
-                                         ▼
-┌─────────────────────────── DISTRIBUTED DOWNSTREAM SERVICES ───────────────────────┐
-│  FastAPI • Next.js • Go • Rust • Cloudflare Edge • Envoy API Gateway              │
-│  claims = hvt.tokens.verify(jwt) ──► 0 DATABASE CALLS ──► 200 OK GRANTED          │
-└───────────────────────────────────────────────────────────────────────────────────┘`}
-              </pre>
-            </div>
+      {/* ── ARCHITECTURE ──────────────────────────────────────────────────── */}
+      <section id="architecture" className="border-b border-[#27272a] px-5 py-16 sm:px-8 lg:py-20">
+        <div className="mx-auto max-w-6xl space-y-8">
+          <div className="max-w-2xl space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              One signed token authorizes every request.
+            </h2>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Define access once, sign it into the token at login, and let every service check it locally.
+              Switch roles below to see which routes each token opens.
+            </p>
           </div>
 
+          <ol className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {ARCHITECTURE_STEPS.map((step, index) => (
+              <li key={step.title} className="rounded-2xl border border-[#27272a] bg-[#111114] p-6 space-y-3">
+                <span className="font-mono text-xs text-zinc-500">{String(index + 1).padStart(2, '0')}</span>
+                <h3 className="text-base font-bold text-white">{step.title}</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">{step.body}</p>
+                <code className="inline-block rounded bg-[#18181b] border border-[#27272a] px-2 py-1 font-mono text-[11px] text-zinc-300">
+                  {step.detail}
+                </code>
+              </li>
+            ))}
+          </ol>
+
           {/* Interactive Token Claims & Verification Console */}
-          <div id="architecture" className="mt-10 rounded-2xl border border-[#27272a] bg-[#111114] overflow-hidden shadow-2xl">
+          <div className="rounded-2xl border border-[#27272a] bg-[#111114] overflow-hidden shadow-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#27272a] px-5 py-3 gap-3 bg-[#161619]">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-zinc-300">Live Claims Evaluator</span>
@@ -620,7 +570,7 @@ export default function Landing() {
                 Integrate in minutes with any language or framework
               </h2>
               <p className="text-sm text-zinc-400 leading-relaxed">
-                Use our official TypeScript, Python, and Go SDKs or query standard HTTP endpoints directly from cURL, Next.js Edge, Cloudflare Workers, or Django.
+                Use our official TypeScript SDK or query standard HTTP endpoints directly from cURL, Next.js Edge, Cloudflare Workers, or Django.
               </p>
 
               <div className="pt-2">

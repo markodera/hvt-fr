@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 import {
     createRuntimeInvitation,
-    listProjectRoles,
+    listAllProjectRoles,
     listProjects,
     listRuntimeInvitations,
     revokeRuntimeInvitation,
@@ -295,7 +295,7 @@ export function ProjectUsersSection() {
 
     const { data: projectRolesData, isLoading: projectRolesLoading, isError: projectRolesError } = useQuery({
         queryKey: ['projectRoles', selectedProjectId, 'project-user-invite'],
-        queryFn: () => listProjectRoles(selectedProjectId, { page_size: 100 }),
+        queryFn: (context) => listAllProjectRoles(selectedProjectId, context),
         enabled: inviteDialogOpen && Boolean(selectedProjectId),
     });
 

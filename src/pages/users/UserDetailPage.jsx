@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import {
     getUserProjectAccess,
-    listProjectRoles,
+    listAllProjectRoles,
     listProjects,
     replaceUserProjectRoles,
 } from '@/api/organizations';
@@ -83,7 +83,7 @@ export function UserDetailPage() {
 
     const { data: projectRolesData, isLoading: projectRolesLoading } = useQuery({
         queryKey: ['projectRoles', selectedProjectId, 'user-detail-access'],
-        queryFn: () => listProjectRoles(selectedProjectId, { page_size: 100 }),
+        queryFn: (context) => listAllProjectRoles(selectedProjectId, context),
         enabled: canManageAppAccess && Boolean(selectedProjectId),
     });
 

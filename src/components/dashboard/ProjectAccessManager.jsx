@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { KeyRound, Pencil, ShieldCheck, Trash2 } from 'lucide-react';
+import { ChevronDown, KeyRound, Pencil, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -11,8 +11,8 @@ import {
     deleteProjectPermission,
     deleteProjectRole,
     getCurrentProjectAccess,
-    listProjectPermissions,
-    listProjectRoles,
+    listAllProjectPermissions,
+    listAllProjectRoles,
     updateProjectPermission,
     updateProjectRole,
 } from '@/api/organizations';
@@ -36,6 +36,23 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const selectClassName =
     'flex h-10 w-full rounded-lg border border-[#27272a] bg-[#18181b] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-600';
+
+const searchInputClassName =
+    'h-9 w-full rounded-lg border border-[#27272a] bg-[#18181b] pl-9 pr-3 text-sm text-white placeholder:text-[#52525b] outline-none transition-colors focus:border-zinc-500';
+
+const iconButtonClassName =
+    'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#27272a] text-zinc-400 transition-colors hover:bg-[#111111] hover:text-white';
+
+const LIST_PREVIEW_COUNT = 6;
+const ACCESS_PREVIEW_COUNT = 12;
+
+function matchesQuery(query, values) {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+        return true;
+    }
+    return values.some((value) => (value || '').toLowerCase().includes(q));
+}
 
 function normalizeCollection(data) {
     return data?.results ?? data ?? [];
@@ -69,6 +86,13 @@ export function ProjectAccessManager({ projects = [] }) {
     const [editingRole, setEditingRole] = useState(null);
     const [deletePermissionTarget, setDeletePermissionTarget] = useState(null);
     const [deleteRoleTarget, setDeleteRoleTarget] = useState(null);
+    const [permissionQuery, setPermissionQuery] = useState('');
+    const [roleQuery, setRoleQuery] = useState('');
+    const [showAllPermissions, setShowAllPermissions] = useState(false);
+    const [showAllRoles, setShowAllRoles] = useState(false);
+    const [showAllAccessPermissions, setShowAllAccessPermissions] = useState(false);
+    const [expandedRoleId, setExpandedRoleId] = useState(null);
+    const [dialogPermissionQuery, setDialogPermissionQuery] = useState('');
 
     const permissionForm = useForm({
         resolver: zodResolver(projectPermissionSchema),
@@ -109,13 +133,13 @@ export function ProjectAccessManager({ projects = [] }) {
 
     const { data: permissionsData, isLoading: permissionsLoading } = useQuery({
         queryKey: ['projectPermissions', selectedProjectId],
-        queryFn: () => listProjectPermissions(selectedProjectId, { page_size: 100 }),
+        queryFn: (context) => listAllProjectPermissions(selectedProjectId, context),
         enabled: Boolean(selectedProjectId),
     });
 
     const { data: rolesData, isLoading: rolesLoading } = useQuery({
         queryKey: ['projectRoles', selectedProjectId],
-        queryFn: () => listProjectRoles(selectedProjectId, { page_size: 100 }),
+        queryFn: (context) => listAllProjectRoles(selectedProjectId, context),
         enabled: Boolean(selectedProjectId),
     });
 
@@ -127,6 +151,35 @@ export function ProjectAccessManager({ projects = [] }) {
 
     const permissions = normalizeCollection(permissionsData);
     const roles = normalizeCollection(rolesData);
+
+    const filteredPermissions = useMemo(
+        () => permissions.filter((permission) => matchesQuery(permissionQuery, [permission.name, permission.slug, permission.description])),
+        [permissions, permissionQuery]
+    );
+    const filteredRoles = useMemo(
+        () =>
+            roles.filter((role) =>
+                matchesQuery(roleQuery, [
+                    role.name,
+                    role.slug,
+                    role.description,
+                    ...(role.permissions || []).map((permission) => permission.slug),
+                ])
+            ),
+        [roles, roleQuery]
+    );
+    const visiblePermissions =
+        permissionQuery.trim() || showAllPermissions ? filteredPermissions : filteredPermissions.slice(0, LIST_PREVIEW_COUNT);
+    const visibleRoles = roleQuery.trim() || showAllRoles ? filteredRoles : filteredRoles.slice(0, LIST_PREVIEW_COUNT);
+    const dialogPermissions = useMemo(
+        () => permissions.filter((permission) => matchesQuery(dialogPermissionQuery, [permission.name, permission.slug, permission.description])),
+        [permissions, dialogPermissionQuery]
+    );
+    const accessPermissions = currentAccess?.permissions || [];
+    const visibleAccessPermissions = showAllAccessPermissions
+        ? accessPermissions
+        : accessPermissions.slice(0, ACCESS_PREVIEW_COUNT);
+
     const selectedPermissionIds = roleForm.watch('permission_ids') || [];
     const permissionSlugField = permissionForm.register('slug');
     const roleSlugField = roleForm.register('slug');
@@ -147,6 +200,7 @@ export function ProjectAccessManager({ projects = [] }) {
     function closeRoleDialog() {
         setRoleDialogOpen(false);
         setEditingRole(null);
+        setDialogPermissionQuery('');
         roleForm.reset(emptyRoleValues());
         resetRoleSlugSync();
     }
@@ -171,6 +225,7 @@ export function ProjectAccessManager({ projects = [] }) {
 
     function openCreateRoleDialog() {
         setEditingRole(null);
+        setDialogPermissionQuery('');
         roleForm.reset(emptyRoleValues());
         resetRoleSlugSync();
         setRoleDialogOpen(true);
@@ -178,6 +233,7 @@ export function ProjectAccessManager({ projects = [] }) {
 
     function openEditRoleDialog(role) {
         setEditingRole(role);
+        setDialogPermissionQuery('');
         roleForm.reset({
             slug: role.slug || '',
             name: role.name || '',
@@ -305,7 +361,15 @@ export function ProjectAccessManager({ projects = [] }) {
                     <div className="w-full lg:w-[320px]">
                         <select
                             value={selectedProjectId}
-                            onChange={(event) => setSelectedProjectId(event.target.value)}
+                            onChange={(event) => {
+                                setSelectedProjectId(event.target.value);
+                                setPermissionQuery('');
+                                setRoleQuery('');
+                                setShowAllPermissions(false);
+                                setShowAllRoles(false);
+                                setShowAllAccessPermissions(false);
+                                setExpandedRoleId(null);
+                            }}
                             className={selectClassName}
                             disabled={projects.length === 0}
                         >
@@ -353,13 +417,26 @@ export function ProjectAccessManager({ projects = [] }) {
                         </div>
                         <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Permissions</p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                                {currentAccess?.permissions?.length ? (
-                                    currentAccess.permissions.map((permission) => (
-                                        <Badge key={permission} variant="secondary" className="font-mono text-[11px] text-zinc-300">
-                                            {permission}
-                                        </Badge>
-                                    ))
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                {accessPermissions.length ? (
+                                    <>
+                                        {visibleAccessPermissions.map((permission) => (
+                                            <Badge key={permission} variant="secondary" className="font-mono text-[11px] text-zinc-300">
+                                                {permission}
+                                            </Badge>
+                                        ))}
+                                        {accessPermissions.length > ACCESS_PREVIEW_COUNT ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowAllAccessPermissions((value) => !value)}
+                                                className="rounded-full border border-[#27272a] px-2 py-0.5 text-[11px] text-[#a1a1aa] transition-colors hover:border-[#3f3f46] hover:text-white"
+                                            >
+                                                {showAllAccessPermissions
+                                                    ? 'Show less'
+                                                    : `+${accessPermissions.length - ACCESS_PREVIEW_COUNT} more`}
+                                            </button>
+                                        ) : null}
+                                    </>
                                 ) : (
                                     <p className="text-sm text-[#71717a]">No app permissions are active for your dashboard account in this project.</p>
                                 )}
@@ -395,46 +472,71 @@ export function ProjectAccessManager({ projects = [] }) {
                             No dynamic app permissions have been defined for this project yet.
                         </div>
                     ) : (
-                        <div className="mt-6 space-y-3">
-                            {permissions.map((permission) => (
-                                <div key={permission.id} className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                        <div>
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <p className="text-sm font-medium text-white">{permission.name}</p>
-                                                <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
-                                                    {permission.slug}
-                                                </Badge>
-                                            </div>
-                                            <p className="mt-2 text-sm text-[#a1a1aa]">
-                                                {permission.description || 'No description yet.'}
-                                            </p>
-                                        </div>
-                                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => openEditPermissionDialog(permission)}
-                                                className="w-full border-[#27272a] bg-transparent text-white hover:bg-[#111111] sm:w-auto"
-                                            >
-                                                <Pencil className="mr-2 h-4 w-4" />
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => setDeletePermissionTarget(permission)}
-                                                className="w-full sm:w-auto"
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Delete
-                                            </Button>
-                                        </div>
-                                    </div>
+                        <div className="mt-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717a]" />
+                                <input
+                                    type="search"
+                                    value={permissionQuery}
+                                    onChange={(event) => setPermissionQuery(event.target.value)}
+                                    placeholder={`Search ${permissions.length} permissions...`}
+                                    aria-label="Search project permissions"
+                                    className={searchInputClassName}
+                                />
+                            </div>
+                            {filteredPermissions.length === 0 ? (
+                                <div className="mt-3 rounded-xl border border-dashed border-[#27272a] bg-[#18181b] p-4 text-sm text-[#71717a]">
+                                    No permissions match “{permissionQuery.trim()}”.
                                 </div>
-                            ))}
+                            ) : (
+                                <div className="mt-3 space-y-2">
+                                    {visiblePermissions.map((permission) => (
+                                        <div
+                                            key={permission.id}
+                                            className="flex items-center gap-3 rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="truncate text-sm font-medium text-white">{permission.name}</p>
+                                                    <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
+                                                        {permission.slug}
+                                                    </Badge>
+                                                </div>
+                                                {permission.description ? (
+                                                    <p className="mt-0.5 truncate text-xs text-[#71717a]">{permission.description}</p>
+                                                ) : null}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditPermissionDialog(permission)}
+                                                aria-label={`Edit ${permission.name}`}
+                                                className={iconButtonClassName}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDeletePermissionTarget(permission)}
+                                                aria-label={`Delete ${permission.name}`}
+                                                className={`${iconButtonClassName} hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-300`}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {!permissionQuery.trim() && filteredPermissions.length > LIST_PREVIEW_COUNT ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAllPermissions((value) => !value)}
+                                            className="w-full rounded-xl border border-dashed border-[#27272a] px-4 py-2.5 text-xs font-medium text-[#a1a1aa] transition-colors hover:border-[#3f3f46] hover:text-white"
+                                        >
+                                            {showAllPermissions
+                                                ? 'Show less'
+                                                : `Show all ${filteredPermissions.length} permissions`}
+                                        </button>
+                                    ) : null}
+                                </div>
+                            )}
                         </div>
                     )}
                 </section>
@@ -463,65 +565,110 @@ export function ProjectAccessManager({ projects = [] }) {
                             No app roles have been defined for this project yet.
                         </div>
                     ) : (
-                        <div className="mt-6 space-y-3">
-                            {roles.map((role) => (
-                                <div key={role.id} className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <p className="text-sm font-medium text-white">{role.name}</p>
-                                                <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
-                                                    {role.slug}
-                                                </Badge>
-                                                {role.is_default_signup ? (
-                                                    <Badge variant="default">Default signup</Badge>
-                                                ) : null}
-                                                {role.is_self_assignable ? (
-                                                    <Badge variant="secondary" className="text-white">
-                                                        Self-assignable
-                                                    </Badge>
-                                                ) : null}
-                                            </div>
-                                            <p className="mt-2 text-sm text-[#a1a1aa]">
-                                                {role.description || 'No description yet.'}
-                                            </p>
-                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                {role.permissions?.length ? (
-                                                    role.permissions.map((permission) => (
-                                                        <Badge key={permission.id} variant="secondary" className="font-mono text-[11px] text-white">
-                                                            {permission.slug}
-                                                        </Badge>
-                                                    ))
+                        <div className="mt-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717a]" />
+                                <input
+                                    type="search"
+                                    value={roleQuery}
+                                    onChange={(event) => setRoleQuery(event.target.value)}
+                                    placeholder={`Search ${roles.length} roles...`}
+                                    aria-label="Search project roles"
+                                    className={searchInputClassName}
+                                />
+                            </div>
+                            {filteredRoles.length === 0 ? (
+                                <div className="mt-3 rounded-xl border border-dashed border-[#27272a] bg-[#18181b] p-4 text-sm text-[#71717a]">
+                                    No roles match “{roleQuery.trim()}”.
+                                </div>
+                            ) : (
+                                <div className="mt-3 space-y-2">
+                                    {visibleRoles.map((role) => {
+                                        const expanded = expandedRoleId === role.id;
+                                        const rolePermissions = role.permissions || [];
+                                        return (
+                                            <div key={role.id} className="rounded-xl border border-[#27272a] bg-[#18181b] px-4 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <p className="truncate text-sm font-medium text-white">{role.name}</p>
+                                                            <Badge variant="secondary" className="font-mono text-[11px] text-zinc-300">
+                                                                {role.slug}
+                                                            </Badge>
+                                                            {role.is_default_signup ? (
+                                                                <Badge variant="default">Default signup</Badge>
+                                                            ) : null}
+                                                            {role.is_self_assignable ? (
+                                                                <Badge variant="secondary" className="text-white">
+                                                                    Self-assignable
+                                                                </Badge>
+                                                            ) : null}
+                                                        </div>
+                                                        {role.description ? (
+                                                            <p className="mt-0.5 truncate text-xs text-[#71717a]">{role.description}</p>
+                                                        ) : null}
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openEditRoleDialog(role)}
+                                                        aria-label={`Edit ${role.name}`}
+                                                        className={iconButtonClassName}
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDeleteRoleTarget(role)}
+                                                        aria-label={`Delete ${role.name}`}
+                                                        className={`${iconButtonClassName} hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-300`}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                                {rolePermissions.length ? (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setExpandedRoleId(expanded ? null : role.id)}
+                                                            aria-expanded={expanded}
+                                                            className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#71717a] transition-colors hover:text-white"
+                                                        >
+                                                            <ChevronDown
+                                                                className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                                                            />
+                                                            {rolePermissions.length} permission{rolePermissions.length === 1 ? '' : 's'}
+                                                        </button>
+                                                        {expanded ? (
+                                                            <div className="mt-2 flex flex-wrap gap-2 border-t border-[#27272a] pt-2">
+                                                                {rolePermissions.map((permission) => (
+                                                                    <Badge
+                                                                        key={permission.id}
+                                                                        variant="secondary"
+                                                                        className="font-mono text-[11px] text-white"
+                                                                    >
+                                                                        {permission.slug}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        ) : null}
+                                                    </>
                                                 ) : (
-                                                    <span className="text-xs text-[#71717a]">No permissions attached yet.</span>
+                                                    <p className="mt-2 text-xs text-[#71717a]">No permissions attached yet.</p>
                                                 )}
                                             </div>
-                                        </div>
-                                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => openEditRoleDialog(role)}
-                                                className="w-full border-[#27272a] bg-transparent text-white hover:bg-[#111111] sm:w-auto"
-                                            >
-                                                <Pencil className="mr-2 h-4 w-4" />
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => setDeleteRoleTarget(role)}
-                                                className="w-full sm:w-auto"
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Delete
-                                            </Button>
-                                        </div>
-                                    </div>
+                                        );
+                                    })}
+                                    {!roleQuery.trim() && filteredRoles.length > LIST_PREVIEW_COUNT ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAllRoles((value) => !value)}
+                                            className="w-full rounded-xl border border-dashed border-[#27272a] px-4 py-2.5 text-xs font-medium text-[#a1a1aa] transition-colors hover:border-[#3f3f46] hover:text-white"
+                                        >
+                                            {showAllRoles ? 'Show less' : `Show all ${filteredRoles.length} roles`}
+                                        </button>
+                                    ) : null}
                                 </div>
-                            ))}
+                            )}
                         </div>
                     )}
                 </section>
@@ -695,14 +842,33 @@ export function ProjectAccessManager({ projects = [] }) {
                         </label>
 
                         <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">Permissions in this role</Label>
+                            <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-[#71717a]">
+                                Permissions in this role ({selectedPermissionIds.length} selected)
+                            </Label>
                             {permissions.length === 0 ? (
                                 <div className="rounded-xl border border-dashed border-[#27272a] bg-[#18181b] p-4 text-sm text-[#71717a]">
                                     Create project permissions first, then attach them to this role.
                                 </div>
                             ) : (
-                                <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-[#27272a] bg-[#18181b] p-3">
-                                    {permissions.map((permission) => {
+                                <>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717a]" />
+                                        <input
+                                            type="search"
+                                            value={dialogPermissionQuery}
+                                            onChange={(event) => setDialogPermissionQuery(event.target.value)}
+                                            placeholder="Filter permissions..."
+                                            aria-label="Filter permissions in this role"
+                                            className={searchInputClassName}
+                                        />
+                                    </div>
+                                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-[#27272a] bg-[#18181b] p-3">
+                                        {dialogPermissions.length === 0 ? (
+                                            <p className="px-3 py-2 text-sm text-[#71717a]">
+                                                No permissions match “{dialogPermissionQuery.trim()}”.
+                                            </p>
+                                        ) : null}
+                                        {dialogPermissions.map((permission) => {
                                         const checked = selectedPermissionIds.includes(permission.id);
                                         return (
                                             <label
@@ -729,7 +895,8 @@ export function ProjectAccessManager({ projects = [] }) {
                                             </label>
                                         );
                                     })}
-                                </div>
+                                    </div>
+                                </>
                             )}
                             {roleForm.formState.errors.permission_ids ? (
                                 <p className="text-xs text-danger">{roleForm.formState.errors.permission_ids.message}</p>

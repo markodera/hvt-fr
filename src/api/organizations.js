@@ -107,6 +107,34 @@ export function listProjectRoles(projectId, params = {}, options = {}) {
     });
 }
 
+async function listAllProjectEntries(listPage, projectId, options) {
+    const requestOptions = normalizeOptions(options);
+    const entries = [];
+    let page = 1;
+    let hasNext = true;
+
+    while (hasNext) {
+        const data = await listPage(projectId, { page, page_size: 100 }, requestOptions);
+        if (Array.isArray(data)) {
+            return data;
+        }
+
+        entries.push(...(data?.results ?? []));
+        hasNext = Boolean(data?.next);
+        page += 1;
+    }
+
+    return entries;
+}
+
+export function listAllProjectPermissions(projectId, options = {}) {
+    return listAllProjectEntries(listProjectPermissions, projectId, options);
+}
+
+export function listAllProjectRoles(projectId, options = {}) {
+    return listAllProjectEntries(listProjectRoles, projectId, options);
+}
+
 export function createProjectRole(projectId, data, options = {}) {
     return organizationRequest(`/api/v1/organizations/current/projects/${projectId}/roles/`, {
         method: 'POST',
